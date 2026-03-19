@@ -1,12 +1,23 @@
-<ng-container *ngIf="orders$ | async as orders">
+<ng-container *ngIf="vm$ | async as vm">
   <section class="orders-page">
     <header>
       <p class="eyebrow">Account</p>
       <h1>My orders</h1>
     </header>
 
-    <ng-container *ngIf="orders.orders?.length; else emptyOrders">
-      <article class="order-card" *ngFor="let order of orders.orders">
+    <section class="orders-toolbar" *ngIf="vm.orders.pagination as pagination">
+      <p>{{ pagination.totalResults || 0 }} order(s)</p>
+
+      <label>
+        <span>Sort</span>
+        <select [value]="vm.currentSort" (change)="changeSort($any($event.target).value)">
+          <option *ngFor="let option of sortOptions" [value]="option.code">{{ option.label }}</option>
+        </select>
+      </label>
+    </section>
+
+    <ng-container *ngIf="vm.orders.orders?.length; else emptyOrders">
+      <article class="order-card" *ngFor="let order of vm.orders.orders">
         <div>
           <strong>{{ order.code }}</strong>
           <p>{{ order.status }}</p>
@@ -17,6 +28,24 @@
           <p>{{ order.placed | date: 'medium' }}</p>
         </div>
       </article>
+
+      <footer class="orders-pagination" *ngIf="vm.orders.pagination as pagination">
+        <button
+          type="button"
+          (click)="changePage((pagination.currentPage || 0) - 1, vm.currentSort)"
+          [disabled]="(pagination.currentPage || 0) <= 0">
+          Previous
+        </button>
+
+        <span>Page {{ (pagination.currentPage || 0) + 1 }} of {{ pagination.totalPages || 1 }}</span>
+
+        <button
+          type="button"
+          (click)="changePage((pagination.currentPage || 0) + 1, vm.currentSort)"
+          [disabled]="(pagination.currentPage || 0) + 1 >= (pagination.totalPages || 1)">
+          Next
+        </button>
+      </footer>
     </ng-container>
   </section>
 </ng-container>

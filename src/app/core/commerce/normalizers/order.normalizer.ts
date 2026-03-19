@@ -10,19 +10,26 @@ type NormalizeHistoryOptions = {
 
 @Injectable({ providedIn: 'root' })
 export class UbrisOrderNormalizer {
-  normalize(rawOrders: Record<string, unknown>[] | undefined): OrderHistoryList {
+  normalize(rawOrders: Record<string, unknown>[] | Record<string, unknown> | undefined): OrderHistoryList {
     return this.normalizeHistoryList(rawOrders);
   }
 
-  normalizeHistoryList(rawOrders: Record<string, unknown>[] | undefined, options: NormalizeHistoryOptions = {}): OrderHistoryList {
-    const sortedOrders = this.sortOrders(Array.isArray(rawOrders) ? rawOrders : [], options.sort);
-    const pageSize = Math.max(options.pageSize ?? sortedOrders.length ?? 0, 1);
-    const currentPage = Math.max(options.currentPage ?? 0, 0);
-    const totalResults = sortedOrders.length;
-    const totalPages = totalResults === 0 ? 1 : Math.ceil(totalResults / pageSize);
-    const fromIndex = Math.min(currentPage * pageSize, totalResults);
-    const toIndex = Math.min(fromIndex + pageSize, totalResults);
-    const orders = sortedOrders.slice(fromIndex, toIndex).map(order => this.normalizeOrderHistory(order));
+  normalizeHistoryList(
+    rawOrders: Record<string, unknown>[] | Record<string, unknown> | undefined,
+    options: NormalizeHistoryOptions = {}
+  ): OrderHistoryList {
+    if (Array.isArray(rawOrders)) {
+      return this.normalizeLegacyHistoryList(rawOrders, options);
+    }
+
+    const source = this.asRecord(rawOrders);
+    const currentSort = this.firstNonBlank(source, 'sort') ?? options.sort ?? 'byDateDesc';
+    const items = this.asRecordList(source.items ?? source.results ?? source.orders);
+    const orders = items.map(order => this.normalizeOrderHistory(order));
+    const pageSize = Math.max(this.asNumber(source.pageSize, options.pageSize ?? orders.length), 1);
+    const currentPage = Math.max(this.asNumber(source.currentPage, options.currentPage ?? 0), 0);
+    const totalResults = Math.max(this.asNumber(source.totalResults, orders.length), 0);
+    const totalPages = Math.max(this.asNumber(source.totalPages, totalResults === 0 ? 1 : Math.ceil(totalResults / pageSize)), 1);
 
     return {
       orders,
@@ -32,7 +39,7 @@ export class UbrisOrderNormalizer {
         totalResults,
         totalPages
       },
-      sorts: []
+      sorts: this.normalizeSorts(source.sorts, currentSort)
     };
   }
 
@@ -124,6 +131,28 @@ export class UbrisOrderNormalizer {
     return undefined;
   }
 
+  private normalizeLegacyHistoryList(rawOrders: Record<string, unknown>[], options: NormalizeHistoryOptions): OrderHistoryList {
+    const sortedOrders = this.sortOrders(rawOrders, options.sort);
+    const pageSize = Math.max(options.pageSize ?? sortedOrders.length ?? 0, 1);
+    const currentPage = Math.max(options.currentPage ?? 0, 0);
+    const totalResults = sortedOrders.length;
+    const totalPages = totalResults === 0 ? 1 : Math.ceil(totalResults / pageSize);
+    const fromIndex = Math.min(currentPage * pageSize, totalResults);
+    const toIndex = Math.min(fromIndex + pageSize, totalResults);
+    const orders = sortedOrders.slice(fromIndex, toIndex).map(order => this.normalizeOrderHistory(order));
+
+    return {
+      orders,
+      pagination: {
+        currentPage,
+        pageSize,
+        totalResults,
+        totalPages
+      },
+      sorts: this.defaultSorts(options.sort ?? 'byDateDesc')
+    };
+  }
+
   private sortOrders(rawOrders: Record<string, unknown>[], sort?: string): Record<string, unknown>[] {
     const normalizedSort = (sort ?? 'byDateDesc').toLowerCase();
     const orders = [...rawOrders];
@@ -133,12 +162,47 @@ export class UbrisOrderNormalizer {
     if (normalizedSort === 'bydateasc') {
       return orders.sort((left, right) => this.dateValue(left) - this.dateValue(right));
     }
+    if (normalizedSort === 'bytotaldesc') {
+      return orders.sort((left, right) => this.totalValue(right) - this.totalValue(left));
+    }
+    if (normalizedSort === 'bytotalasc') {
+      return orders.sort((left, right) => this.totalValue(left) - this.totalValue(right));
+    }
     return orders;
+  }
+
+  private normalizeSorts(rawSorts: unknown, currentSort: string) {
+    const sorts = this.asRecordList(rawSorts)
+      .map(sort => ({
+        code: this.firstNonBlank(sort, 'code') ?? '',
+        name: this.firstNonBlank(sort, 'name') ?? this.firstNonBlank(sort, 'code') ?? '',
+        selected: this.asBoolean(sort.selected)
+      }))
+      .filter(sort => sort.code.length > 0);
+
+    if (sorts.length > 0) {
+      return sorts;
+    }
+
+    return this.defaultSorts(currentSort);
+  }
+
+  private defaultSorts(currentSort: string) {
+    return [
+      { code: 'byDateDesc', name: 'Newest', selected: currentSort === 'byDateDesc' },
+      { code: 'byDateAsc', name: 'Oldest', selected: currentSort === 'byDateAsc' },
+      { code: 'byTotalDesc', name: 'Highest total', selected: currentSort === 'byTotalDesc' },
+      { code: 'byTotalAsc', name: 'Lowest total', selected: currentSort === 'byTotalAsc' }
+    ];
   }
 
   private dateValue(raw: Record<string, unknown>): number {
     const value = this.asDate(this.firstNonBlank(raw, 'placedAt', 'updatedAt', 'createdAt'));
     return value?.getTime() ?? 0;
+  }
+
+  private totalValue(raw: Record<string, unknown>): number {
+    return this.asNumber(raw.total, 0);
   }
 
   private sumQuantities(rawEntries: unknown): number | undefined {
@@ -153,6 +217,13 @@ export class UbrisOrderNormalizer {
 
   private asRecord(value: unknown): Record<string, unknown> {
     return value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  }
+
+  private asRecordList(value: unknown): Record<string, unknown>[] {
+    if (!Array.isArray(value)) {
+      return [];
+    }
+    return value.filter((entry): entry is Record<string, unknown> => !!entry && typeof entry === 'object');
   }
 
   private firstNonBlank(source: Record<string, unknown>, ...keys: string[]): string | null {
@@ -178,6 +249,16 @@ export class UbrisOrderNormalizer {
       return Number.isNaN(parsed) ? fallback : parsed;
     }
     return fallback;
+  }
+
+  private asBoolean(value: unknown): boolean {
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value.trim().toLowerCase() === 'true';
+    }
+    return false;
   }
 
   private asDate(value: string | null): Date | null {

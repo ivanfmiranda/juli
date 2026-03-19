@@ -40,9 +40,12 @@ export class UbrisOrderAdapter implements UserOrderAdapter {
   ): Observable<OrderHistoryList> {
     const params = new HttpParams()
       .set('tenantId', 'default')
-      .set('customerId', userId);
+      .set('customerId', userId)
+      .set('currentPage', String(currentPage))
+      .set('pageSize', String(pageSize))
+      .set('sort', sort);
 
-    return this.http.get<GatewayEnvelope<Record<string, unknown>[]>>(
+    return this.http.get<GatewayEnvelope<Record<string, unknown>>>(
       `${environment.ubrisApiBaseUrl}/api/bff/query/orders`,
       { params }
     ).pipe(

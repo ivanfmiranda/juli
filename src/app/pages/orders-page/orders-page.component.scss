@@ -3,6 +3,34 @@
   gap: 1rem;
 }
 
+.orders-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.orders-toolbar p {
+  margin: 0;
+  color: #526075;
+}
+
+.orders-toolbar label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #274060;
+  font-weight: 600;
+}
+
+.orders-toolbar select {
+  border: 1px solid #c4d0df;
+  border-radius: 10px;
+  padding: 0.45rem 0.75rem;
+  background: #fff;
+}
+
 .order-card {
   display: flex;
   justify-content: space-between;
@@ -18,5 +46,30 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.75rem;
+  color: #526075;
+}
+
+.orders-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.orders-pagination button {
+  border: none;
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  background: #274060;
+  color: #fff;
+  cursor: pointer;
+}
+
+.orders-pagination button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.orders-pagination span {
   color: #526075;
 }
