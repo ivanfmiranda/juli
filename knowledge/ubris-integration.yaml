@@ -1,0 +1,399 @@
+# Ubris Integration Guide
+#
+# Este documento descreve a integração futura com o backend Ubris,
+# incluindo responsabilidades, interfaces e fluxo de dados.
+
+overview:
+  title: Integração Juli CMS com Ubris Commerce
+  status: Planejada / Preparada
+  current_implementation: MockCommerceResolver
+  target_implementation: UbrisCommerceResolver
+  migration_effort: Baixo (troca de provider apenas)
+
+# ═══════════════════════════════════════════════════════════════════
+# SEPARAÇÃO DE RESPONSABILIDADES
+# ═══════════════════════════════════════════════════════════════════
+
+responsibilities:
+  cms:
+    system: Strapi
+    owns:
+      - Conteúdo editorial
+      - Estrutura de páginas
+      - Componentes visuais
+      - Ordenação de elementos
+      - Textos e mídias
+    provides:
+      - product_code (SKU)
+      - category_code
+      - teaser_text
+      - configurações de exibição
+    does_not:
+      - Buscar dados de produto
+      - Calcular preços
+      - Verificar estoque
+      - Processar pedidos
+
+  commerce:
+    system: Ubris
+    owns:
+      - Catálogo de produtos
+      - Preços e promoções
+      - Estoque disponível
+      - Dados de cliente
+      - Pedidos e checkout
+    provides:
+      - Nome do produto
+      - Descrição completa
+      - Preço atual
+      - Imagens do produto
+      - Disponibilidade
+      - Reviews
+    does_not:
+      - Definir layout de página
+      - Escolher quais produtos exibir
+      - Controlar ordenação visual
+
+  presentation:
+    system: Spartacus/Angular
+    owns:
+      - Renderização visual
+      - Interatividade
+      - Navegação
+      - Cache de apresentação
+    integrates:
+      - CMS para estrutura
+      - Commerce para dados
+
+# ═══════════════════════════════════════════════════════════════════
+# COMPONENTES AFETADOS
+# ═══════════════════════════════════════════════════════════════════
+
+affected_components:
+  product_teaser:
+    description: Exibe preview de produto
+    cms_provides:
+      - product_code: "3881010"
+      - teaser_text: "O melhor do ano"
+    commerce_provides:
+      - name: "Smartphone Pro Max"
+      - price: "R$ 4.999,99"
+      - image: "url"
+      - stock: true/false
+    integration_flow: |
+      1. CMS envia: { type: "product-teaser", product_code: "3881010" }
+      2. ProductTeaserComponent recebe dados do CMS
+      3. Componente chama CommerceResolver.getProduct("3881010")
+      4. Resolver busca em Ubris (ou mock)
+      5. Componente combina: teaser_text (CMS) + price (Commerce)
+      6. UI renderiza card completo
+
+  category_teaser:
+    description: Exibe preview de categoria
+    cms_provides:
+      - category_code: "578"
+      - teaser_image: "url" (opcional, pode vir do commerce)
+    commerce_provides:
+      - name: "Eletrônicos"
+      - product_count: 124
+      - image: "url"
+    integration_flow: |
+      1. CMS envia: { type: "category-teaser", category_code: "578" }
+      2. CategoryTeaserComponent recebe dados
+      3. Componente chama CommerceResolver.getCategory("578")
+      4. Resolver busca em Ubris
+      5. Componente renderiza com dados da categoria
+
+  product_carousel:
+    description: Carrossel de produtos (futuro)
+    cms_provides:
+      - product_codes: ["3881010", "3881020", "3881030"]
+      - layout: "horizontal"
+    commerce_provides:
+      - Dados completos de cada produto
+    integration_flow: |
+      1. CMS envia array de códigos
+      2. Componente chama CommerceResolver.getProducts(codes)
+      3. Ubris retorna bulk de produtos
+      4. Componente renderiza carrossel
+
+# ═══════════════════════════════════════════════════════════════════
+# INTERFACE ESPERADA
+# ═══════════════════════════════════════════════════════════════════
+
+expected_ubris_api:
+  
+  products:
+    get_by_code:
+      endpoint: GET /api/v1/products/{code}
+      response_example: |
+        {
+          "code": "3881010",
+          "name": "Smartphone Pro Max",
+          "description": "...",
+          "price": {
+            "value": 4999.99,
+            "currencyIso": "BRL",
+            "formattedValue": "R$ 4.999,99"
+          },
+          "images": {
+            "primary": { "url": "...", "alt": "..." },
+            "thumbnail": { "url": "...", "alt": "..." }
+          },
+          "stock": {
+            "available": true,
+            "quantity": 15
+          }
+        }
+    
+    get_bulk:
+      endpoint: POST /api/v1/products/bulk
+      request_body: |
+        {
+          "codes": ["3881010", "3881020"]
+        }
+      response: Array de produtos
+    
+    search:
+      endpoint: GET /api/v1/search?q={query}&page={page}
+      response: |
+        {
+          "products": [...],
+          "total": 42,
+          "suggestions": [...]
+        }
+
+  categories:
+    get_by_code:
+      endpoint: GET /api/v1/categories/{code}
+      response_example: |
+        {
+          "code": "578",
+          "name": "Eletrônicos",
+          "description": "...",
+          "image": { "url": "...", "alt": "..." },
+          "productCount": 124,
+          "parentCategory": null,
+          "subCategories": ["phones", "computers"]
+        }
+    
+    get_products:
+      endpoint: GET /api/v1/categories/{code}/products?page={page}&size={size}
+      response: |
+        {
+          "products": [...],
+          "total": 124,
+          "page": 0
+        }
+
+# ═══════════════════════════════════════════════════════════════════
+# FLUXO DE DADOS
+# ═══════════════════════════════════════════════════════════════════
+
+data_flow:
+  
+  current_mock:
+    name: "Fluxo Atual (Mock)"
+    steps:
+      - CMS envia estrutura com product_code
+      - ProductTeaserComponent recebe via CmsComponentData
+      - Componente injeta MockCommerceResolver
+      - Resolver retorna produto mockado
+      - Componente renderiza
+    diagram: |
+      Strapi → Adapter → ProductTeaserComponent → MockCommerceResolver
+                                                        ↓
+                                                    Mock Data
+                                                        ↓
+                                                   UI Render
+
+  future_ubris:
+    name: "Fluxo Futuro (Ubris)"
+    steps:
+      - CMS envia estrutura com product_code (igual)
+      - ProductTeaserComponent recebe (igual)
+      - Componente injeta UbrisCommerceResolver
+      - Resolver chama API Ubris
+      - Ubris retorna dados reais
+      - Componente renderiza (igual)
+    diagram: |
+      Strapi → Adapter → ProductTeaserComponent → UbrisCommerceResolver
+                                                        ↓
+                                                  Ubris API
+                                                        ↓
+                                                   UI Render
+
+  key_insight: |
+    A ÚNICA mudança é a implementação do Resolver.
+    O componente ProductTeaserComponent NÃO MUDA.
+    O modelo canônico NÃO MUDA.
+    O adapter NÃO MUDA.
+
+# ═══════════════════════════════════════════════════════════════════
+# IMPLEMENTAÇÃO ATUAL
+# ═══════════════════════════════════════════════════════════════════
+
+current_implementation:
+  
+  files:
+    interface: src/app/core/commerce/commerce-resolver.interface.ts
+    mock: src/app/core/commerce/mock-commerce.resolver.ts
+    stub: src/app/core/commerce/ubris-commerce.resolver.stub.ts
+    module: src/app/core/commerce/commerce.module.ts
+  
+  usage:
+    registration: |
+      // Em app.module.ts ou strapi-cms.module.ts
+      imports: [
+        CommerceModule.forRoot({ useMock: true })  // Dev
+        // CommerceModule.forRoot({ useMock: false, ubrisConfig: {...} })  // Prod
+      ]
+    
+    injection: |
+      // Em componente
+      constructor(
+        @Inject(COMMERCE_RESOLVER) private commerceResolver: CommerceResolver
+      ) {}
+      
+    consumption: |
+      // Buscar produto
+      this.product$ = this.commerceResolver.getProduct(productCode);
+
+# ═══════════════════════════════════════════════════════════════════
+# MIGRAÇÃO PARA UBRIS
+# ═══════════════════════════════════════════════════════════════════
+
+migration_plan:
+  
+  phase_1: "Preparação"
+    tasks:
+      - Validar interfaces com equipe Ubris
+      - Confirmar endpoints da API
+      - Ajustar modelos se necessário
+    status: Pendente
+    
+  phase_2: "Implementação"
+    tasks:
+      - Implementar UbrisCommerceResolver
+      - Adicionar mapeamento de respostas
+      - Implementar tratamento de erros
+      - Adicionar cache se necessário
+    status: Pendente
+    
+  phase_3: "Testes"
+    tasks:
+      - Testar integração em ambiente de staging
+      - Validar performance
+      - Testar fallback em caso de erro Ubris
+    status: Pendente
+    
+  phase_4: "Deploy"
+    tasks:
+      - Trocar provider de Mock para Ubris
+      - Monitorar erros
+      - Rollback plan se necessário
+    status: Pendente
+
+  checklist_pre_ubris:
+    - Ubris API documentada e estável
+    - Endpoints de produto funcionando
+    - Endpoints de categoria funcionando
+    - Autenticação configurada
+    - Rate limits conhecidos
+    - SLAs definidos
+
+# ═══════════════════════════════════════════════════════════════════
+# TRATAMENTO DE ERROS
+# ═══════════════════════════════════════════════════════════════════
+
+error_handling:
+  
+  scenarios:
+    product_not_found:
+      description: Produto não existe no Ubris
+      cms_data: { product_code: "INVALID" }
+      behavior: |
+        1. CommerceResolver retorna null
+        2. Componente mostra estado vazio
+        3. Opcional: Log para análise
+      fallback: EmptyState
+    
+    ubris_unavailable:
+      description: API Ubris fora do ar
+      behavior: |
+        1. CommerceResolver retorna erro
+        2. Componente mostra ErrorComponent
+        3. Retry automático (exponential backoff)
+        4. Fallback para dados do CMS se disponível
+      fallback: ErrorComponent
+    
+    partial_data:
+      description: Dados incompletos do produto
+      behavior: |
+        1. CommerceResolver retorna produto com dados parciais
+        2. Componente renderiza com o que tem
+        3. Campos faltantes não aparecem
+      fallback: Graceful degradation
+
+  resolver_strategy: |
+    O CommerceResolver DEVE:
+    - Sempre retornar Observable (nunca throw síncrono)
+    - Usar catchError para transformar erros em null ou valor padrão
+    - Implementar timeout para evitar hangs
+    - Logar erros para monitoramento
+
+# ═══════════════════════════════════════════════════════════════════
+# CACHE E PERFORMANCE
+# ═══════════════════════════════════════════════════════════════════
+
+performance:
+  
+  caching_strategy:
+    level_1: "Component State"
+      description: ProductTeaser guarda product$ em propriedade
+      duration: Vida do componente
+      
+    level_2: "Resolver Cache"
+      description: CommerceResolver cacheia chamadas recentes
+      duration: Configurável (default: 5 min)
+      key: product_code ou category_code
+      
+    level_3: "HTTP Cache"
+      description: HTTP interceptors ou service worker
+      duration: Controlado por headers Ubris
+
+  optimization:
+    bulk_requests: |
+      Quando possível, usar getProducts(codes[]) ao invés de
+      múltiplos getProduct(code). Reduz chamadas de rede.
+    
+    lazy_loading: |
+      ProductTeaser só busca dados quando visível na viewport
+      (usar IntersectionObserver se necessário)
+    
+    prefetching: |
+      Opcional: prefetch de produtos quando usuário
+      passa o mouse sobre o teaser
+
+# ═══════════════════════════════════════════════════════════════════
+# RESUMO EXECUTIVO
+# ═══════════════════════════════════════════════════════════════════
+
+executive_summary: |
+  
+  A integração com Ubris é uma troca de implementação, não uma
+  reescrita. A arquitetura atual já suporta Ubris:
+  
+  1. CMS (Strapi) continua igual
+  2. Modelo canônico não muda
+  3. Componentes não mudam
+  4. Apenas o CommerceResolver é trocado
+  
+  Tempo estimado de migração: 1-2 dias de trabalho
+  Risco: Baixo (fallback para mock disponível)
+  
+  Próximos passos:
+  1. Aguardar API Ubris estável
+  2. Implementar UbrisCommerceResolver
+  3. Trocar provider
+  4. Testar e deploy

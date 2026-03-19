@@ -1,0 +1,63 @@
+.listing-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.listing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.listing-card {
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.listing-card a {
+  color: inherit;
+  text-decoration: none;
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.listing-card {
+  display: grid;
+}
+
+.btn-add {
+  margin: 0 1rem 1rem;
+  border: 0;
+  border-radius: 999px;
+  padding: 0.75rem 1rem;
+  background: #10253d;
+  color: #fff;
+  font-weight: 600;
+}
+
+.listing-card img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #eef2f7;
+}
+
+.listing-empty,
+.listing-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.listing-pagination button {
+  border: 1px solid #10253d;
+  background: #fff;
+  color: #10253d;
+  border-radius: 999px;
+  padding: 0.625rem 1rem;
+}

@@ -1,0 +1,173 @@
+/**
+ * InfoCard Component Styles
+ * 
+ * Design clean e moderno para cards de informação.
+ * Features:
+ * - Hover effects suaves
+ * - Suporte a ícones emojis
+ * - Estados interativos quando tem link
+ */
+
+:host {
+  display: block;
+}
+
+.juli-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #ffffff;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+
+  // Estado hover base
+  &:hover {
+    border-color: #dee2e6;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  // Variante clicável
+  &--clickable {
+    cursor: pointer;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      
+      .juli-info-card__arrow {
+        transform: translateX(4px);
+      }
+    }
+  }
+
+  // Ícone
+  &__icon {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 10px;
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  // Conteúdo
+  &__content {
+    flex: 1;
+    min-width: 0; // Previne overflow
+  }
+
+  &__title {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #212529;
+    line-height: 1.3;
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: #6c757d;
+    line-height: 1.6;
+  }
+
+  // Link indicator
+  &__link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s;
+    flex-shrink: 0;
+
+    &:hover {
+      background: #f8f9fa;
+    }
+  }
+
+  &__arrow {
+    font-size: 1.25rem;
+    color: #0d6efd;
+    transition: transform 0.2s ease;
+    line-height: 1;
+  }
+}
+
+// Variantes de tamanho (se necessário no futuro)
+.juli-info-card--compact {
+  padding: 1rem;
+  
+  .juli-info-card__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.25rem;
+  }
+  
+  .juli-info-card__title {
+    font-size: 1rem;
+  }
+  
+  .juli-info-card__description {
+    font-size: 0.875rem;
+  }
+}
+
+.juli-info-card--large {
+  padding: 2rem;
+  
+  .juli-info-card__icon {
+    width: 64px;
+    height: 64px;
+    font-size: 2rem;
+    border-radius: 16px;
+  }
+  
+  .juli-info-card__title {
+    font-size: 1.375rem;
+  }
+  
+  .juli-info-card__description {
+    font-size: 1rem;
+  }
+}
+
+// Grid de cards (quando usado em grupo)
+.juli-info-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+// Responsividade
+@media (max-width: 576px) {
+  .juli-info-card {
+    padding: 1rem;
+    gap: 0.75rem;
+    
+    &__icon {
+      width: 40px;
+      height: 40px;
+      font-size: 1.25rem;
+    }
+    
+    &__title {
+      font-size: 1rem;
+    }
+    
+    &__description {
+      font-size: 0.875rem;
+    }
+  }
+}

@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.cms-page {
+  display: grid;
+  gap: 2rem;
+}
+
+.cms-page__hero {
+  display: grid;
+  gap: 0.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dde4ee;
+}
+
+.cms-page__hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.25rem);
+}
+
+.cms-page__hero p {
+  margin: 0;
+  color: #526075;
+  max-width: 60ch;
+}
+
+.cms-region {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.cms-region--header,
+.cms-region--footer {
+  gap: 1rem;
+}

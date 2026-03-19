@@ -1,0 +1,11 @@
+<ng-container *ngIf="data$ | async as data">
+  <div class="juli-hero-banner" [style.backgroundImage]="'url(' + data.backgroundImageUrl + ')'">
+    <div class="container">
+      <h1 *ngIf="data.title">{{ data.title }}</h1>
+      <p *ngIf="data.subtitle">{{ data.subtitle }}</p>
+      <a *ngIf="data.ctaLabel" [routerLink]="data.ctaLink" class="btn btn-primary">
+        {{ data.ctaLabel }}
+      </a>
+    </div>
+  </div>
+</ng-container>

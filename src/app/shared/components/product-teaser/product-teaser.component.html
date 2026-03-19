@@ -1,0 +1,25 @@
+<ng-container *ngIf="data$ | async as cmsData">
+  <div class="juli-product-teaser card">
+    <div class="card-body" *ngIf="product$ | async as product; else loading">
+      <img *ngIf="imageUrl(product)"
+           [src]="imageUrl(product)"
+           class="card-img-top"
+           [alt]="imageAlt(product)">
+      <h5 class="card-title">{{ product.name }}</h5>
+      <p class="card-text text-muted">{{ cmsData.teaserText || product.summary }}</p>
+      <p class="price">{{ product.price?.formattedValue }}</p>
+      <div class="actions">
+        <a [routerLink]="product.url || ['/product', product.code]" class="btn btn-outline-primary">View product</a>
+        <button type="button" class="btn btn-primary" (click)="addToCart(product.code)">Add to cart</button>
+      </div>
+    </div>
+    <ng-template #loading>
+      <div class="card-body">
+        <div class="placeholder-glow">
+          <span class="placeholder col-12"></span>
+          <span class="placeholder col-6"></span>
+        </div>
+      </div>
+    </ng-template>
+  </div>
+</ng-container>

@@ -1,0 +1,17 @@
+<ng-container *ngIf="data$ | async as data">
+  <article class="juli-simple-banner">
+    <a *ngIf="data.link; else staticBanner" [routerLink]="data.link" class="juli-simple-banner__link">
+      <ng-container *ngTemplateOutlet="content; context: { $implicit: data }"></ng-container>
+    </a>
+    <ng-template #staticBanner>
+      <ng-container *ngTemplateOutlet="content; context: { $implicit: data }"></ng-container>
+    </ng-template>
+  </article>
+</ng-container>
+
+<ng-template #content let-data>
+  <img *ngIf="data.imageUrl" [src]="data.imageUrl" [alt]="data.title || 'Banner image'" class="juli-simple-banner__image">
+  <h3 *ngIf="data.title">{{ data.title }}</h3>
+  <p *ngIf="data.description">{{ data.description }}</p>
+  <span *ngIf="data.buttonLabel" class="juli-simple-banner__cta">{{ data.buttonLabel }}</span>
+</ng-template>

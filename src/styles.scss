@@ -1,0 +1,23 @@
+html, body {
+  min-height: 100%;
+  margin: 0;
+  font-family: Inter, 'Segoe UI', sans-serif;
+  background: #f6f8fb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: #0f172a;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}

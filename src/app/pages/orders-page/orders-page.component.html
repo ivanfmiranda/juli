@@ -1,0 +1,19 @@
+<ng-container *ngIf="orders$ | async as orders">
+  <section class="orders-page">
+    <header>
+      <p class="eyebrow">Account</p>
+      <h1>My orders</h1>
+    </header>
+
+    <article class="order-card" *ngFor="let order of orders.orders">
+      <div>
+        <strong>{{ order.code }}</strong>
+        <p>{{ order.status }}</p>
+      </div>
+      <div>
+        <strong>{{ order.total?.formattedValue }}</strong>
+        <p>{{ order.placed }}</p>
+      </div>
+    </article>
+  </section>
+</ng-container>

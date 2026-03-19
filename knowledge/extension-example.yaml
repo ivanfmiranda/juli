@@ -1,0 +1,328 @@
+# Extension Example: Adding a New Component
+# 
+# Este documento demonstra como adicionar um novo componente ao sistema
+# sem modificar código existente, provando a extensibilidade da arquitetura.
+# 
+# Exemplo: InfoCardComponent - um card simples com ícone, título e descrição.
+
+overview:
+  component_name: InfoCardComponent
+  purpose: Card de informação com ícone, título e descrição
+  complexity: Simple
+  estimated_time: 15 minutos
+
+steps:
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 1: Modelo Canônico
+  # ═════════════════════════════════════════════════════════════════
+  - id: 1
+    title: Adicionar Modelo Canônico
+    file: src/app/core/models/cms.model.ts
+    description: |
+      O modelo canônico define o contrato de dados entre o CMS e o frontend.
+      Este modelo é independente de Strapi - poderia vir de qualquer CMS.
+    action: |
+      Adicionar interface InfoCardComponentModel estendendo CmsComponent:
+      
+      ```typescript
+      export interface InfoCardComponentModel extends CmsComponent {
+        icon?: string;           // Emoji ou ícone
+        title?: string;          // Título do card
+        description?: string;    // Descrição textual
+        link?: string;           // Link opcional
+      }
+      ```
+    validation: |
+      - Interface estende CmsComponent
+      - Propriedades são opcionais (?) para graceful degradation
+      - Não há métodos, apenas propriedades (serializável)
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 2: Schema no Strapi/Mock
+  # ═════════════════════════════════════════════════════════════════
+  - id: 2
+    title: Definir Schema (Strapi ou Mock)
+    description: |
+      O schema define como o conteúdo é estruturado no CMS.
+      No Strapi: criar componente. No mock: adicionar ao JSON.
+    file_mock: scripts/mock-cms.js
+    action_mock: |
+      Adicionar exemplo no cenário demo:
+      
+      ```javascript
+      {
+        id: 2,
+        __component: "cms.info-card",
+        icon: "🚀",
+        title: "Performance",
+        description: "Arquitetura otimizada com lazy loading."
+      }
+      ```
+    file_strapi: strapi/src/components/cms/info-card.json
+    action_strapi: |
+      Criar schema Strapi:
+      
+      ```json
+      {
+        "collectionName": "components_cms_info_cards",
+        "info": {
+          "displayName": "Info Card",
+          "icon": "info"
+        },
+        "attributes": {
+          "icon": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "text" },
+          "link": { "type": "string" }
+        }
+      }
+      ```
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 3: Mapper/Converter (Adapter)
+  # ═════════════════════════════════════════════════════════════════
+  - id: 3
+    title: Adicionar Mapper no Adapter
+    file: src/app/core/cms/adapters/strapi-cms.adapter.ts
+    description: |
+      O adapter é o único lugar que conhece a estrutura do Strapi.
+      Ele transforma o payload bruto em modelo canônico.
+    action: |
+      Adicionar entrada no typeMapping:
+      
+      ```typescript
+      const typeMapping: { [key: string]: string } = {
+        // ... existing mappings
+        'info-card': 'JuliInfoCardComponent'  // ← Adicionar esta linha
+      };
+      ```
+      
+      Nota: A propagação dos campos é automática via spread:
+      ```typescript
+      return {
+        uid: `comp_${Math.random().toString(36).substr(2, 9)}`,
+        typeCode: typeMapping[type] || type,
+        flexType: typeMapping[type] || type,
+        ...strapiComp  // ← Propaga icon, title, description, link
+      };
+      ```
+    validation: |
+      - typeCode segue convenção: Juli[Name]Component
+      - Tipo 'info-card' do Strapi mapeia para 'JuliInfoCardComponent'
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 4: Registrar no Registry
+  # ═════════════════════════════════════════════════════════════════
+  - id: 4
+    title: Registrar Componente Angular
+    file: src/app/spartacus/strapi-cms.module.ts
+    description: |
+      O registry central (ConfigModule) mapeia typeCode para Angular component.
+      Este é o único lugar onde se configura a relação CMS → Angular.
+    action: |
+      Adicionar entrada em cmsComponents:
+      
+      ```typescript
+      ConfigModule.withConfig({
+        cmsComponents: {
+          // ... existing components
+          JuliInfoCardComponent: {
+            component: InfoCardComponent  // ← Adicionar esta entrada
+          }
+        }
+      })
+      ```
+      
+      E declarar o componente:
+      ```typescript
+      declarations: [
+        // ... existing
+        InfoCardComponent  // ← Adicionar
+      ]
+      ```
+    validation: |
+      - typeCode (JuliInfoCardComponent) corresponde ao do adapter
+      - Componente importado corretamente
+      - Declarado em declarations
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 5: Criar Renderer Angular
+  # ═════════════════════════════════════════════════════════════════
+  - id: 5
+    title: Criar Componente Angular
+    file: src/app/shared/components/info-card/info-card.component.ts
+    description: |
+      O renderer usa o modelo canônico e não conhece Strapi.
+      Ele recebe dados via CmsComponentData injetado.
+    action: |
+      ```typescript
+      @Component({
+        selector: 'app-info-card',
+        templateUrl: './info-card.component.html',
+        styleUrls: ['./info-card.component.scss'],
+        changeDetection: ChangeDetectionStrategy.OnPush
+      })
+      export class InfoCardComponent {
+        data$: Observable<InfoCardComponentModel> = this.componentData.data$;
+
+        constructor(
+          protected componentData: CmsComponentData<InfoCardComponentModel>
+        ) {}
+      }
+      ```
+    validation: |
+      - Usa CmsComponentData<InfoCardComponentModel>
+      - ChangeDetectionStrategy.OnPush
+      - Não importa nada de Strapi
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 6: Template e Estilos
+  # ═════════════════════════════════════════════════════════════════
+  - id: 6
+    title: Criar Template e Estilos
+    files:
+      - src/app/shared/components/info-card/info-card.component.html
+      - src/app/shared/components/info-card/info-card.component.scss
+    description: |
+      Template usa async pipe e propriedades canônicas.
+      Estilos são autônomos (BEM naming).
+    template_example: |
+      ```html
+      <ng-container *ngIf="data$ | async as data">
+        <article class="juli-info-card">
+          <div class="juli-info-card__icon" *ngIf="data.icon">
+            {{ data.icon }}
+          </div>
+          <div class="juli-info-card__content">
+            <h3 *ngIf="data.title">{{ data.title }}</h3>
+            <p *ngIf="data.description">{{ data.description }}</p>
+          </div>
+        </article>
+      </ng-container>
+      ```
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 7: Testar
+  # ═════════════════════════════════════════════════════════════════
+  - id: 7
+    title: Testar o Componente
+    description: |
+      Testar em diferentes cenários do mock.
+    commands:
+      - cmd: npm run mock-cms
+        desc: Iniciar mock server
+      - cmd: curl http://localhost:1337/api/pages?filters[slug][$eq]=demo
+        desc: Verificar se InfoCard aparece no JSON
+      - cmd: ng serve
+        desc: Rodar Spartacus e verificar renderização
+    scenarios:
+      - name: demo
+        url: /demo
+        expected: InfoCards renderizam com ícone, título e descrição
+      - name: partial
+        url: /partial
+        expected: InfoCards vazios mostram estado apropriado
+
+  # ═════════════════════════════════════════════════════════════════
+  # PASSO 8: Documentar
+  # ═════════════════════════════════════════════════════════════════
+  - id: 8
+    title: Atualizar Documentação
+    files:
+      - knowledge/component-mapping.yaml
+      - ARCHITECTURE_CHECKLIST.md
+    action: |
+      Adicionar entrada na tabela de componentes:
+      
+      ```yaml
+      mappings:
+        - strapi_type: 'info-card'
+          spartacus_type: 'JuliInfoCardComponent'
+          angular_component: './components/info-card/info-card.component'
+      ```
+
+# ═══════════════════════════════════════════════════════════════════
+# ARQUIVOS MODIFICADOS (RESUMO)
+# ═══════════════════════════════════════════════════════════════════
+
+files_modified:
+  - path: src/app/core/models/cms.model.ts
+    change: +15 linhas (nova interface)
+    critical: true
+    
+  - path: scripts/mock-cms.js
+    change: +15 linhas (dados de exemplo)
+    critical: false (para teste apenas)
+    
+  - path: src/app/core/cms/adapters/strapi-cms.adapter.ts
+    change: +1 linha (typeMapping)
+    critical: true
+    
+  - path: src/app/spartacus/strapi-cms.module.ts
+    change: +5 linhas (config + declarations)
+    critical: true
+    
+  - path: src/app/shared/components/info-card/
+    change: 3 arquivos novos
+    critical: true
+
+# ═══════════════════════════════════════════════════════════════════
+# PRINCÍPIOS SEGUIDOS
+# ═══════════════════════════════════════════════════════════════════
+
+principles:
+  - name: Boundary Rules
+    applied: |
+      - Componente Angular não acessa payload bruto
+      - Apenas adapter conhece estrutura Strapi
+      
+  - name: Model Rules
+    applied: |
+      - Usa modelo canônico InfoCardComponentModel
+      - Type explícito (typeCode)
+      
+  - name: Mapping Rules
+    applied: |
+      - Mapper adicionado ao adapter
+      - Registro centralizado no módulo
+      
+  - name: Rendering Rules
+    applied: |
+      - Baseado em modelo canônico
+      - Nenhum parsing de payload
+      
+  - name: Fallback Rules
+    applied: |
+      - Se tipo não existir → UnknownComponent
+      - Se dados vazios → EmptyState
+
+# ═══════════════════════════════════════════════════════════════════
+# VALIDAÇÃO DE EXTENSIBILIDADE
+# ═══════════════════════════════════════════════════════════════════
+
+validation_checklist:
+  - item: Novo componente adicionado sem modificar código existente
+    status: ✅ Apenas adições
+    
+  - item: Outros componentes continuam funcionando
+    status: ✅ Nenhum breaking change
+    
+  - item: Fallback funciona automaticamente
+    status: ✅ Via UnknownComponent global
+    
+  - item: Arquitetura não vaza Strapi
+    status: ✅ Modelo canônico isolado
+    
+  - item: Documentação atualizada
+    status: ✅ Este arquivo
+
+time_tracking:
+  estimated: 15 minutos
+  actual: ~15 minutos
+  breakdown:
+    modelo: 2 min
+    schema: 2 min
+    mapper: 1 min
+    registry: 2 min
+    component: 5 min
+    testes: 3 min

@@ -1,0 +1,24 @@
+<ng-container *ngIf="page$ | async as page">
+  <app-not-found-page *ngIf="page.found === false; else pageContent"></app-not-found-page>
+
+  <ng-template #pageContent>
+    <div class="cms-page">
+      <header class="cms-page__hero" *ngIf="page.title || page.seo?.description">
+        <h1 *ngIf="page.title">{{ page.title }}</h1>
+        <p *ngIf="page.seo?.description">{{ page.seo?.description }}</p>
+      </header>
+
+      <ng-container *ngFor="let regionName of regionOrder; trackBy: trackByRegion">
+        <section
+          class="cms-region cms-region--{{ regionName }}"
+          *ngIf="page.regions[regionName]?.components?.length"
+        >
+          <app-cms-component-host
+            *ngFor="let component of page.regions[regionName].components; trackBy: trackByComponent"
+            [component]="component"
+          ></app-cms-component-host>
+        </section>
+      </ng-container>
+    </div>
+  </ng-template>
+</ng-container>

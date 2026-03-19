@@ -1,0 +1,15 @@
+# Juli CMS Integration: Strapi + Spartacus
+
+## System Purpose
+This project implements a decoupled CMS integration for SAP Commerce Composable Storefront (Spartacus) using Strapi as the headless editorial layer. It aims to provide a modular, extensible, and vendor-agnostic way to manage landing pages and visual components.
+
+## Core Principles
+1. **Decoupled Editorial:** Content editors work in Strapi; Spartacus renders the content.
+2. **Canonical Abstraction:** An internal model (Canonical Model) bridges Strapi and Spartacus, preventing vendor lock-in.
+3. **Non-Intrusive Extension:** Use Spartacus adapters and converters instead of modifying core libraries.
+4. **Future-Ready:** Architecture supports transitioning to "Ubris" backend in the future.
+
+## Key Boundaries
+- **Editorial (Strapi):** Content structure, validation, media management, and API endpoints.
+- **Integration Layer (Adapter/Converter):** Translating Strapi's JSON response to the Canonical Model.
+- **Rendering Layer (Spartacus/Angular):** Mapping CMS types to Angular components and applying styles/logic.

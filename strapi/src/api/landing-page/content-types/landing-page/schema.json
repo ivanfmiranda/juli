@@ -1,0 +1,41 @@
+{
+  "kind": "collectionType",
+  "collectionName": "landing_pages",
+  "info": {
+    "singularName": "landing-page",
+    "pluralName": "landing-pages",
+    "displayName": "Landing Page",
+    "description": "Customizable landing pages for Spartacus"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo-metadata"
+    },
+    "content_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.hero-banner",
+        "cms.simple-banner",
+        "cms.rich-text",
+        "cms.cta-block",
+        "cms.product-teaser",
+        "cms.category-teaser"
+      ]
+    }
+  }
+}

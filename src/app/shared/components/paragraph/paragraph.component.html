@@ -1,0 +1,3 @@
+<ng-container *ngIf="data$ | async as data">
+  <div class="juli-paragraph" [innerHTML]="data.content || ''"></div>
+</ng-container>

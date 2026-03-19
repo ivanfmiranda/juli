@@ -1,0 +1,32 @@
+<ng-container *ngIf="data$ | async as data">
+  <article 
+    class="juli-info-card"
+    [class.juli-info-card--clickable]="data.link"
+  >
+    <!-- Ícone -->
+    <div class="juli-info-card__icon" *ngIf="data.icon">
+      <span aria-hidden="true">{{ data.icon }}</span>
+    </div>
+    
+    <!-- Conteúdo -->
+    <div class="juli-info-card__content">
+      <h3 class="juli-info-card__title" *ngIf="data.title">
+        {{ data.title }}
+      </h3>
+      
+      <p class="juli-info-card__description" *ngIf="data.description">
+        {{ data.description }}
+      </p>
+    </div>
+    
+    <!-- Link wrapper (se houver link) -->
+    <a 
+      *ngIf="data.link"
+      [routerLink]="data.link"
+      class="juli-info-card__link"
+      [attr.aria-label]="'Saiba mais sobre ' + data.title"
+    >
+      <span class="juli-info-card__arrow">→</span>
+    </a>
+  </article>
+</ng-container>

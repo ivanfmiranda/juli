@@ -1,0 +1,23 @@
+<ng-container *ngIf="product$ | async as product; else missing">
+  <section class="product-page" *ngIf="product; else missing">
+    <div class="product-page__media">
+      <img *ngIf="imageUrl(product)"
+           [src]="imageUrl(product)"
+           [alt]="imageAlt(product)">
+    </div>
+    <div class="product-page__summary">
+      <p class="eyebrow">Ubris live data</p>
+      <h1>{{ product.name }}</h1>
+      <p class="price">{{ product.price?.formattedValue }}</p>
+      <p class="stock" [class.out]="product.stock?.stockLevelStatus !== 'IN_STOCK' && product.stock?.stockLevelStatus !== 'LOW_STOCK'">
+        {{ (product.stock?.stockLevelStatus === 'IN_STOCK' || product.stock?.stockLevelStatus === 'LOW_STOCK') ? 'In stock' : 'Stock unavailable' }}
+      </p>
+      <p class="description">{{ product.summary || product.description }}</p>
+      <button type="button" class="cta" (click)="addToCart(product.code)">Add to cart</button>
+    </div>
+  </section>
+</ng-container>
+
+<ng-template #missing>
+  <app-not-found-page></app-not-found-page>
+</ng-template>

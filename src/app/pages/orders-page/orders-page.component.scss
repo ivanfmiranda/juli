@@ -1,0 +1,22 @@
+.orders-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.order-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #526075;
+}

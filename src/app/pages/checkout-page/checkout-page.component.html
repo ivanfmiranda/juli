@@ -1,0 +1,42 @@
+<section class="checkout-page" *ngIf="cart$ | async as cart">
+  <header>
+    <p class="eyebrow">Checkout</p>
+    <h1>Complete your order</h1>
+  </header>
+
+  <div class="checkout-grid">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="checkout-form">
+      <label>
+        Shipping address
+        <input formControlName="addressLine" type="text" placeholder="Rua Commerce, 100">
+      </label>
+
+      <label>
+        Payment method
+        <select formControlName="paymentMethod">
+          <option value="card">Card</option>
+          <option value="pix">Pix</option>
+          <option value="invoice">Invoice</option>
+        </select>
+      </label>
+
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <button type="submit" [disabled]="submitting">
+        {{ submitting ? 'Submitting...' : 'Place order' }}
+      </button>
+    </form>
+
+    <aside class="checkout-summary">
+      <h2>Order summary</h2>
+      <div *ngFor="let entry of cart.entries">
+        <span>{{ entry.product?.name }} x {{ entry.quantity }}</span>
+        <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+      </div>
+      <div class="total-row">
+        <span>Total</span>
+        <strong>{{ cart.totalPrice?.formattedValue }}</strong>
+      </div>
+    </aside>
+  </div>
+</section>

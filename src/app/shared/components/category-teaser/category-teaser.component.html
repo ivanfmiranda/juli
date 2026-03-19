@@ -1,0 +1,12 @@
+<ng-container *ngIf="data$ | async as data">
+  <article class="juli-category-teaser">
+    <a [routerLink]="data.link || '/'">
+      <img *ngIf="data.imageUrl" [src]="data.imageUrl" [alt]="data.title || 'Category teaser'">
+      <div class="juli-category-teaser__content">
+        <p class="eyebrow">Category</p>
+        <h3>{{ data.title }}</h3>
+        <p *ngIf="data.description">{{ data.description }}</p>
+      </div>
+    </a>
+  </article>
+</ng-container>

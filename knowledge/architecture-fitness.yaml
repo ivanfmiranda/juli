@@ -1,0 +1,138 @@
+# Juli Architecture Fitness Checks
+# Propósito: Garantir que a integridade da solução não degrade com o tempo.
+# Regra de Ouro: VALIDAR, ENDURECER, COMPROVAR - Não reestruturar por vaidade.
+
+boundary-rules:
+  - id: NO_STRAPI_IN_UI
+    description: "Nenhum componente Angular pode acessar payload bruto do Strapi (__component, data.attributes)."
+    enforcement: "ACL Strategy (Adapter/Converter)"
+    check: "Grep por '__component', 'attributes', 'data.data' em /shared/components"
+    severity: "CRITICAL"
+    
+  - id: RENDERER_STRAPI_AGNOSTIC
+    description: "Nenhum renderer conhece a estrutura do Strapi."
+    enforcement: "Canonical Model Usage"
+    check: "Verificar imports em componentes - só podem importar de core/models/cms.model"
+    severity: "CRITICAL"
+    
+  - id: ACL_STRICT_DTO
+    description: "Somente a ACL/converter pode acessar DTOs brutos."
+    enforcement: "Directory isolation"
+    check: "DTOs só podem ser acessados em core/cms/adapters/"
+    severity: "CRITICAL"
+
+model-rules:
+  - id: CANONICAL_MANDATORY
+    description: "Todos os componentes usam modelo canônico."
+    enforcement: "TypeScript interfaces em core/models/cms.model.ts"
+    check: "Todo componente usa CmsComponentData<ModeloEspecifico>"
+    severity: "HIGH"
+    
+  - id: EXPLICIT_COMPONENT_TYPE
+    description: "Todos os componentes têm tipo explícito."
+    enforcement: "typeCode em interface CmsComponent"
+    check: "Todos os mappers retornam typeCode definido"
+    severity: "HIGH"
+    
+  - id: SERIALIZABLE_MODELS
+    description: "Modelos são serializáveis (interfaces puras, sem métodos)."
+    enforcement: "Interfaces TypeScript apenas com propriedades"
+    check: "Nenhuma interface tem métodos ou classes com lógica"
+    severity: "MEDIUM"
+
+mapping-rules:
+  - id: MAPPER_OR_FALLBACK
+    description: "Todo tipo CMS deve ter mapper ou fallback."
+    enforcement: "UnknownComponentRenderer para tipos não mapeados"
+    check: "mapComponent em adapter sempre retorna um componente válido"
+    severity: "HIGH"
+    
+  - id: CENTRALIZED_REGISTRY
+    description: "Registry deve ser centralizado (StrapiCmsModule)."
+    enforcement: "ConfigModule.withConfig no módulo"
+    check: "Todas as entradas cmsComponents estão no módulo central"
+    severity: "MEDIUM"
+    
+  - id: SAFE_MAPPING
+    description: "Ausência de mapper não quebra a aplicação (UnknownComponent)."
+    enforcement: "UnknownComponent registrado e configurado"
+    check: "Fallback aplicado automaticamente pelo container"
+    severity: "CRITICAL"
+
+rendering-rules:
+  - id: CANONICAL_BASED_RENDERING
+    description: "Renderização é baseada no modelo canônico."
+    enforcement: "Components usam data$ | async do CmsComponentData"
+    check: "Nenhum parse manual de payload nos templates"
+    severity: "HIGH"
+    
+  - id: REGION_BASED_LAYOUT
+    description: "Layout é baseado em regiões (Slots)."
+    enforcement: "CmsPage com slots mapeados para Section1, Section2, etc"
+    check: "Templates Spartacus referenciam slots por nome"
+    severity: "MEDIUM"
+    
+  - id: NO_RAW_PAYLOAD_PARSING
+    description: "Nenhum componente faz parsing de payload bruto."
+    enforcement: "Adapter/Converter faz toda transformação"
+    check: "Templates usam propriedades do modelo canônico diretamente"
+    severity: "CRITICAL"
+
+fallback-rules:
+  - id: CONTROLLED_FALLBACK
+    description: "Todo erro deve resultar em fallback controlado."
+    enforcement: "FallbackPolicyService centraliza decisões"
+    check: "Nenhum erro de CMS quebra a aplicação (testar com mock error)"
+    severity: "CRITICAL"
+    
+  - id: NO_APP_CRASH
+    description: "Nenhum erro no CMS quebra a aplicação."
+    enforcement: "Try-catch no adapter + fallback components"
+    check: "Mock /page/error não quebra a UI"
+    severity: "CRITICAL"
+    
+  - id: GRACEFUL_DEGRADATION
+    description: "Degradação gradual - vazio > erro > crash"
+    enforcement: "EmptyState > ErrorState > UnknownComponent hierarquia"
+    check: "Cenários parciais mostram o que funciona, escondem o que não funciona"
+    severity: "HIGH"
+
+integration-rules:
+  - id: UBRS_READY
+    description: "Arquitetura preparada para integração Ubris futura."
+    enforcement: "CommerceResolver interface e injeção de dependência"
+    check: "ProductTeaser funciona com mock hoje, pronto para Ubris amanhã"
+    severity: "MEDIUM"
+    
+  - id: CMS_COMMERCE_SEPARATION
+    description: "CMS e Commerce são responsabilidades separadas."
+    enforcement: "CMS traz código/ID; Commerce resolver traz dados"
+    check: "Nenhum componente CMS chama API de produto diretamente"
+    severity: "HIGH"
+
+test-rules:
+  - id: MOCK_COVERAGE
+    description: "Mock CMS cobre todos os cenários de erro."
+    enforcement: "scripts/mock-cms.js com /page/* endpoints"
+    check: "home, partial, unknown, not-found, error, empty testáveis"
+    severity: "HIGH"
+    
+  - id: EXTENSION_TESTED
+    description: "Novo componente pode ser adicionado sem modificar código existente."
+    enforcement: "Prova via InfoCardComponent"
+    check: "Adicionar InfoCard não requer mudanças em adapter existente"
+    severity: "HIGH"
+
+# Validação Automatizada (para CI/CD)
+validation_commands:
+  - name: "Check Strapi Leaks"
+    command: "grep -r '__component\\|attributes\\|data.data' src/app/shared/components || echo 'No leaks found'"
+    fail_on_match: true
+    
+  - name: "Check Canonical Usage"
+    command: "grep -r 'CmsComponentData' src/app/shared/components | wc -l"
+    min_count: 1
+    
+  - name: "Check Fallback Imports"
+    command: "grep -r 'UnknownComponent\\|ErrorComponent' src/app/spartacus/strapi-cms.module.ts"
+    fail_on_missing: true

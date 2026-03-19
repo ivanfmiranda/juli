@@ -1,0 +1,27 @@
+<div class="app-shell">
+  <header class="app-header">
+    <a class="brand" routerLink="/">Juli</a>
+
+    <form class="search" (ngSubmit)="search()">
+      <input type="search" [formControl]="searchControl" placeholder="Search Ubris catalog">
+      <button type="submit">Search</button>
+    </form>
+
+    <nav class="app-nav">
+      <a routerLink="/page/home">CMS</a>
+      <ng-container *ngIf="session$ | async as session; else guestLinks">
+        <span>{{ session.username }}</span>
+        <a routerLink="/cart">Cart <span *ngIf="cartCount$ | async as count">({{ count }})</span></a>
+        <a routerLink="/account/orders">Orders</a>
+        <button type="button" (click)="logout()">Logout</button>
+      </ng-container>
+      <ng-template #guestLinks>
+        <a routerLink="/login">Login</a>
+      </ng-template>
+    </nav>
+  </header>
+
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+</div>

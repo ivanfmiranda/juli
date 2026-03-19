@@ -1,0 +1,49 @@
+# Strapi Content Model for MVP
+
+content_types:
+  LandingPage:
+    attributes:
+      title: 'string'
+      slug: 'uid' (unique)
+      seo: 'component (SeoMetadata)'
+      content_slots: 'dynamic zone' (HeroBanner, SimpleBanner, RichText, CtaBlock, ProductTeaser, CategoryTeaser)
+
+  ProductPage:
+    attributes:
+      slug: 'uid' (unique)
+      top_slots: 'dynamic zone'
+      bottom_slots: 'dynamic zone'
+
+components:
+  SeoMetadata:
+    title: 'string'
+    description: 'text'
+    keywords: 'string'
+    og_image: 'media'
+
+  HeroBanner:
+    title: 'string'
+    subtitle: 'string'
+    cta_label: 'string'
+    cta_link: 'string'
+    background_image: 'media'
+
+  SimpleBanner:
+    image: 'media'
+    link: 'string'
+
+  RichText:
+    content: 'rich_text'
+
+  CtaBlock:
+    title: 'string'
+    button_label: 'string'
+    button_link: 'string'
+
+  ProductTeaser:
+    product_code: 'string'
+    teaser_text: 'string'
+
+  CategoryTeaser:
+    category_code: 'string'
+    teaser_image: 'media'

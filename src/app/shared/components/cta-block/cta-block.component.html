@@ -1,0 +1,12 @@
+<ng-container *ngIf="data$ | async as data">
+  <section class="juli-cta-block">
+    <div>
+      <p class="eyebrow">Action</p>
+      <h2 *ngIf="data.title">{{ data.title }}</h2>
+      <p *ngIf="data.description">{{ data.description }}</p>
+    </div>
+    <a *ngIf="data.buttonLink || data.link" [routerLink]="data.buttonLink || data.link" class="btn">
+      {{ data.buttonLabel || 'Explore' }}
+    </a>
+  </section>
+</ng-container>

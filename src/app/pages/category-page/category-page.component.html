@@ -1,0 +1,33 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section class="listing-page">
+    <header class="listing-page__header">
+      <p class="eyebrow">Category</p>
+      <h1>{{ vm.name || 'Category' }}</h1>
+      <p>{{ vm.total }} products</p>
+    </header>
+
+    <div class="listing-grid" *ngIf="vm.products.length; else noProducts">
+      <article class="listing-card" *ngFor="let product of vm.products">
+        <a [routerLink]="product.url || ['/product', product.code]">
+          <img *ngIf="imageUrl(product)" [src]="imageUrl(product)" [alt]="imageAlt(product)">
+          <h2>{{ product.name }}</h2>
+          <p>{{ product.price?.formattedValue }}</p>
+        </a>
+        <button type="button" class="btn-add" (click)="addToCart(product.code)">Add to cart</button>
+      </article>
+    </div>
+
+    <ng-template #noProducts>
+      <section class="listing-empty">
+        <h2>No products published for this category yet</h2>
+        <p>Publish catalog content in Strapi or add items to the mapped category in Ubris.</p>
+      </section>
+    </ng-template>
+
+    <footer class="listing-pagination">
+      <button type="button" (click)="changePage(vm.page - 1)" [disabled]="vm.page <= 0">Previous</button>
+      <span>Page {{ vm.page + 1 }} of {{ vm.totalPages }}</span>
+      <button type="button" (click)="changePage(vm.page + 1)" [disabled]="vm.page + 1 >= vm.totalPages">Next</button>
+    </footer>
+  </section>
+</ng-container>

@@ -1,0 +1,46 @@
+<ng-container *ngIf="vm$ | async as vm">
+  <section class="listing-page">
+    <header class="listing-page__header">
+      <p class="eyebrow">Search</p>
+      <h1 *ngIf="vm.query; else emptySearch">Results for "{{ vm.query }}"</h1>
+      <ng-template #emptySearch><h1>Search catalog</h1></ng-template>
+      <p>{{ vm.total }} products</p>
+    </header>
+
+    <div class="listing-grid" *ngIf="vm.products.length; else noResults">
+      <article class="listing-card" *ngFor="let product of vm.products">
+        <a [routerLink]="product.url || ['/product', product.code]">
+          <img *ngIf="imageUrl(product)" [src]="imageUrl(product)" [alt]="imageAlt(product)">
+          <h2>{{ product.name }}</h2>
+          <p>{{ product.price?.formattedValue }}</p>
+        </a>
+        <button type="button" class="btn-add" (click)="addToCart(product.code)">Add to cart</button>
+      </article>
+    </div>
+
+    <ng-template #noResults>
+      <section class="listing-empty">
+        <h2>No products found</h2>
+        <p>Try a different query or browse the catalog from a CMS page.</p>
+      </section>
+    </ng-template>
+
+    <footer class="listing-pagination" *ngIf="vm.page.pagination as pagination">
+      <button
+        type="button"
+        (click)="changePage(vm.query, (pagination.currentPage || 0) - 1)"
+        [disabled]="(pagination.currentPage || 0) <= 0"
+      >
+        Previous
+      </button>
+      <span>Page {{ (pagination.currentPage || 0) + 1 }} of {{ pagination.totalPages || 1 }}</span>
+      <button
+        type="button"
+        (click)="changePage(vm.query, (pagination.currentPage || 0) + 1)"
+        [disabled]="(pagination.currentPage || 0) + 1 >= (pagination.totalPages || 1)"
+      >
+        Next
+      </button>
+    </footer>
+  </section>
+</ng-container>

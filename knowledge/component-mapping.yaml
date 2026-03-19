@@ -1,0 +1,33 @@
+# Strapi CMS to Spartacus Component Mapping
+
+mappings:
+  - strapi_type: 'hero-banner'
+    spartacus_type: 'JuliHeroBannerComponent'
+    angular_component: './components/hero-banner/hero-banner.component'
+  
+  - strapi_type: 'simple-banner'
+    spartacus_type: 'JuliSimpleBannerComponent'
+    angular_component: './components/simple-banner/simple-banner.component'
+  
+  - strapi_type: 'rich-text'
+    spartacus_type: 'CMSParagraphComponent' # Built-in Spartacus or custom
+    angular_component: './components/rich-text/rich-text.component'
+  
+  - strapi_type: 'cta-block'
+    spartacus_type: 'JuliCtaBlockComponent'
+    angular_component: './components/cta-block/cta-block.component'
+  
+  - strapi_type: 'product-teaser'
+    spartacus_type: 'JuliProductTeaserComponent'
+    angular_component: './components/product-teaser/product-teaser.component'
+  
+  - strapi_type: 'category-teaser'
+    spartacus_type: 'JuliCategoryTeaserComponent'
+    angular_component: './components/category-teaser/category-teaser.component'
+
+rendering_logic:
+  default_slot: 'Section1'
+  page_types:
+    - LandingPage
+    - ProductPage
+    - CategoryPage

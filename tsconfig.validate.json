@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ES2020",
+    "moduleResolution": "Node",
+    "strict": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2020", "DOM"],
+    "baseUrl": ".",
+    "typeRoots": ["./types"]
+  },
+  "include": [
+    "types/**/*.d.ts",
+    "src/app/core/models/cms.model.ts",
+    "src/app/core/cms/adapters/strapi-cms.adapter.ts",
+    "src/app/core/cms/adapters/__tests__/strapi-cms.adapter.spec.ts",
+    "src/app/core/cms/fallback/unknown-component.component.ts",
+    "src/app/core/cms/fallback/error-component.component.ts",
+    "src/app/shared/components/hero-banner/hero-banner.component.ts",
+    "src/app/shared/components/product-teaser/product-teaser.component.ts",
+    "src/app/shared/components/info-card/info-card.component.ts",
+    "src/app/shared/components/paragraph/paragraph.component.ts",
+    "src/app/shared/components/simple-banner/simple-banner.component.ts",
+    "src/app/spartacus/strapi-cms.module.ts"
+  ]
+}
