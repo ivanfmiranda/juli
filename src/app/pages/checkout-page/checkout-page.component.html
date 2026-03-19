@@ -74,7 +74,7 @@
       <section class="form-section review-step">
         <h2>Review and place order</h2>
         <p>
-          The review step recalculates totals and validates stock before place-order. Any form change after review marks the review as stale.
+          The flow is now explicit: save address, load delivery modes, select delivery, run review/reprice, and only then place the order.
         </p>
       </section>
     </form>
@@ -94,6 +94,33 @@
         <strong>{{ cart.totalPrice?.formattedValue }}</strong>
       </div>
 
+      <section class="delivery-section">
+        <h3>Delivery mode</h3>
+        <p class="delivery-copy">
+          Save the address first. Delivery options are bound to the current checkout and feed the review total.
+        </p>
+
+        <button type="button" class="secondary-action" (click)="saveAddressAndLoadDelivery()" [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
+          {{ loadingDelivery ? 'Loading delivery...' : 'Save address and load delivery' }}
+        </button>
+
+        <div class="delivery-options" *ngIf="deliveryOptions.length">
+          <label class="delivery-option" *ngFor="let option of deliveryOptions" [class.selected]="selectedDeliveryCode === option.code">
+            <input
+              type="radio"
+              name="deliveryMode"
+              [value]="option.code"
+              [checked]="selectedDeliveryCode === option.code"
+              (change)="selectDeliveryMode(option.code)">
+            <span class="delivery-option-copy">
+              <strong>{{ option.name }}</strong>
+              <small *ngIf="option.description">{{ option.description }}</small>
+              <small>{{ formatMoney(option.cost, option.currency || 'USD') }} · {{ option.estimatedDays }} day(s)</small>
+            </span>
+          </label>
+        </div>
+      </section>
+
       <div class="review-actions">
         <button type="button" (click)="review()" [disabled]="reviewButtonDisabled">
           {{ reviewing ? 'Reviewing...' : 'Review order' }}
@@ -108,8 +135,12 @@
           <p><strong>Status:</strong> {{ review.readyToPlace ? 'Ready to place' : 'Review blocked' }}</p>
           <p><strong>Checkout ID:</strong> {{ review.checkoutId }}</p>
           <p><strong>Address validated:</strong> {{ review.addressValidated ? 'Yes' : 'No' }}</p>
+          <p><strong>Delivery validated:</strong> {{ review.deliveryValidated ? 'Yes' : 'No' }}</p>
           <p><strong>Pricing validated:</strong> {{ review.pricingValidated ? 'Yes' : 'No' }}</p>
           <p><strong>Stock validated:</strong> {{ review.stockValidated ? 'Yes' : 'No' }}</p>
+          <p *ngIf="review.deliveryMode"><strong>Delivery mode:</strong> {{ review.deliveryMode.name }} ({{ review.deliveryMode.estimatedDays }} day(s))</p>
+          <p><strong>Delivery cost:</strong> {{ formatMoney(review.deliveryCost, review.currency || review.deliveryMode?.currency || 'USD') }}</p>
+          <p><strong>Reviewed total:</strong> {{ formatMoney(review.total, review.currency || 'USD') }}</p>
           <p *ngIf="review.updatedAt"><strong>Updated:</strong> {{ review.updatedAt | date: 'medium' }}</p>
 
           <div class="review-messages" *ngIf="review.messages.length">

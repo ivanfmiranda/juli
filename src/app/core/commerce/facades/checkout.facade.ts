@@ -3,6 +3,8 @@ import { Observable } from 'rxjs';
 import {
   JuliCheckoutAddressState,
   JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutDeliveryModeSelection,
+  JuliCheckoutDeliveryOptionsState,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
   JuliCheckoutSubmission
@@ -15,6 +17,14 @@ export class JuliCheckoutFacade {
 
   saveAddress(body: JuliCheckoutAddressUpsertRequest): Observable<JuliCheckoutAddressState> {
     return this.connector.saveAddress(body);
+  }
+
+  deliveryOptions(checkoutId: string): Observable<JuliCheckoutDeliveryOptionsState> {
+    return this.connector.deliveryOptions(checkoutId);
+  }
+
+  setDeliveryMode(checkoutId: string, code: string): Observable<JuliCheckoutDeliveryModeSelection> {
+    return this.connector.setDeliveryMode(checkoutId, code);
   }
 
   review(checkoutId: string): Observable<JuliCheckoutReviewSnapshot> {

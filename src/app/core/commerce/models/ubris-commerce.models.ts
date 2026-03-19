@@ -70,6 +70,32 @@ export interface JuliCheckoutAddressState {
   updatedAt?: string;
 }
 
+export interface JuliDeliveryOption {
+  code: string;
+  name: string;
+  description?: string;
+  cost?: number;
+  currency?: string;
+  estimatedDays: number;
+  available: boolean;
+  type: string;
+}
+
+export interface JuliCheckoutDeliveryOptionsState {
+  checkoutId: string;
+  status: string;
+  selectedCode?: string;
+  options: JuliDeliveryOption[];
+  updatedAt?: string;
+}
+
+export interface JuliCheckoutDeliveryModeSelection {
+  checkoutId: string;
+  status: string;
+  deliveryMode: JuliDeliveryOption;
+  updatedAt?: string;
+}
+
 export interface JuliCheckoutReviewItem {
   productCode: string;
   quantity: number;
@@ -86,6 +112,8 @@ export interface JuliCheckoutReviewSnapshot {
   paymentMethod: string;
   status: string;
   address: JuliCheckoutAddress;
+  deliveryMode?: JuliDeliveryOption;
+  deliveryCost?: number;
   items: JuliCheckoutReviewItem[];
   totalItems: number;
   subTotal?: number;
@@ -95,6 +123,7 @@ export interface JuliCheckoutReviewSnapshot {
   stockValidated: boolean;
   pricingValidated: boolean;
   addressValidated: boolean;
+  deliveryValidated: boolean;
   readyToPlace: boolean;
   messages: string[];
   warnings: string[];

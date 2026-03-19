@@ -6,6 +6,8 @@ import {
   GatewayEnvelope,
   JuliCheckoutAddressState,
   JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutDeliveryModeSelection,
+  JuliCheckoutDeliveryOptionsState,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
   JuliCheckoutSubmission
@@ -19,6 +21,19 @@ export class UbrisCheckoutAdapter {
     return this.http.post<GatewayEnvelope<JuliCheckoutAddressState>>(
       `${environment.ubrisApiBaseUrl}/api/bff/checkout/address`,
       body
+    );
+  }
+
+  getDeliveryOptions(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutDeliveryOptionsState>> {
+    return this.http.get<GatewayEnvelope<JuliCheckoutDeliveryOptionsState>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/delivery-options`
+    );
+  }
+
+  setDeliveryMode(checkoutId: string, code: string): Observable<GatewayEnvelope<JuliCheckoutDeliveryModeSelection>> {
+    return this.http.put<GatewayEnvelope<JuliCheckoutDeliveryModeSelection>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/delivery-mode`,
+      { code }
     );
   }
 

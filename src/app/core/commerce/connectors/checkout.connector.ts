@@ -5,9 +5,12 @@ import { UbrisCheckoutAdapter } from '../adapters/checkout.adapter';
 import {
   JuliCheckoutAddressState,
   JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutDeliveryModeSelection,
+  JuliCheckoutDeliveryOptionsState,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
-  JuliCheckoutSubmission
+  JuliCheckoutSubmission,
+  JuliDeliveryOption
 } from '../models/ubris-commerce.models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +35,35 @@ export class UbrisCheckoutConnector {
     );
   }
 
+  deliveryOptions(checkoutId: string): Observable<JuliCheckoutDeliveryOptionsState> {
+    return this.adapter.getDeliveryOptions(checkoutId).pipe(
+      map(response => {
+        const data = response.data ?? {} as JuliCheckoutDeliveryOptionsState;
+        return {
+          checkoutId: this.requireString((data as any).checkoutId),
+          status: this.requireString((data as any).status),
+          selectedCode: this.asString((data as any).selectedCode) ?? undefined,
+          options: this.asDeliveryOptions((data as any).options),
+          updatedAt: this.asString((data as any).updatedAt) ?? undefined
+        };
+      })
+    );
+  }
+
+  setDeliveryMode(checkoutId: string, code: string): Observable<JuliCheckoutDeliveryModeSelection> {
+    return this.adapter.setDeliveryMode(checkoutId, code).pipe(
+      map(response => {
+        const data = response.data ?? {} as JuliCheckoutDeliveryModeSelection;
+        return {
+          checkoutId: this.requireString((data as any).checkoutId),
+          status: this.requireString((data as any).status),
+          deliveryMode: this.asDeliveryOption((data as any).deliveryMode),
+          updatedAt: this.asString((data as any).updatedAt) ?? undefined
+        };
+      })
+    );
+  }
+
   review(checkoutId: string): Observable<JuliCheckoutReviewSnapshot> {
     return this.adapter.review(checkoutId).pipe(
       map(response => {
@@ -44,6 +76,8 @@ export class UbrisCheckoutConnector {
           paymentMethod: this.requireString((data as any).paymentMethod),
           status: this.requireString((data as any).status),
           address: (data as any).address,
+          deliveryMode: this.optionalDeliveryOption((data as any).deliveryMode),
+          deliveryCost: this.asNumber((data as any).deliveryCost),
           items: Array.isArray((data as any).items) ? (data as any).items : [],
           totalItems: this.asNumber((data as any).totalItems) ?? 0,
           subTotal: this.asNumber((data as any).subTotal),
@@ -53,6 +87,7 @@ export class UbrisCheckoutConnector {
           stockValidated: Boolean((data as any).stockValidated),
           pricingValidated: Boolean((data as any).pricingValidated),
           addressValidated: Boolean((data as any).addressValidated),
+          deliveryValidated: Boolean((data as any).deliveryValidated),
           readyToPlace: Boolean((data as any).readyToPlace),
           messages: this.asStringArray((data as any).messages),
           warnings: this.asStringArray((data as any).warnings),
@@ -96,6 +131,31 @@ export class UbrisCheckoutConnector {
     );
   }
 
+  private asDeliveryOptions(value: unknown): JuliDeliveryOption[] {
+    return Array.isArray(value) ? value.map(item => this.asDeliveryOption(item)) : [];
+  }
+
+  private optionalDeliveryOption(value: unknown): JuliDeliveryOption | undefined {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    return this.asDeliveryOption(value);
+  }
+
+  private asDeliveryOption(value: unknown): JuliDeliveryOption {
+    const raw = (value ?? {}) as Record<string, unknown>;
+    return {
+      code: this.requireString(raw.code),
+      name: this.requireString(raw.name),
+      description: this.asString(raw.description) ?? undefined,
+      cost: this.asNumber(raw.cost),
+      currency: this.asString(raw.currency) ?? undefined,
+      estimatedDays: this.asNumber(raw.estimatedDays) ?? 0,
+      available: Boolean(raw.available),
+      type: this.requireString(raw.type)
+    };
+  }
+
   private asString(value: unknown): string | null {
     if (value === null || value === undefined) {
       return null;
@@ -108,7 +168,11 @@ export class UbrisCheckoutConnector {
     if (typeof value === 'number' && Number.isFinite(value)) {
       return value;
     }
-    const parsed = Number(this.asString(value));
+    const normalized = this.asString(value);
+    if (normalized === null) {
+      return undefined;
+    }
+    const parsed = Number(normalized);
     return Number.isFinite(parsed) ? parsed : undefined;
   }
 

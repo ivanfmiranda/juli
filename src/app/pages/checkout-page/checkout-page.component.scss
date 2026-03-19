@@ -113,6 +113,59 @@ button:disabled {
   margin: 0;
 }
 
+.delivery-section {
+  display: grid;
+  gap: 0.85rem;
+  border-top: 1px solid #eef2f7;
+  padding-top: 1rem;
+}
+
+.delivery-section h3,
+.delivery-copy {
+  margin: 0;
+}
+
+.delivery-copy {
+  color: #526075;
+}
+
+.secondary-action {
+  background: #1e293b;
+}
+
+.delivery-options {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.delivery-option {
+  display: flex;
+  gap: 0.85rem;
+  align-items: flex-start;
+  border: 1px solid #d8dee8;
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+}
+
+.delivery-option.selected {
+  border-color: #0b5fff;
+  background: #eff6ff;
+}
+
+.delivery-option input {
+  margin-top: 0.2rem;
+}
+
+.delivery-option-copy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.delivery-option-copy small {
+  color: #526075;
+}
+
 .review-actions {
   display: grid;
   gap: 0.85rem;
