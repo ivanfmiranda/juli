@@ -11,6 +11,21 @@ Official Angular + Spartacus storefront for Ubris headless commerce with Strapi 
 - Commerce source of truth: Ubris headless through `gateway-bff`
 - Rendering model: Angular client runtime with CMS-driven pages and live commerce enrichment
 
+## Official Frontend Policy
+
+There is a single supported frontend path for this initiative:
+
+- `juli`
+
+Explicitly out of scope:
+
+- parallel storefront experiments
+- legacy storefront stabilization work
+- cosmetic improvements to non-official frontend shells
+- any checkout evolution outside the `juli` runtime and the supporting Ubris contracts
+
+Legacy or historical frontend artifacts may still exist elsewhere for reference, but they are not an active delivery path and must not receive new feature work.
+
 This repository does not maintain a parallel storefront path. The supported runtime is:
 
 1. Strapi running on `http://localhost:1337`
@@ -67,6 +82,7 @@ Current implementation note:
 - cart, checkout and account are functional and integrated with Ubris
 - they are not yet a fully native reuse of every Spartacus commerce flow module
 - the runtime path is still official and production-oriented, but that detail matters for future convergence work
+- current convergence priority is backend and integration preparation for more native Spartacus commerce flows, not parallel frontend work
 
 ## Prerequisites
 
