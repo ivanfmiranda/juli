@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject } from 'rxjs';
-import { finalize, takeUntil } from 'rxjs/operators';
+import { Subject, forkJoin, of } from 'rxjs';
+import { finalize, switchMap, takeUntil } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   JuliCartFacade,
   JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutPaymentInitializeState,
+  JuliCheckoutPaymentMethod,
+  JuliCheckoutPaymentStatus,
   JuliCheckoutFacade,
   JuliCheckoutAddressState,
-  JuliCheckoutDeliveryModeSelection,
   JuliCheckoutReviewSnapshot
 } from '../../core/commerce';
 import { JuliDeliveryOption } from '../../core/commerce/models/ubris-commerce.models';
@@ -32,7 +34,7 @@ export class CheckoutPageComponent implements OnDestroy {
     countryIso: ['BR', Validators.required],
     phone: [''],
     notes: [''],
-    paymentMethod: ['card', Validators.required]
+    paymentMethod: ['CARD', Validators.required]
   });
 
   private readonly destroy$ = new Subject<void>();
@@ -40,10 +42,14 @@ export class CheckoutPageComponent implements OnDestroy {
   checkoutId?: string;
   savedAddress?: JuliCheckoutAddressState;
   deliveryOptions: JuliDeliveryOption[] = [];
+  paymentMethods: JuliCheckoutPaymentMethod[] = [];
   selectedDeliveryCode?: string;
+  paymentInitialization?: JuliCheckoutPaymentInitializeState;
+  paymentStatus?: JuliCheckoutPaymentStatus;
   reviewSnapshot?: JuliCheckoutReviewSnapshot;
   reviewStale = false;
   loadingDelivery = false;
+  loadingPaymentMethods = false;
   reviewing = false;
   submitting = false;
   errorMessage?: string;
@@ -57,7 +63,7 @@ export class CheckoutPageComponent implements OnDestroy {
     private readonly router: Router
   ) {
     this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.invalidateReview('Checkout data changed. Save address and reload delivery before reviewing again.');
+      this.invalidateReview('Checkout data changed. Save address and reload delivery/payment before reviewing again.');
     });
   }
 
@@ -71,14 +77,14 @@ export class CheckoutPageComponent implements OnDestroy {
 
     this.loadingDelivery = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Saving address and loading delivery options...';
+    this.statusMessage = 'Saving address and loading checkout options...';
 
     const request: JuliCheckoutAddressUpsertRequest = {
       checkoutId: this.checkoutId,
       cartId,
       customerId: session.username,
       userType: session.userType || 'B2C',
-      paymentMethod: this.form.value.paymentMethod || 'card',
+      paymentMethod: this.form.value.paymentMethod || 'CARD',
       address: {
         fullName: this.form.value.fullName || '',
         line1: this.form.value.line1 || '',
@@ -102,8 +108,11 @@ export class CheckoutPageComponent implements OnDestroy {
         this.checkoutId = savedAddress.checkoutId;
         this.deliveryOptions = [];
         this.selectedDeliveryCode = undefined;
+        this.paymentMethods = [];
+        this.paymentInitialization = undefined;
+        this.paymentStatus = undefined;
         this.invalidateReview(undefined);
-        this.loadDeliveryOptions(savedAddress.checkoutId);
+        this.loadCheckoutOptions(savedAddress.checkoutId);
       },
       error: error => {
         this.errorMessage = error?.error?.message || error?.message || 'Saving checkout address failed';
@@ -118,21 +127,39 @@ export class CheckoutPageComponent implements OnDestroy {
       return;
     }
 
+    const selectedPaymentMethod = this.selectedPaymentMethodCode;
+    if (!selectedPaymentMethod) {
+      this.errorMessage = 'Select a payment method before reviewing the checkout.';
+      return;
+    }
+
     this.reviewing = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Refreshing checkout review...';
+    this.statusMessage = 'Refreshing checkout review and payment state...';
 
     this.checkoutFacade.setDeliveryMode(this.checkoutId, this.selectedDeliveryCode).pipe(
+      switchMap(selection => this.checkoutFacade.initializePayment(this.checkoutId!, selectedPaymentMethod).pipe(
+        switchMap(initialized => this.checkoutFacade.paymentStatus(this.checkoutId!).pipe(
+          switchMap(paymentStatus => {
+            this.paymentInitialization = initialized;
+            this.paymentStatus = paymentStatus;
+            return this.checkoutFacade.review(this.checkoutId!);
+          })
+        ))
+      )),
       finalize(() => {
         this.reviewing = false;
       })
     ).subscribe({
-      next: selection => {
-        this.selectedDeliveryCode = selection.deliveryMode.code;
-        this.runReview(selection);
+      next: review => {
+        this.reviewSnapshot = review;
+        this.reviewStale = false;
+        this.selectedDeliveryCode = review.deliveryMode?.code || this.selectedDeliveryCode;
+        this.errorMessage = review.errors[0];
+        this.statusMessage = review.messages[0] || (review.readyToPlace ? 'Checkout review is ready.' : 'Checkout review requires fixes.');
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Selecting delivery mode failed';
+        this.errorMessage = error?.error?.message || error?.message || 'Refreshing checkout review failed';
         this.statusMessage = undefined;
       }
     });
@@ -178,18 +205,27 @@ export class CheckoutPageComponent implements OnDestroy {
     return this.reviewing
       || this.submitting
       || this.loadingDelivery
+      || this.loadingPaymentMethods
       || this.form.invalid
       || !this.checkoutId
       || !this.selectedDeliveryCode
-      || this.deliveryOptions.length === 0;
+      || this.deliveryOptions.length === 0
+      || this.paymentMethods.length === 0
+      || !this.selectedPaymentMethodCode;
   }
 
   get placeOrderDisabled(): boolean {
     return this.submitting
       || this.reviewing
       || this.loadingDelivery
+      || this.loadingPaymentMethods
       || this.reviewStale
       || !this.reviewSnapshot?.readyToPlace;
+  }
+
+  get selectedPaymentMethodCode(): string | undefined {
+    const selected = this.form.value.paymentMethod || undefined;
+    return selected || this.paymentMethods.find(method => method.supported)?.code;
   }
 
   formatMoney(value?: number, currency = 'USD'): string {
@@ -207,41 +243,43 @@ export class CheckoutPageComponent implements OnDestroy {
     this.destroy$.complete();
   }
 
-  private loadDeliveryOptions(checkoutId: string): void {
-    this.checkoutFacade.deliveryOptions(checkoutId).subscribe({
-      next: optionsState => {
+  private loadCheckoutOptions(checkoutId: string): void {
+    this.loadingPaymentMethods = true;
+    this.checkoutFacade.deliveryOptions(checkoutId).pipe(
+      switchMap(optionsState => forkJoin({
+        delivery: of(optionsState),
+        payment: this.checkoutFacade.paymentMethods(checkoutId)
+      })),
+      finalize(() => {
+        this.loadingPaymentMethods = false;
+      })
+    ).subscribe({
+      next: result => {
+        const optionsState = result.delivery;
         this.deliveryOptions = optionsState.options.filter(option => option.available);
         this.selectedDeliveryCode = optionsState.selectedCode
           || this.deliveryOptions.find(option => option.available)?.code;
+        this.paymentMethods = result.payment.availableMethods.filter(method => method.supported);
+        const currentPaymentMethod = this.selectedPaymentMethodCode;
+        const preferredPaymentMethod = this.paymentMethods.find(method => method.code === currentPaymentMethod)?.code
+          || this.paymentMethods[0]?.code;
+        if (preferredPaymentMethod) {
+          this.form.patchValue({ paymentMethod: preferredPaymentMethod }, { emitEvent: false });
+        }
         if (this.deliveryOptions.length === 0) {
           this.statusMessage = undefined;
           this.errorMessage = 'No delivery modes are currently available for this checkout.';
           return;
         }
-        this.statusMessage = 'Delivery options loaded. Select a mode and refresh review.';
+        if (this.paymentMethods.length === 0) {
+          this.statusMessage = undefined;
+          this.errorMessage = 'No payment methods are currently available for this checkout.';
+          return;
+        }
+        this.statusMessage = 'Delivery and payment options loaded. Select the checkout options and refresh review.';
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Loading delivery options failed';
-        this.statusMessage = undefined;
-      }
-    });
-  }
-
-  private runReview(selection: JuliCheckoutDeliveryModeSelection): void {
-    if (!this.checkoutId) {
-      return;
-    }
-
-    this.checkoutFacade.review(this.checkoutId).subscribe({
-      next: review => {
-        this.reviewSnapshot = review;
-        this.reviewStale = false;
-        this.selectedDeliveryCode = review.deliveryMode?.code || selection.deliveryMode.code;
-        this.errorMessage = review.errors[0];
-        this.statusMessage = review.messages[0] || (review.readyToPlace ? 'Checkout review is ready.' : 'Checkout review requires fixes.');
-      },
-      error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Checkout review failed';
+        this.errorMessage = error?.error?.message || error?.message || 'Loading checkout options failed';
         this.statusMessage = undefined;
       }
     });

@@ -5,6 +5,9 @@ import {
   JuliCheckoutAddressUpsertRequest,
   JuliCheckoutDeliveryModeSelection,
   JuliCheckoutDeliveryOptionsState,
+  JuliCheckoutPaymentInitializeState,
+  JuliCheckoutPaymentMethodsState,
+  JuliCheckoutPaymentStatus,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
   JuliCheckoutSubmission
@@ -25,6 +28,18 @@ export class JuliCheckoutFacade {
 
   setDeliveryMode(checkoutId: string, code: string): Observable<JuliCheckoutDeliveryModeSelection> {
     return this.connector.setDeliveryMode(checkoutId, code);
+  }
+
+  paymentMethods(checkoutId: string): Observable<JuliCheckoutPaymentMethodsState> {
+    return this.connector.paymentMethods(checkoutId);
+  }
+
+  initializePayment(checkoutId: string, methodCode: string): Observable<JuliCheckoutPaymentInitializeState> {
+    return this.connector.initializePayment(checkoutId, methodCode);
+  }
+
+  paymentStatus(checkoutId: string): Observable<JuliCheckoutPaymentStatus> {
+    return this.connector.paymentStatus(checkoutId);
   }
 
   review(checkoutId: string): Observable<JuliCheckoutReviewSnapshot> {

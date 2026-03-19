@@ -8,6 +8,9 @@ import {
   JuliCheckoutAddressUpsertRequest,
   JuliCheckoutDeliveryModeSelection,
   JuliCheckoutDeliveryOptionsState,
+  JuliCheckoutPaymentInitializeState,
+  JuliCheckoutPaymentMethodsState,
+  JuliCheckoutPaymentStatus,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
   JuliCheckoutSubmission
@@ -34,6 +37,25 @@ export class UbrisCheckoutAdapter {
     return this.http.put<GatewayEnvelope<JuliCheckoutDeliveryModeSelection>>(
       `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/delivery-mode`,
       { code }
+    );
+  }
+
+  getPaymentMethods(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutPaymentMethodsState>> {
+    return this.http.get<GatewayEnvelope<JuliCheckoutPaymentMethodsState>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/payment-methods`
+    );
+  }
+
+  initializePayment(checkoutId: string, methodCode: string): Observable<GatewayEnvelope<JuliCheckoutPaymentInitializeState>> {
+    return this.http.post<GatewayEnvelope<JuliCheckoutPaymentInitializeState>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/payment/initialize`,
+      { methodCode }
+    );
+  }
+
+  getPaymentStatus(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutPaymentStatus>> {
+    return this.http.get<GatewayEnvelope<JuliCheckoutPaymentStatus>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/payment/status`
     );
   }
 

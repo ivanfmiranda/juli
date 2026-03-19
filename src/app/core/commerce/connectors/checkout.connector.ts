@@ -7,6 +7,11 @@ import {
   JuliCheckoutAddressUpsertRequest,
   JuliCheckoutDeliveryModeSelection,
   JuliCheckoutDeliveryOptionsState,
+  JuliCheckoutPaymentCapability,
+  JuliCheckoutPaymentInitializeState,
+  JuliCheckoutPaymentMethod,
+  JuliCheckoutPaymentMethodsState,
+  JuliCheckoutPaymentStatus,
   JuliCheckoutResult,
   JuliCheckoutReviewSnapshot,
   JuliCheckoutSubmission,
@@ -64,6 +69,60 @@ export class UbrisCheckoutConnector {
     );
   }
 
+  paymentMethods(checkoutId: string): Observable<JuliCheckoutPaymentMethodsState> {
+    return this.adapter.getPaymentMethods(checkoutId).pipe(
+      map(response => {
+        const data = response.data ?? {} as JuliCheckoutPaymentMethodsState;
+        return {
+          checkoutId: this.requireString((data as any).checkoutId),
+          availableMethods: this.asPaymentMethods((data as any).availableMethods),
+          updatedAt: this.asString((data as any).updatedAt) ?? undefined
+        };
+      })
+    );
+  }
+
+  initializePayment(checkoutId: string, methodCode: string): Observable<JuliCheckoutPaymentInitializeState> {
+    return this.adapter.initializePayment(checkoutId, methodCode).pipe(
+      map(response => {
+        const data = response.data ?? {} as JuliCheckoutPaymentInitializeState;
+        return {
+          checkoutId: this.requireString((data as any).checkoutId),
+          paymentSessionId: this.requireString((data as any).paymentSessionId),
+          provider: this.requireString((data as any).provider),
+          method: this.requireString((data as any).method),
+          status: this.requireString((data as any).status),
+          clientPayload: this.asRecord((data as any).clientPayload),
+          requiresCustomerAction: Boolean((data as any).requiresCustomerAction),
+          detail: this.asString((data as any).detail) ?? undefined,
+          providerReference: this.asString((data as any).providerReference) ?? undefined,
+          updatedAt: this.asString((data as any).updatedAt) ?? undefined
+        };
+      })
+    );
+  }
+
+  paymentStatus(checkoutId: string): Observable<JuliCheckoutPaymentStatus> {
+    return this.adapter.getPaymentStatus(checkoutId).pipe(
+      map(response => {
+        const data = response.data ?? {} as JuliCheckoutPaymentStatus;
+        return {
+          checkoutId: this.requireString((data as any).checkoutId),
+          paymentSessionId: this.requireString((data as any).paymentSessionId),
+          provider: this.requireString((data as any).provider),
+          method: this.requireString((data as any).method),
+          status: this.requireString((data as any).status),
+          detail: this.asString((data as any).detail) ?? undefined,
+          providerReference: this.asString((data as any).providerReference) ?? undefined,
+          clientPayload: this.asRecord((data as any).clientPayload),
+          requiresCustomerAction: Boolean((data as any).requiresCustomerAction),
+          nextAction: this.asRecord((data as any).nextAction),
+          updatedAt: this.asString((data as any).updatedAt) ?? undefined
+        };
+      })
+    );
+  }
+
   review(checkoutId: string): Observable<JuliCheckoutReviewSnapshot> {
     return this.adapter.review(checkoutId).pipe(
       map(response => {
@@ -77,6 +136,7 @@ export class UbrisCheckoutConnector {
           status: this.requireString((data as any).status),
           address: (data as any).address,
           deliveryMode: this.optionalDeliveryOption((data as any).deliveryMode),
+          payment: this.optionalPaymentStatus((data as any).payment),
           deliveryCost: this.asNumber((data as any).deliveryCost),
           items: Array.isArray((data as any).items) ? (data as any).items : [],
           totalItems: this.asNumber((data as any).totalItems) ?? 0,
@@ -88,6 +148,7 @@ export class UbrisCheckoutConnector {
           pricingValidated: Boolean((data as any).pricingValidated),
           addressValidated: Boolean((data as any).addressValidated),
           deliveryValidated: Boolean((data as any).deliveryValidated),
+          paymentValidated: Boolean((data as any).paymentValidated),
           readyToPlace: Boolean((data as any).readyToPlace),
           messages: this.asStringArray((data as any).messages),
           warnings: this.asStringArray((data as any).warnings),
@@ -135,11 +196,35 @@ export class UbrisCheckoutConnector {
     return Array.isArray(value) ? value.map(item => this.asDeliveryOption(item)) : [];
   }
 
+  private asPaymentMethods(value: unknown): JuliCheckoutPaymentMethod[] {
+    return Array.isArray(value) ? value.map(item => this.asPaymentMethod(item)) : [];
+  }
+
   private optionalDeliveryOption(value: unknown): JuliDeliveryOption | undefined {
     if (!value || typeof value !== 'object') {
       return undefined;
     }
     return this.asDeliveryOption(value);
+  }
+
+  private optionalPaymentStatus(value: unknown): JuliCheckoutPaymentStatus | undefined {
+    if (!value || typeof value !== 'object') {
+      return undefined;
+    }
+    const raw = value as Record<string, unknown>;
+    return {
+      checkoutId: this.requireString(raw.checkoutId),
+      paymentSessionId: this.requireString(raw.paymentSessionId),
+      provider: this.requireString(raw.provider),
+      method: this.requireString(raw.method),
+      status: this.requireString(raw.status),
+      detail: this.asString(raw.detail) ?? undefined,
+      providerReference: this.asString(raw.providerReference) ?? undefined,
+      clientPayload: this.asRecord(raw.clientPayload),
+      requiresCustomerAction: Boolean(raw.requiresCustomerAction),
+      nextAction: this.asRecord(raw.nextAction),
+      updatedAt: this.asString(raw.updatedAt) ?? undefined
+    };
   }
 
   private asDeliveryOption(value: unknown): JuliDeliveryOption {
@@ -154,6 +239,37 @@ export class UbrisCheckoutConnector {
       available: Boolean(raw.available),
       type: this.requireString(raw.type)
     };
+  }
+
+  private asPaymentMethod(value: unknown): JuliCheckoutPaymentMethod {
+    const raw = (value ?? {}) as Record<string, unknown>;
+    return {
+      code: this.requireString(raw.code),
+      label: this.requireString(raw.label),
+      supported: Boolean(raw.supported),
+      provider: this.requireString(raw.provider),
+      capabilities: this.asPaymentCapability(raw.capabilities)
+    };
+  }
+
+  private asPaymentCapability(value: unknown): JuliCheckoutPaymentCapability {
+    const raw = (value ?? {}) as Record<string, unknown>;
+    return {
+      supportsCard: Boolean(raw.supportsCard),
+      supportsPix: Boolean(raw.supportsPix),
+      supportsApplePay: Boolean(raw.supportsApplePay),
+      supportsGooglePay: Boolean(raw.supportsGooglePay),
+      supportsSamsungPay: Boolean(raw.supportsSamsungPay),
+      supportsManualCapture: Boolean(raw.supportsManualCapture),
+      supportsRefund: Boolean(raw.supportsRefund),
+      supportsPartialRefund: Boolean(raw.supportsPartialRefund)
+    };
+  }
+
+  private asRecord(value: unknown): Record<string, unknown> {
+    return value && typeof value === 'object' && !Array.isArray(value)
+      ? value as Record<string, unknown>
+      : {};
   }
 
   private asString(value: unknown): string | null {

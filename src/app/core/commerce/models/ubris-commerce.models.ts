@@ -96,6 +96,58 @@ export interface JuliCheckoutDeliveryModeSelection {
   updatedAt?: string;
 }
 
+export interface JuliCheckoutPaymentCapability {
+  supportsCard: boolean;
+  supportsPix: boolean;
+  supportsApplePay: boolean;
+  supportsGooglePay: boolean;
+  supportsSamsungPay: boolean;
+  supportsManualCapture: boolean;
+  supportsRefund: boolean;
+  supportsPartialRefund: boolean;
+}
+
+export interface JuliCheckoutPaymentMethod {
+  code: string;
+  label: string;
+  supported: boolean;
+  provider: string;
+  capabilities: JuliCheckoutPaymentCapability;
+}
+
+export interface JuliCheckoutPaymentMethodsState {
+  checkoutId: string;
+  availableMethods: JuliCheckoutPaymentMethod[];
+  updatedAt?: string;
+}
+
+export interface JuliCheckoutPaymentInitializeState {
+  checkoutId: string;
+  paymentSessionId: string;
+  provider: string;
+  method: string;
+  status: string;
+  clientPayload: Record<string, unknown>;
+  requiresCustomerAction: boolean;
+  detail?: string;
+  providerReference?: string;
+  updatedAt?: string;
+}
+
+export interface JuliCheckoutPaymentStatus {
+  checkoutId: string;
+  paymentSessionId: string;
+  provider: string;
+  method: string;
+  status: string;
+  detail?: string;
+  providerReference?: string;
+  clientPayload: Record<string, unknown>;
+  requiresCustomerAction: boolean;
+  nextAction: Record<string, unknown>;
+  updatedAt?: string;
+}
+
 export interface JuliCheckoutReviewItem {
   productCode: string;
   quantity: number;
@@ -113,6 +165,7 @@ export interface JuliCheckoutReviewSnapshot {
   status: string;
   address: JuliCheckoutAddress;
   deliveryMode?: JuliDeliveryOption;
+  payment?: JuliCheckoutPaymentStatus;
   deliveryCost?: number;
   items: JuliCheckoutReviewItem[];
   totalItems: number;
@@ -124,6 +177,7 @@ export interface JuliCheckoutReviewSnapshot {
   pricingValidated: boolean;
   addressValidated: boolean;
   deliveryValidated: boolean;
+  paymentValidated: boolean;
   readyToPlace: boolean;
   messages: string[];
   warnings: string[];

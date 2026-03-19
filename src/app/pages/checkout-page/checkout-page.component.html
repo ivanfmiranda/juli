@@ -64,11 +64,14 @@
         <label>
           Payment method
           <select formControlName="paymentMethod">
-            <option value="card">Card</option>
-            <option value="pix">Pix</option>
-            <option value="invoice">Invoice</option>
+            <option *ngFor="let method of paymentMethods" [value]="method.code">
+              {{ method.label }} · {{ method.provider }}
+            </option>
           </select>
         </label>
+        <p class="payment-copy">
+          Payment methods come from the backend payment boundary. This shell only selects and initializes a payment session.
+        </p>
       </section>
 
       <section class="form-section review-step">
@@ -101,7 +104,7 @@
         </p>
 
         <button type="button" class="secondary-action" (click)="saveAddressAndLoadDelivery()" [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
-          {{ loadingDelivery ? 'Loading delivery...' : 'Save address and load delivery' }}
+          {{ loadingDelivery || loadingPaymentMethods ? 'Loading checkout options...' : 'Save address and load checkout options' }}
         </button>
 
         <div class="delivery-options" *ngIf="deliveryOptions.length">
@@ -136,9 +139,14 @@
           <p><strong>Checkout ID:</strong> {{ review.checkoutId }}</p>
           <p><strong>Address validated:</strong> {{ review.addressValidated ? 'Yes' : 'No' }}</p>
           <p><strong>Delivery validated:</strong> {{ review.deliveryValidated ? 'Yes' : 'No' }}</p>
+          <p><strong>Payment validated:</strong> {{ review.paymentValidated ? 'Yes' : 'No' }}</p>
           <p><strong>Pricing validated:</strong> {{ review.pricingValidated ? 'Yes' : 'No' }}</p>
           <p><strong>Stock validated:</strong> {{ review.stockValidated ? 'Yes' : 'No' }}</p>
           <p *ngIf="review.deliveryMode"><strong>Delivery mode:</strong> {{ review.deliveryMode.name }} ({{ review.deliveryMode.estimatedDays }} day(s))</p>
+          <p *ngIf="review.payment"><strong>Payment method:</strong> {{ review.payment.method }} via {{ review.payment.provider }}</p>
+          <p *ngIf="review.payment"><strong>Payment status:</strong> {{ review.payment.status }}</p>
+          <p *ngIf="review.payment?.paymentSessionId"><strong>Payment session:</strong> {{ review.payment?.paymentSessionId }}</p>
+          <p *ngIf="review.payment?.detail"><strong>Payment detail:</strong> {{ review.payment?.detail }}</p>
           <p><strong>Delivery cost:</strong> {{ formatMoney(review.deliveryCost, review.currency || review.deliveryMode?.currency || 'USD') }}</p>
           <p><strong>Reviewed total:</strong> {{ formatMoney(review.total, review.currency || 'USD') }}</p>
           <p *ngIf="review.updatedAt"><strong>Updated:</strong> {{ review.updatedAt | date: 'medium' }}</p>
