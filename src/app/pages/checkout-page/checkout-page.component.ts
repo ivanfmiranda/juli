@@ -1,17 +1,25 @@
-import { ChangeDetectionStrategy, Component, OnDestroy } from '@angular/core';
+import {
+  AfterViewChecked,
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild
+} from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Subject, forkJoin, of } from 'rxjs';
+import { forkJoin, of, Subject, Subscription, timer } from 'rxjs';
 import { finalize, switchMap, takeUntil } from 'rxjs/operators';
+import { loadStripe, Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
 import {
   JuliCartFacade,
+  JuliCheckoutAddressState,
   JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutFacade,
   JuliCheckoutPaymentInitializeState,
   JuliCheckoutPaymentMethod,
   JuliCheckoutPaymentStatus,
-  JuliCheckoutFacade,
-  JuliCheckoutAddressState,
   JuliCheckoutReviewSnapshot
 } from '../../core/commerce';
 import { JuliDeliveryOption } from '../../core/commerce/models/ubris-commerce.models';
@@ -22,7 +30,10 @@ import { JuliDeliveryOption } from '../../core/commerce/models/ubris-commerce.mo
   styleUrls: ['./checkout-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CheckoutPageComponent implements OnDestroy {
+export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
+  @ViewChild('stripeCardElementHost')
+  stripeCardElementHost?: ElementRef<HTMLDivElement>;
+
   readonly cart$ = this.cartFacade.cart$;
   readonly form = this.fb.group({
     fullName: ['', Validators.required],
@@ -38,6 +49,11 @@ export class CheckoutPageComponent implements OnDestroy {
   });
 
   private readonly destroy$ = new Subject<void>();
+  private paymentStatusPolling?: Subscription;
+  private stripe?: Stripe | null;
+  private stripeElements?: StripeElements;
+  private stripeCardElement?: StripeCardElement;
+  private pendingStripeMount = false;
 
   checkoutId?: string;
   savedAddress?: JuliCheckoutAddressState;
@@ -50,6 +66,9 @@ export class CheckoutPageComponent implements OnDestroy {
   reviewStale = false;
   loadingDelivery = false;
   loadingPaymentMethods = false;
+  initializingPayment = false;
+  refreshingPaymentStatus = false;
+  confirmingPayment = false;
   reviewing = false;
   submitting = false;
   errorMessage?: string;
@@ -63,8 +82,17 @@ export class CheckoutPageComponent implements OnDestroy {
     private readonly router: Router
   ) {
     this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.invalidateReview('Checkout data changed. Save address and reload delivery/payment before reviewing again.');
+      this.resetPaymentState();
+      this.invalidateReview('Checkout data changed. Re-apply payment before reviewing again.');
     });
+  }
+
+  ngAfterViewChecked(): void {
+    if (!this.pendingStripeMount || !this.stripeCardElementHost || !this.showStripeCardForm) {
+      return;
+    }
+    this.pendingStripeMount = false;
+    void this.mountStripeCardElement();
   }
 
   saveAddressAndLoadDelivery(): void {
@@ -109,8 +137,7 @@ export class CheckoutPageComponent implements OnDestroy {
         this.deliveryOptions = [];
         this.selectedDeliveryCode = undefined;
         this.paymentMethods = [];
-        this.paymentInitialization = undefined;
-        this.paymentStatus = undefined;
+        this.resetPaymentState();
         this.invalidateReview(undefined);
         this.loadCheckoutOptions(savedAddress.checkoutId);
       },
@@ -121,32 +148,120 @@ export class CheckoutPageComponent implements OnDestroy {
     });
   }
 
-  review(): void {
-    if (!this.checkoutId || !this.selectedDeliveryCode || this.reviewing || this.submitting || this.loadingDelivery) {
+  initializePayment(): void {
+    if (!this.checkoutId || !this.selectedDeliveryCode || !this.selectedPaymentMethodCode || this.initializingPayment || this.loadingDelivery || this.loadingPaymentMethods || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
 
-    const selectedPaymentMethod = this.selectedPaymentMethodCode;
-    if (!selectedPaymentMethod) {
-      this.errorMessage = 'Select a payment method before reviewing the checkout.';
+    this.initializingPayment = true;
+    this.errorMessage = undefined;
+    this.statusMessage = 'Applying delivery mode and initializing payment...';
+
+    this.checkoutFacade.setDeliveryMode(this.checkoutId, this.selectedDeliveryCode).pipe(
+      switchMap(() => this.checkoutFacade.initializePayment(this.checkoutId!, this.selectedPaymentMethodCode!)),
+      switchMap(initialized => {
+        this.paymentInitialization = initialized;
+        return this.checkoutFacade.paymentStatus(this.checkoutId!);
+      }),
+      finalize(() => {
+        this.initializingPayment = false;
+      })
+    ).subscribe({
+      next: paymentStatus => {
+        this.paymentStatus = paymentStatus;
+        this.reviewSnapshot = undefined;
+        this.reviewStale = true;
+        this.errorMessage = undefined;
+        if (this.showStripeCardForm) {
+          this.pendingStripeMount = true;
+          this.statusMessage = 'Secure card session initialized. Enter card details and confirm payment before reviewing the checkout.';
+          return;
+        }
+        if (this.showPixAction) {
+          this.startPaymentStatusPolling();
+          this.statusMessage = 'Pix payment initialized. Complete the QR/copy-and-paste action and wait for payment confirmation before reviewing.';
+          return;
+        }
+        this.statusMessage = this.paymentReadyForReview
+          ? 'Payment is ready. You can refresh the checkout review now.'
+          : (paymentStatus.detail || 'Payment initialized. Refresh the payment status before reviewing.');
+      },
+      error: error => {
+        this.errorMessage = error?.error?.message || error?.message || 'Initializing payment failed';
+        this.statusMessage = undefined;
+      }
+    });
+  }
+
+  async confirmCardPayment(): Promise<void> {
+    if (!this.showStripeCardForm || !this.paymentInitialization || !this.stripeCardElement || this.confirmingPayment) {
+      return;
+    }
+
+    const publishableKey = this.asString(this.paymentInitialization.clientPayload['publishableKey']);
+    const clientSecret = this.asString(this.paymentInitialization.clientPayload['clientSecret']);
+    if (!publishableKey || !clientSecret) {
+      this.errorMessage = 'Stripe card client payload is incomplete.';
+      return;
+    }
+
+    try {
+      this.confirmingPayment = true;
+      this.errorMessage = undefined;
+      this.statusMessage = 'Confirming card payment with Stripe...';
+      const stripe = await this.ensureStripe(publishableKey);
+      const result = await stripe.confirmCardPayment(clientSecret, {
+        payment_method: {
+          card: this.stripeCardElement,
+          billing_details: {
+            name: this.form.value.fullName || undefined,
+            phone: this.form.value.phone || undefined,
+            address: {
+              city: this.form.value.city || undefined,
+              country: this.form.value.countryIso || undefined,
+              line1: this.form.value.line1 || undefined,
+              line2: this.form.value.line2 || undefined,
+              postal_code: this.form.value.postalCode || undefined,
+              state: this.form.value.region || undefined
+            }
+          }
+        }
+      });
+
+      if (result.error) {
+        this.errorMessage = result.error.message || 'Card payment confirmation failed.';
+        this.statusMessage = undefined;
+        return;
+      }
+
+      await this.refreshPaymentStatusOnce('Card payment confirmed. Refreshing payment status...');
+    } catch (error: any) {
+      this.errorMessage = error?.message || 'Card payment confirmation failed.';
+      this.statusMessage = undefined;
+    } finally {
+      this.confirmingPayment = false;
+    }
+  }
+
+  async refreshPaymentStatus(): Promise<void> {
+    await this.refreshPaymentStatusOnce('Refreshing payment status...');
+  }
+
+  review(): void {
+    if (!this.checkoutId || !this.paymentStatus || this.reviewing || this.submitting || this.loadingDelivery || this.loadingPaymentMethods) {
       return;
     }
 
     this.reviewing = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Refreshing checkout review and payment state...';
+    this.statusMessage = 'Refreshing payment state and checkout review...';
 
-    this.checkoutFacade.setDeliveryMode(this.checkoutId, this.selectedDeliveryCode).pipe(
-      switchMap(selection => this.checkoutFacade.initializePayment(this.checkoutId!, selectedPaymentMethod).pipe(
-        switchMap(initialized => this.checkoutFacade.paymentStatus(this.checkoutId!).pipe(
-          switchMap(paymentStatus => {
-            this.paymentInitialization = initialized;
-            this.paymentStatus = paymentStatus;
-            return this.checkoutFacade.review(this.checkoutId!);
-          })
-        ))
-      )),
+    this.checkoutFacade.paymentStatus(this.checkoutId).pipe(
+      switchMap(paymentStatus => {
+        this.paymentStatus = paymentStatus;
+        return this.checkoutFacade.review(this.checkoutId!);
+      }),
       finalize(() => {
         this.reviewing = false;
       })
@@ -196,8 +311,9 @@ export class CheckoutPageComponent implements OnDestroy {
 
   selectDeliveryMode(code: string): void {
     this.selectedDeliveryCode = code;
+    this.resetPaymentState();
     if (this.reviewSnapshot && this.reviewSnapshot.deliveryMode?.code !== code) {
-      this.invalidateReview('Delivery mode changed. Refresh review before place-order.');
+      this.invalidateReview('Delivery mode changed. Re-apply payment before place-order.');
     }
   }
 
@@ -206,12 +322,15 @@ export class CheckoutPageComponent implements OnDestroy {
       || this.submitting
       || this.loadingDelivery
       || this.loadingPaymentMethods
+      || this.initializingPayment
+      || this.confirmingPayment
       || this.form.invalid
       || !this.checkoutId
       || !this.selectedDeliveryCode
       || this.deliveryOptions.length === 0
       || this.paymentMethods.length === 0
-      || !this.selectedPaymentMethodCode;
+      || !this.selectedPaymentMethodCode
+      || !this.paymentReadyForReview;
   }
 
   get placeOrderDisabled(): boolean {
@@ -219,6 +338,8 @@ export class CheckoutPageComponent implements OnDestroy {
       || this.reviewing
       || this.loadingDelivery
       || this.loadingPaymentMethods
+      || this.initializingPayment
+      || this.confirmingPayment
       || this.reviewStale
       || !this.reviewSnapshot?.readyToPlace;
   }
@@ -226,6 +347,34 @@ export class CheckoutPageComponent implements OnDestroy {
   get selectedPaymentMethodCode(): string | undefined {
     const selected = this.form.value.paymentMethod || undefined;
     return selected || this.paymentMethods.find(method => method.supported)?.code;
+  }
+
+  get paymentReadyForReview(): boolean {
+    const status = this.paymentStatus?.status?.toUpperCase();
+    return status === 'AUTHORIZED' || status === 'CAPTURED';
+  }
+
+  get showStripeCardForm(): boolean {
+    return this.paymentInitialization?.provider === 'STRIPE'
+      && this.selectedPaymentMethodCode === 'CARD'
+      && !!this.asString(this.paymentInitialization.clientPayload['publishableKey'])
+      && !!this.asString(this.paymentInitialization.clientPayload['clientSecret']);
+  }
+
+  get showPixAction(): boolean {
+    return this.selectedPaymentMethodCode === 'PIX'
+      && !!this.pixActionPayload;
+  }
+
+  get pixActionPayload(): Record<string, unknown> | undefined {
+    const payload = this.paymentStatus?.nextAction && Object.keys(this.paymentStatus.nextAction).length > 0
+      ? this.paymentStatus.nextAction
+      : this.paymentInitialization?.clientPayload;
+    return payload && Object.keys(payload).length > 0 ? payload : undefined;
+  }
+
+  get pixExpiresAt(): string | undefined {
+    return this.asString(this.pixActionPayload?.['expiresAt']);
   }
 
   formatMoney(value?: number, currency = 'USD'): string {
@@ -239,6 +388,8 @@ export class CheckoutPageComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.stopPaymentStatusPolling();
+    this.unmountStripeCardElement();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -276,7 +427,7 @@ export class CheckoutPageComponent implements OnDestroy {
           this.errorMessage = 'No payment methods are currently available for this checkout.';
           return;
         }
-        this.statusMessage = 'Delivery and payment options loaded. Select the checkout options and refresh review.';
+        this.statusMessage = 'Delivery and payment options loaded. Apply payment after choosing delivery and payment method.';
       },
       error: error => {
         this.errorMessage = error?.error?.message || error?.message || 'Loading checkout options failed';
@@ -285,11 +436,119 @@ export class CheckoutPageComponent implements OnDestroy {
     });
   }
 
+  private async refreshPaymentStatusOnce(message: string): Promise<void> {
+    if (!this.checkoutId || this.refreshingPaymentStatus) {
+      return;
+    }
+    try {
+      this.refreshingPaymentStatus = true;
+      this.statusMessage = message;
+      this.paymentStatus = await this.checkoutFacade.paymentStatus(this.checkoutId).toPromise();
+      if (this.paymentReadyForReview) {
+        this.stopPaymentStatusPolling();
+        this.statusMessage = 'Payment is ready. Refresh the checkout review now.';
+      } else if (this.showPixAction) {
+        this.startPaymentStatusPolling();
+        this.statusMessage = this.paymentStatus?.detail || 'Pix payment is still pending customer confirmation.';
+      } else {
+        this.statusMessage = this.paymentStatus?.detail || 'Payment status refreshed.';
+      }
+      this.invalidateReview(undefined);
+    } catch (error: any) {
+      this.errorMessage = error?.error?.message || error?.message || 'Refreshing payment status failed';
+      this.statusMessage = undefined;
+    } finally {
+      this.refreshingPaymentStatus = false;
+    }
+  }
+
+  private startPaymentStatusPolling(): void {
+    if (!this.checkoutId || !this.paymentStatus || this.isPaymentTerminal(this.paymentStatus.status)) {
+      return;
+    }
+    this.stopPaymentStatusPolling();
+    this.paymentStatusPolling = timer(3000, 3000).pipe(
+      switchMap(() => this.checkoutFacade.paymentStatus(this.checkoutId!)),
+      takeUntil(this.destroy$)
+    ).subscribe({
+      next: status => {
+        this.paymentStatus = status;
+        if (this.isPaymentTerminal(status.status)) {
+          this.stopPaymentStatusPolling();
+          this.statusMessage = this.paymentReadyForReview
+            ? 'Payment confirmed. Refresh the checkout review now.'
+            : (status.detail || 'Payment reached a terminal state.');
+        }
+      },
+      error: error => {
+        this.stopPaymentStatusPolling();
+        this.errorMessage = error?.error?.message || error?.message || 'Polling payment status failed';
+      }
+    });
+  }
+
+  private stopPaymentStatusPolling(): void {
+    this.paymentStatusPolling?.unsubscribe();
+    this.paymentStatusPolling = undefined;
+  }
+
+  private isPaymentTerminal(status?: string): boolean {
+    const normalized = status?.toUpperCase();
+    return normalized === 'AUTHORIZED'
+      || normalized === 'CAPTURED'
+      || normalized === 'FAILED'
+      || normalized === 'CANCELLED';
+  }
+
+  private async mountStripeCardElement(): Promise<void> {
+    const publishableKey = this.paymentInitialization && this.asString(this.paymentInitialization.clientPayload['publishableKey']);
+    const clientSecret = this.paymentInitialization && this.asString(this.paymentInitialization.clientPayload['clientSecret']);
+    if (!publishableKey || !clientSecret || !this.stripeCardElementHost) {
+      return;
+    }
+    const stripe = await this.ensureStripe(publishableKey);
+    this.unmountStripeCardElement();
+    this.stripeElements = stripe.elements({ clientSecret });
+    this.stripeCardElement = this.stripeElements.create('card', {
+      hidePostalCode: true
+    });
+    this.stripeCardElement.mount(this.stripeCardElementHost.nativeElement);
+  }
+
+  private async ensureStripe(publishableKey: string): Promise<Stripe> {
+    if (!this.stripe) {
+      this.stripe = await loadStripe(publishableKey);
+    }
+    if (!this.stripe) {
+      throw new Error('Unable to initialize Stripe client.');
+    }
+    return this.stripe;
+  }
+
+  private unmountStripeCardElement(): void {
+    this.stripeCardElement?.unmount();
+    this.stripeCardElement?.destroy();
+    this.stripeCardElement = undefined;
+    this.stripeElements = undefined;
+    this.pendingStripeMount = false;
+  }
+
+  private resetPaymentState(): void {
+    this.stopPaymentStatusPolling();
+    this.unmountStripeCardElement();
+    this.paymentInitialization = undefined;
+    this.paymentStatus = undefined;
+  }
+
   private invalidateReview(message?: string): void {
     this.reviewSnapshot = undefined;
     this.reviewStale = Boolean(this.checkoutId || this.savedAddress || this.deliveryOptions.length > 0);
     if (message) {
       this.statusMessage = message;
     }
+  }
+
+  private asString(value: unknown): string | undefined {
+    return typeof value === 'string' && value.trim() ? value : undefined;
   }
 }

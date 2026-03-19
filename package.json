@@ -29,6 +29,7 @@
     "@ngrx/store": "^12.1.0",
     "@spartacus/core": "4.3.8",
     "@spartacus/storefront": "4.3.8",
+    "@stripe/stripe-js": "^4.8.0",
     "angular-oauth2-oidc": "^10.0.1",
     "i18next": "^20.2.2",
     "i18next-http-backend": "^1.2.2",

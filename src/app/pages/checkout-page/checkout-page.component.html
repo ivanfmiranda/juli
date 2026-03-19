@@ -1,9 +1,9 @@
 <section class="checkout-page" *ngIf="cart$ | async as cart; else emptyCheckout">
   <header>
     <p class="eyebrow">Checkout</p>
-    <h1>Address, review and place order</h1>
+    <h1>Address, payment, review and place order</h1>
     <p class="page-copy">
-      Save the checkout address, run an explicit review/reprice, and only then place the order.
+      Save the checkout address, select delivery, initialize a real payment session, refresh review/reprice, and only then place the order.
     </p>
   </header>
 
@@ -70,14 +70,14 @@
           </select>
         </label>
         <p class="payment-copy">
-          Payment methods come from the backend payment boundary. This shell only selects and initializes a payment session.
+          Payment methods come from the backend payment boundary. The storefront only consumes the edge contracts and renders the provider action when required.
         </p>
       </section>
 
       <section class="form-section review-step">
         <h2>Review and place order</h2>
         <p>
-          The flow is now explicit: save address, load delivery modes, select delivery, run review/reprice, and only then place the order.
+          The flow is explicit: save address, select delivery, initialize payment, complete any customer action, run review/reprice, and only then place the order.
         </p>
       </section>
     </form>
@@ -100,10 +100,10 @@
       <section class="delivery-section">
         <h3>Delivery mode</h3>
         <p class="delivery-copy">
-          Save the address first. Delivery options are bound to the current checkout and feed the review total.
+          Save the address first. Delivery options are bound to the current checkout and feed the reviewed total.
         </p>
 
-        <button type="button" class="secondary-action" (click)="saveAddressAndLoadDelivery()" [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
+        <button type="button" class="secondary-action" (click)="saveAddressAndLoadDelivery()" [disabled]="loadingDelivery || reviewing || submitting || initializingPayment || confirmingPayment || form.invalid">
           {{ loadingDelivery || loadingPaymentMethods ? 'Loading checkout options...' : 'Save address and load checkout options' }}
         </button>
 
@@ -124,6 +124,50 @@
         </div>
       </section>
 
+      <section class="payment-session-section">
+        <h3>Payment session</h3>
+        <p class="payment-copy">
+          Apply the selected delivery mode and initialize a payment session before review. Real providers can require customer action.
+        </p>
+
+        <button type="button" class="secondary-action" (click)="initializePayment()" [disabled]="initializingPayment || reviewing || submitting || loadingDelivery || loadingPaymentMethods || form.invalid || !checkoutId || !selectedDeliveryCode || !selectedPaymentMethodCode">
+          {{ initializingPayment ? 'Initializing payment...' : 'Apply delivery and initialize payment' }}
+        </button>
+
+        <section class="payment-state" *ngIf="paymentInitialization as paymentInit">
+          <p><strong>Provider:</strong> {{ paymentInit.provider }}</p>
+          <p><strong>Method:</strong> {{ paymentInit.method }}</p>
+          <p><strong>Status:</strong> {{ paymentStatus?.status || paymentInit.status }}</p>
+          <p *ngIf="paymentStatus?.detail || paymentInit.detail"><strong>Detail:</strong> {{ paymentStatus?.detail || paymentInit.detail }}</p>
+          <p><strong>Payment session:</strong> {{ paymentInit.paymentSessionId }}</p>
+        </section>
+
+        <section class="stripe-card-section" *ngIf="showStripeCardForm">
+          <h4>Secure card confirmation</h4>
+          <p>Card details are confirmed with Stripe hosted fields. The checkout only advances after the payment session becomes authorized.</p>
+          <div class="stripe-card-host" #stripeCardElementHost></div>
+          <button type="button" class="secondary-action" (click)="confirmCardPayment()" [disabled]="confirmingPayment || initializingPayment || reviewing || submitting">
+            {{ confirmingPayment ? 'Confirming card...' : 'Confirm card payment' }}
+          </button>
+        </section>
+
+        <section class="pix-section" *ngIf="showPixAction && pixActionPayload as pixAction">
+          <h4>Pix customer action</h4>
+          <p *ngIf="pixAction['pixCode']"><strong>Copy and paste:</strong> {{ pixAction['pixCode'] }}</p>
+          <p *ngIf="pixAction['hostedInstructionsUrl'] as hostedInstructionsUrl">
+            <strong>Hosted instructions:</strong>
+            <a [href]="hostedInstructionsUrl" rel="noreferrer" target="_blank">Open provider instructions</a>
+          </p>
+          <p *ngIf="pixAction['imageUrlPng'] as imageUrlPng">
+            <img [src]="imageUrlPng" alt="Pix QR code">
+          </p>
+          <p *ngIf="pixExpiresAt"><strong>Expires:</strong> {{ pixExpiresAt | date: 'medium' }}</p>
+          <button type="button" class="secondary-action" (click)="refreshPaymentStatus()" [disabled]="refreshingPaymentStatus || initializingPayment || reviewing || submitting">
+            {{ refreshingPaymentStatus ? 'Refreshing payment status...' : 'Refresh payment status' }}
+          </button>
+        </section>
+      </section>
+
       <div class="review-actions">
         <button type="button" (click)="review()" [disabled]="reviewButtonDisabled">
           {{ reviewing ? 'Reviewing...' : 'Review order' }}
@@ -131,7 +175,7 @@
 
         <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
         <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-        <p class="stale-state" *ngIf="reviewStale">Review is stale. Run review again before place-order.</p>
+        <p class="stale-state" *ngIf="reviewStale">Review is stale. Refresh review before place-order.</p>
 
         <section class="review-snapshot" *ngIf="reviewSnapshot as review">
           <h3>Review snapshot</h3>
