@@ -18,6 +18,7 @@ import { SearchPageComponent } from './pages/search-page/search-page.component';
 import { CartPageComponent } from './pages/cart-page/cart-page.component';
 import { CheckoutPageComponent } from './pages/checkout-page/checkout-page.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
+import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { CmsComponentHostComponent } from './shared/cms-runtime/cms-component-host.component';
 import { StrapiCmsModule } from './spartacus/strapi-cms.module';
 
@@ -32,6 +33,7 @@ import { StrapiCmsModule } from './spartacus/strapi-cms.module';
     CartPageComponent,
     CheckoutPageComponent,
     OrdersPageComponent,
+    OrderDetailPageComponent,
     CmsComponentHostComponent
   ],
   imports: [

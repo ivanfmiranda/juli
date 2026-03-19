@@ -1,0 +1,42 @@
+<ng-container *ngIf="order$ | async as order">
+  <section class="order-detail-page">
+    <header class="page-header">
+      <p class="eyebrow">Account</p>
+      <h1>Order {{ order.code }}</h1>
+      <p>{{ order.status }}</p>
+      <a routerLink="/account/orders">Back to orders</a>
+    </header>
+
+    <section class="detail-grid">
+      <article class="detail-card">
+        <h2>Summary</h2>
+        <p><strong>Placed:</strong> {{ order.created | date: 'medium' }}</p>
+        <p><strong>Items:</strong> {{ order.totalItems || order.entries?.length || 0 }}</p>
+        <p><strong>Subtotal:</strong> {{ order.subTotal?.formattedValue || '-' }}</p>
+        <p><strong>Tax:</strong> {{ order.totalTax?.formattedValue || '-' }}</p>
+        <p><strong>Total:</strong> {{ order.totalPriceWithTax?.formattedValue || order.totalPrice?.formattedValue || '-' }}</p>
+      </article>
+
+      <article class="detail-card">
+        <h2>Line items</h2>
+        <ng-container *ngIf="order.entries?.length; else noEntries">
+          <article class="line-item" *ngFor="let entry of order.entries">
+            <div>
+              <strong>{{ entry.product?.name || entry.product?.code }}</strong>
+              <p>{{ entry.product?.code }}</p>
+            </div>
+            <div>
+              <p>Qty {{ entry.quantity }}</p>
+              <p>{{ entry.basePrice?.formattedValue }}</p>
+              <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+            </div>
+          </article>
+        </ng-container>
+      </article>
+    </section>
+  </section>
+</ng-container>
+
+<ng-template #noEntries>
+  <p>No line items available for this order.</p>
+</ng-template>

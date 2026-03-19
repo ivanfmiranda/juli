@@ -40,14 +40,15 @@ export class UbrisOrderNormalizer {
     const source = raw ?? {};
     const placedValue = this.firstNonBlank(source, 'placedAt', 'updatedAt', 'createdAt');
     const totalItems = this.asNumber(source.totalItems, this.sumQuantities(source.entries) ?? 0);
+    const currency = this.firstNonBlank(source, 'currency') ?? 'USD';
     return {
       code: this.firstNonBlank(source, 'id', 'orderId') ?? undefined,
       status: this.firstNonBlank(source, 'status') ?? undefined,
       created: this.asDate(placedValue) ?? undefined,
-      totalPrice: this.normalizePrice(source.total),
-      totalPriceWithTax: this.normalizePrice(this.pickPriceCandidate(source, 'totalWithTax', 'totalPriceWithTax', 'grandTotal', 'total')),
-      subTotal: this.normalizePrice(this.pickPriceCandidate(source, 'subtotal', 'subTotal', 'netTotal')),
-      totalTax: this.normalizePrice(this.pickPriceCandidate(source, 'tax', 'totalTax')),
+      totalPrice: this.normalizePrice(source.total, currency),
+      totalPriceWithTax: this.normalizePrice(this.pickPriceCandidate(source, 'totalWithTax', 'totalPriceWithTax', 'grandTotal', 'total'), currency),
+      subTotal: this.normalizePrice(this.pickPriceCandidate(source, 'subtotal', 'subTotal', 'netTotal'), currency),
+      totalTax: this.normalizePrice(this.pickPriceCandidate(source, 'tax', 'totalTax'), currency),
       totalItems: totalItems > 0 ? totalItems : undefined,
       user: userId ? { uid: userId } : undefined,
       entries: this.normalizeEntries(source.entries)
@@ -56,23 +57,32 @@ export class UbrisOrderNormalizer {
 
   private normalizeOrderHistory(raw: Record<string, unknown>) {
     const placedValue = this.firstNonBlank(raw, 'placedAt', 'updatedAt', 'createdAt');
+    const currency = this.firstNonBlank(raw, 'currency') ?? 'USD';
     return {
       code: this.firstNonBlank(raw, 'id', 'orderId') ?? undefined,
       status: this.firstNonBlank(raw, 'status') ?? undefined,
       placed: this.asDate(placedValue) ?? undefined,
-      total: this.normalizePrice(raw.total)
+      total: this.normalizePrice(raw.total, currency)
     };
   }
 
-  private normalizePrice(raw: unknown): Price | undefined {
+  private normalizePrice(raw: unknown, fallbackCurrency: string = 'USD'): Price | undefined {
     if (raw && typeof raw === 'object') {
       const price = raw as Record<string, unknown>;
-      const currencyIso = this.firstNonBlank(price, 'currency') ?? 'USD';
+      const currencyIso = this.firstNonBlank(price, 'currency') ?? fallbackCurrency;
       const amount = this.asNumber(price.raw, 0);
       return {
         currencyIso,
         value: amount,
         formattedValue: this.firstNonBlank(price, 'formatted') ?? `${currencyIso} ${amount.toFixed(2)}`
+      };
+    }
+    if (typeof raw === 'number' || typeof raw === 'string') {
+      const amount = this.asNumber(raw, 0);
+      return {
+        currencyIso: fallbackCurrency,
+        value: amount,
+        formattedValue: `${fallbackCurrency} ${amount.toFixed(2)}`
       };
     }
     return undefined;
@@ -88,12 +98,13 @@ export class UbrisOrderNormalizer {
       .map((entry, index) => {
         const productCode = this.firstNonBlank(entry, 'sku', 'productCode') ?? this.firstNonBlank(this.asRecord(entry.product), 'code', 'sku');
         const productName = this.firstNonBlank(entry, 'name') ?? this.firstNonBlank(this.asRecord(entry.product), 'name');
+        const currency = this.firstNonBlank(entry, 'currency') ?? 'USD';
         const quantity = this.asNumber(entry.quantity, 0);
         return {
           entryNumber: this.asNumber(entry.entryNumber, index),
           quantity: quantity > 0 ? quantity : undefined,
-          basePrice: this.normalizePrice(this.pickPriceCandidate(entry, 'unitPrice', 'basePrice', 'price')),
-          totalPrice: this.normalizePrice(this.pickPriceCandidate(entry, 'lineTotal', 'totalPrice', 'total')),
+          basePrice: this.normalizePrice(this.pickPriceCandidate(entry, 'unitPrice', 'basePrice', 'price'), currency),
+          totalPrice: this.normalizePrice(this.pickPriceCandidate(entry, 'lineTotal', 'totalPrice', 'total'), currency),
           product: productCode ? {
             code: productCode,
             name: productName ?? undefined

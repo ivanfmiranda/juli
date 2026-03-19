@@ -1,0 +1,41 @@
+.order-detail-page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.page-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.detail-card {
+  background: #fff;
+  border: 1px solid #d8dee8;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+}
+
+.line-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 0;
+  border-top: 1px solid #eef2f7;
+}
+
+.line-item:first-of-type {
+  border-top: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #526075;
+}

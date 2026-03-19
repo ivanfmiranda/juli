@@ -10,6 +10,7 @@
         <div>
           <strong>{{ order.code }}</strong>
           <p>{{ order.status }}</p>
+          <a *ngIf="order.code" [routerLink]="['/account/orders', order.code]">View details</a>
         </div>
         <div>
           <strong>{{ order.total?.formattedValue }}</strong>

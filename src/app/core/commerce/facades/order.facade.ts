@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { OrderHistoryList, UserOrderService } from '@spartacus/core';
+import { Order, OrderHistoryList, UserOrderService } from '@spartacus/core';
 import { Observable, defer } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
@@ -28,7 +29,21 @@ export class JuliOrderFacade {
     });
   }
 
+  get(orderCode: string): Observable<Order> {
+    return defer(() => {
+      this.userOrderService.clearOrderDetails();
+      this.userOrderService.loadOrderDetails(orderCode);
+      return this.userOrderService.getOrderDetails().pipe(
+        filter(order => !!order && order.code === orderCode)
+      );
+    });
+  }
+
   clear(): void {
     this.userOrderService.clearOrderList();
+  }
+
+  clearDetail(): void {
+    this.userOrderService.clearOrderDetails();
   }
 }

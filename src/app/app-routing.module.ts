@@ -9,6 +9,7 @@ import { SearchPageComponent } from './pages/search-page/search-page.component';
 import { CartPageComponent } from './pages/cart-page/cart-page.component';
 import { CheckoutPageComponent } from './pages/checkout-page/checkout-page.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
+import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { NotFoundPageComponent } from './core/cms/fallback';
 
 const routes: Routes = [
@@ -26,6 +27,7 @@ const routes: Routes = [
   { path: 'search', component: SearchPageComponent },
   { path: 'cart', component: CartPageComponent, canActivate: [AuthGuard] },
   { path: 'checkout', component: CheckoutPageComponent, canActivate: [AuthGuard] },
+  { path: 'account/orders/:code', component: OrderDetailPageComponent, canActivate: [AuthGuard] },
   { path: 'account/orders', component: OrdersPageComponent, canActivate: [AuthGuard] },
   { path: '**', component: NotFoundPageComponent }
 ];
