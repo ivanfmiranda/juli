@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
-import { ConfigModule } from '@spartacus/core';
+import { CartModule, ConfigModule, SiteContextModule } from '@spartacus/core';
 import { EffectsModule } from '@ngrx/effects';
 import { StoreModule } from '@ngrx/store';
 import { AppRoutingModule } from './app-routing.module';
@@ -42,7 +42,15 @@ import { StrapiCmsModule } from './spartacus/strapi-cms.module';
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
     AppRoutingModule,
-    ConfigModule.withConfig({}),
+    ConfigModule.withConfig({
+      context: {
+        baseSite: ['electronics'],
+        currency: ['USD'],
+        language: ['en']
+      }
+    }),
+    SiteContextModule.forRoot(),
+    CartModule.forRoot(),
     CommerceModule.forRoot(),
     StrapiCmsModule
   ],

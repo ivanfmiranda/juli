@@ -1,5 +1,15 @@
-import { ModuleWithProviders, NgModule } from '@angular/core';
+import { APP_INITIALIZER, ModuleWithProviders, NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CartAdapter, CartEntryAdapter, CartValidationAdapter, CartVoucherAdapter, SaveCartAdapter, SiteAdapter } from '@spartacus/core';
+import { JuliSpartacusCartAdapter } from './adapters/spartacus-cart.adapter';
+import { JuliSpartacusCartEntryAdapter } from './adapters/spartacus-cart-entry.adapter';
+import { JuliSpartacusCartValidationAdapter, JuliSpartacusCartVoucherAdapter, JuliSpartacusSaveCartAdapter } from './adapters/spartacus-cart-support.adapter';
+import { JuliSpartacusSiteAdapter } from './adapters/spartacus-site.adapter';
+import { SpartacusUserContextBridgeService } from './services/spartacus-user-context.bridge';
+
+function initializeSpartacusUserContext(bridge: SpartacusUserContextBridgeService): () => void {
+  return () => bridge.init();
+}
 
 @NgModule({
   imports: [CommonModule]
@@ -7,7 +17,39 @@ import { CommonModule } from '@angular/common';
 export class CommerceModule {
   static forRoot(): ModuleWithProviders<CommerceModule> {
     return {
-      ngModule: CommerceModule
+      ngModule: CommerceModule,
+      providers: [
+        {
+          provide: CartAdapter,
+          useClass: JuliSpartacusCartAdapter
+        },
+        {
+          provide: CartEntryAdapter,
+          useClass: JuliSpartacusCartEntryAdapter
+        },
+        {
+          provide: SiteAdapter,
+          useClass: JuliSpartacusSiteAdapter
+        },
+        {
+          provide: CartVoucherAdapter,
+          useClass: JuliSpartacusCartVoucherAdapter
+        },
+        {
+          provide: CartValidationAdapter,
+          useClass: JuliSpartacusCartValidationAdapter
+        },
+        {
+          provide: SaveCartAdapter,
+          useClass: JuliSpartacusSaveCartAdapter
+        },
+        {
+          provide: APP_INITIALIZER,
+          useFactory: initializeSpartacusUserContext,
+          deps: [SpartacusUserContextBridgeService],
+          multi: true
+        }
+      ]
     };
   }
 }

@@ -31,4 +31,10 @@ export class UbrisCartAdapter {
       { sku, quantity }
     );
   }
+
+  delete(cartId: string): Observable<GatewayEnvelope<string>> {
+    return this.http.delete<GatewayEnvelope<string>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}`
+    );
+  }
 }

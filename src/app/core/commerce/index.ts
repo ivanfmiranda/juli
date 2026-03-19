@@ -21,3 +21,4 @@ export * from './facades/cart.facade';
 export * from './facades/checkout.facade';
 export * from './facades/order.facade';
 export * from './commerce.module';
+export * from './services/cart-id.storage.service';

@@ -29,4 +29,10 @@ export class UbrisCartConnector {
       map(response => this.normalizer.normalizeModification(response.data, sku, quantity))
     );
   }
+
+  delete(cartId: string): Observable<void> {
+    return this.adapter.delete(cartId).pipe(
+      map(() => undefined)
+    );
+  }
 }
