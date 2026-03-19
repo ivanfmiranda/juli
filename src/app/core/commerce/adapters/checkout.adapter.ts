@@ -2,11 +2,39 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { GatewayEnvelope, JuliCheckoutSubmission, JuliCheckoutResult } from '../models/ubris-commerce.models';
+import {
+  GatewayEnvelope,
+  JuliCheckoutAddressState,
+  JuliCheckoutAddressUpsertRequest,
+  JuliCheckoutResult,
+  JuliCheckoutReviewSnapshot,
+  JuliCheckoutSubmission
+} from '../models/ubris-commerce.models';
 
 @Injectable({ providedIn: 'root' })
 export class UbrisCheckoutAdapter {
   constructor(private readonly http: HttpClient) {}
+
+  saveAddress(body: JuliCheckoutAddressUpsertRequest): Observable<GatewayEnvelope<JuliCheckoutAddressState>> {
+    return this.http.post<GatewayEnvelope<JuliCheckoutAddressState>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/address`,
+      body
+    );
+  }
+
+  review(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutReviewSnapshot>> {
+    return this.http.post<GatewayEnvelope<JuliCheckoutReviewSnapshot>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/review`,
+      {}
+    );
+  }
+
+  submitById(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutResult>> {
+    return this.http.post<GatewayEnvelope<JuliCheckoutResult>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/submit`,
+      {}
+    );
+  }
 
   submit(body: JuliCheckoutSubmission): Observable<GatewayEnvelope<JuliCheckoutResult>> {
     return this.http.post<GatewayEnvelope<JuliCheckoutResult>>(

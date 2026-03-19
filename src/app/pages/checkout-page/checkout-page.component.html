@@ -1,42 +1,154 @@
-<section class="checkout-page" *ngIf="cart$ | async as cart">
+<section class="checkout-page" *ngIf="cart$ | async as cart; else emptyCheckout">
   <header>
     <p class="eyebrow">Checkout</p>
-    <h1>Complete your order</h1>
+    <h1>Address, review and place order</h1>
+    <p class="page-copy">
+      Save the checkout address, run an explicit review/reprice, and only then place the order.
+    </p>
   </header>
 
   <div class="checkout-grid">
-    <form [formGroup]="form" (ngSubmit)="submit()" class="checkout-form">
-      <label>
-        Shipping address
-        <input formControlName="addressLine" type="text" placeholder="Rua Commerce, 100">
-      </label>
+    <form [formGroup]="form" class="checkout-form">
+      <section class="form-section">
+        <h2>Address</h2>
+        <div class="field-grid">
+          <label>
+            Full name
+            <input formControlName="fullName" type="text" placeholder="Customer One">
+          </label>
 
-      <label>
-        Payment method
-        <select formControlName="paymentMethod">
-          <option value="card">Card</option>
-          <option value="pix">Pix</option>
-          <option value="invoice">Invoice</option>
-        </select>
-      </label>
+          <label>
+            Phone
+            <input formControlName="phone" type="text" placeholder="+55 11 99999-0000">
+          </label>
 
-      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+          <label class="field-span-2">
+            Address line 1
+            <input formControlName="line1" type="text" placeholder="Rua Commerce, 100">
+          </label>
 
-      <button type="submit" [disabled]="submitting">
-        {{ submitting ? 'Submitting...' : 'Place order' }}
-      </button>
+          <label class="field-span-2">
+            Address line 2
+            <input formControlName="line2" type="text" placeholder="Apt 12">
+          </label>
+
+          <label>
+            City
+            <input formControlName="city" type="text" placeholder="Sao Paulo">
+          </label>
+
+          <label>
+            Region / state
+            <input formControlName="region" type="text" placeholder="SP">
+          </label>
+
+          <label>
+            Postal code
+            <input formControlName="postalCode" type="text" placeholder="01000-000">
+          </label>
+
+          <label>
+            Country ISO
+            <input formControlName="countryIso" type="text" placeholder="BR">
+          </label>
+
+          <label class="field-span-2">
+            Notes
+            <input formControlName="notes" type="text" placeholder="Leave at lobby">
+          </label>
+        </div>
+      </section>
+
+      <section class="form-section">
+        <h2>Payment selection</h2>
+        <label>
+          Payment method
+          <select formControlName="paymentMethod">
+            <option value="card">Card</option>
+            <option value="pix">Pix</option>
+            <option value="invoice">Invoice</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="form-section review-step">
+        <h2>Review and place order</h2>
+        <p>
+          The review step recalculates totals and validates stock before place-order. Any form change after review marks the review as stale.
+        </p>
+      </section>
     </form>
 
     <aside class="checkout-summary">
       <h2>Order summary</h2>
-      <div *ngFor="let entry of cart.entries">
-        <span>{{ entry.product?.name }} x {{ entry.quantity }}</span>
-        <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+
+      <div class="summary-items">
+        <div *ngFor="let entry of cart.entries">
+          <span>{{ entry.product?.name }} x {{ entry.quantity }}</span>
+          <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+        </div>
       </div>
+
       <div class="total-row">
         <span>Total</span>
         <strong>{{ cart.totalPrice?.formattedValue }}</strong>
       </div>
+
+      <div class="review-actions">
+        <button type="button" (click)="review()" [disabled]="reviewButtonDisabled">
+          {{ reviewing ? 'Reviewing...' : 'Review order' }}
+        </button>
+
+        <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
+        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+        <p class="stale-state" *ngIf="reviewStale">Review is stale. Run review again before place-order.</p>
+
+        <section class="review-snapshot" *ngIf="reviewSnapshot as review">
+          <h3>Review snapshot</h3>
+          <p><strong>Status:</strong> {{ review.readyToPlace ? 'Ready to place' : 'Review blocked' }}</p>
+          <p><strong>Checkout ID:</strong> {{ review.checkoutId }}</p>
+          <p><strong>Address validated:</strong> {{ review.addressValidated ? 'Yes' : 'No' }}</p>
+          <p><strong>Pricing validated:</strong> {{ review.pricingValidated ? 'Yes' : 'No' }}</p>
+          <p><strong>Stock validated:</strong> {{ review.stockValidated ? 'Yes' : 'No' }}</p>
+          <p *ngIf="review.updatedAt"><strong>Updated:</strong> {{ review.updatedAt | date: 'medium' }}</p>
+
+          <div class="review-messages" *ngIf="review.messages.length">
+            <p><strong>Messages</strong></p>
+            <ul>
+              <li *ngFor="let message of review.messages">{{ message }}</li>
+            </ul>
+          </div>
+
+          <div class="review-warnings" *ngIf="review.warnings.length">
+            <p><strong>Warnings</strong></p>
+            <ul>
+              <li *ngFor="let warning of review.warnings">{{ warning }}</li>
+            </ul>
+          </div>
+
+          <div class="review-errors" *ngIf="review.errors.length">
+            <p><strong>Errors</strong></p>
+            <ul>
+              <li *ngFor="let reviewError of review.errors">{{ reviewError }}</li>
+            </ul>
+          </div>
+        </section>
+
+        <button type="button" class="place-order-button" (click)="submit()" [disabled]="placeOrderDisabled">
+          {{ submitting ? 'Placing order...' : 'Place order' }}
+        </button>
+      </div>
     </aside>
   </div>
 </section>
+
+<ng-template #emptyCheckout>
+  <section class="checkout-page">
+    <header>
+      <p class="eyebrow">Checkout</p>
+      <h1>No active cart</h1>
+      <p class="page-copy">Add products to the cart before starting checkout.</p>
+      <a routerLink="/cart">Go to cart</a>
+    </header>
+  </section>
+</ng-template>

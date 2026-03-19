@@ -37,12 +37,81 @@ export interface JuliCheckoutSubmission {
   paymentMethod: string;
 }
 
+export interface JuliCheckoutAddress {
+  id?: string;
+  fullName: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  region?: string;
+  postalCode: string;
+  countryIso: string;
+  phone?: string;
+  notes?: string;
+}
+
+export interface JuliCheckoutAddressUpsertRequest {
+  checkoutId?: string;
+  cartId: string;
+  customerId: string;
+  userType: string;
+  paymentMethod: string;
+  address: JuliCheckoutAddress;
+}
+
+export interface JuliCheckoutAddressState {
+  checkoutId: string;
+  cartId: string;
+  customerId: string;
+  userType: string;
+  paymentMethod: string;
+  status: string;
+  address: JuliCheckoutAddress;
+  updatedAt?: string;
+}
+
+export interface JuliCheckoutReviewItem {
+  productCode: string;
+  quantity: number;
+  unitPrice?: number;
+  lineTotal?: number;
+  stockAvailable: boolean;
+}
+
+export interface JuliCheckoutReviewSnapshot {
+  checkoutId: string;
+  cartId: string;
+  customerId: string;
+  userType: string;
+  paymentMethod: string;
+  status: string;
+  address: JuliCheckoutAddress;
+  items: JuliCheckoutReviewItem[];
+  totalItems: number;
+  subTotal?: number;
+  totalTax?: number;
+  total?: number;
+  currency?: string;
+  stockValidated: boolean;
+  pricingValidated: boolean;
+  addressValidated: boolean;
+  readyToPlace: boolean;
+  messages: string[];
+  warnings: string[];
+  errors: string[];
+  updatedAt?: string;
+}
+
 export interface JuliCheckoutResult {
   checkoutId?: string;
   status?: string;
   approvalRequired?: boolean;
   orderId?: string;
   lastError?: string;
+  detail?: string;
+  retries?: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface JuliOrderSummary {
