@@ -5,15 +5,26 @@
       <h1>My orders</h1>
     </header>
 
-    <article class="order-card" *ngFor="let order of orders.orders">
-      <div>
-        <strong>{{ order.code }}</strong>
-        <p>{{ order.status }}</p>
-      </div>
-      <div>
-        <strong>{{ order.total?.formattedValue }}</strong>
-        <p>{{ order.placed }}</p>
-      </div>
-    </article>
+    <ng-container *ngIf="orders.orders?.length; else emptyOrders">
+      <article class="order-card" *ngFor="let order of orders.orders">
+        <div>
+          <strong>{{ order.code }}</strong>
+          <p>{{ order.status }}</p>
+        </div>
+        <div>
+          <strong>{{ order.total?.formattedValue }}</strong>
+          <p>{{ order.placed | date: 'medium' }}</p>
+        </div>
+      </article>
+    </ng-container>
   </section>
 </ng-container>
+
+<ng-template #emptyOrders>
+  <article class="order-card">
+    <div>
+      <strong>No orders yet</strong>
+      <p>Your confirmed orders will appear here.</p>
+    </div>
+  </article>
+</ng-template>

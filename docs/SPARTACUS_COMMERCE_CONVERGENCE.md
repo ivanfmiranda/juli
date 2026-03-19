@@ -18,7 +18,7 @@ Current state:
 
 - cart is hybrid/custom with custom state, custom facade, custom connectors, and custom page shell
 - checkout is custom and does not use the native Spartacus checkout stack
-- account / orders is hybrid/custom and uses only Spartacus data types, not the native order flow
+- account / orders is now hybrid with Spartacus native order state underneath a custom page shell
 
 Important constraints already visible in the codebase:
 
@@ -51,10 +51,10 @@ Recommendation:
 | Checkout | `src/app/pages/checkout-page/CheckoutPageComponent` | No | `JuliCheckoutFacade` + reactive form | Yes | High |
 | Checkout | Checkout template | No | custom HTML / SCSS | Yes | Medium |
 | Checkout | `JuliCheckoutFacade` / `UbrisCheckoutConnector` | No | single submit endpoint | Yes | High |
-| Orders | `src/app/pages/orders-page/OrdersPageComponent` | Partial | `JuliOrderFacade` | Yes | Medium |
+| Orders | `src/app/pages/orders-page/OrdersPageComponent` | Partial | `JuliOrderFacade` | No | Low |
 | Orders | Orders template | No | custom HTML / SCSS | Yes | Low |
-| Orders | `JuliOrderFacade` / `UbrisOrderConnector` | No | custom contract to `gateway-bff` | Yes | Medium |
-| Orders | Spartacus order data usage | Partial | `OrderHistoryList` type only | Yes | Medium |
+| Orders | `JuliOrderFacade` / `UserOrderService` bridge | Partial | custom `UserOrderAdapter` for `gateway-bff` | No | Low |
+| Orders | Spartacus order data usage | Partial | custom adapter only | No | Low |
 
 ## Evidence From Current Runtime
 
@@ -97,14 +97,16 @@ Relevant files:
 Current orders flow is read-only and custom:
 
 - route is protected by custom `AuthGuard`
-- data is loaded by username from `AuthService`
-- page consumes `OrderHistoryList` but not native Spartacus order state
+- page shell remains custom
+- list loading now uses `UserOrderService` and Spartacus user store
+- `gateway-bff` integration is provided via a custom `UserOrderAdapter`
 
 Relevant files:
 
 - `src/app/pages/orders-page/orders-page.component.ts`
-- `src/app/core/auth/auth.service.ts`
+- `src/app/core/commerce/adapters/order.adapter.ts`
 - `src/app/core/commerce/facades/order.facade.ts`
+- `src/app/core/commerce/normalizers/order.normalizer.ts`
 
 ## Spartacus Native Capability Present Today
 
@@ -279,28 +281,31 @@ Approach:
 
 Decision:
 
-- keep hybrid temporarily
+- converge the loading/state foundation now, keep the custom route and page shell
 
 Reasoning:
 
 - current page is simple and validated
-- installed native order path is deprecated
-- migrating immediately would replace one form of debt with another
+- installed native order path is deprecated, but the `UserOrderService` + `UserOrderAdapter` seam still gives useful convergence with low risk
+- the main debt was the custom loading/state path, not the page shell
 
 Approach:
 
-- converge only after deciding whether to install the modern Spartacus order / user stack for the current version strategy
+- keep `/account/orders` and the current template
+- move loading/state to `UserOrderService`
+- register a custom `UserOrderAdapter` for the current `gateway-bff` contract
+- keep richer account features and eventual move to a modern order library for a later package
 
 ## Recommended Order Of Implementation
 
 1. Cart foundation
-2. Account / orders
+2. Account / orders foundation
 3. Checkout
 
 Why this order:
 
 - cart unlocks the auth and state bridge needed by the others
-- orders is read-only and easier than checkout, but should not move into a deprecated path prematurely
+- orders is read-only and easier than checkout, and can now converge at the state layer without a risky UI swap
 - checkout depends on cart, auth, and richer backend contracts
 
 ## First Work Package
@@ -366,6 +371,30 @@ Rollback:
 - `DELETE /cart/{cartId}`
 - optional `POST /cart/{cartId}/email` if guest checkout is desired
 - stable cart identifiers and user/cart ownership semantics
+
+## Orders / Account Package Status
+
+Implemented in the current package:
+
+- `OrdersPageComponent` keeps the existing route and template shell
+- `JuliOrderFacade` now delegates to `UserOrderService`
+- Spartacus user/order state is enabled through `UserTransitional_4_2_Module`
+- `UbrisOrderAdapter` now implements Spartacus `UserOrderAdapter`
+- backend contract remains `GET /api/bff/query/orders` and `GET /api/bff/query/orders/{orderId}`
+- client-side pagination metadata is synthesized in the normalizer because the backend contract is still summary-only
+
+Backend gaps still open but not required for this package:
+
+- server-side pagination
+- server-side sorting
+- richer order detail entries / totals contract
+- return / cancel / consignment tracking endpoints in the Spartacus shape
+
+Explicit decision:
+
+- orders stays hybrid by page shell
+- orders is converged enough at the state/loading layer for now
+- checkout remains out of scope
 
 ## What Is Safe Today
 

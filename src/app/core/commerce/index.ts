@@ -15,7 +15,6 @@ export * from './connectors/search.connector';
 export * from './connectors/category.connector';
 export * from './connectors/cart.connector';
 export * from './connectors/checkout.connector';
-export * from './connectors/order.connector';
 export * from './facades/category.facade';
 export * from './facades/cart.facade';
 export * from './facades/checkout.facade';
