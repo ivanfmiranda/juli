@@ -46,6 +46,16 @@ yarn-error.log
 testem.log
 /typings
 *.log
+*.out.log
+*.err.log
+*.pid
+*.tmp
+*.temp
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .juli-dev.log
 .juli-dev.err.log
 .juli-ng-serve.pid

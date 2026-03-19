@@ -5,10 +5,10 @@
 
 overview:
   title: Integração Juli CMS com Ubris Commerce
-  status: Planejada / Preparada
-  current_implementation: MockCommerceResolver
-  target_implementation: UbrisCommerceResolver
-  migration_effort: Baixo (troca de provider apenas)
+  status: Implementada no runtime principal
+  current_implementation: Ubris adapters + connectors + normalizers via gateway-bff
+  target_implementation: Evolução incremental sobre a integração atual
+  migration_effort: Baixo para extensões; sem troca de runtime
 
 # ═══════════════════════════════════════════════════════════════════
 # SEPARAÇÃO DE RESPONSABILIDADES
@@ -83,8 +83,8 @@ affected_components:
     integration_flow: |
       1. CMS envia: { type: "product-teaser", product_code: "3881010" }
       2. ProductTeaserComponent recebe dados do CMS
-      3. Componente chama CommerceResolver.getProduct("3881010")
-      4. Resolver busca em Ubris (ou mock)
+      3. Componente chama UbrisProductConnector.get("3881010")
+      4. Connector busca em Ubris via gateway-bff
       5. Componente combina: teaser_text (CMS) + price (Commerce)
       6. UI renderiza card completo
 
@@ -100,8 +100,8 @@ affected_components:
     integration_flow: |
       1. CMS envia: { type: "category-teaser", category_code: "578" }
       2. CategoryTeaserComponent recebe dados
-      3. Componente chama CommerceResolver.getCategory("578")
-      4. Resolver busca em Ubris
+      3. Componente chama connector/facade de categoria
+      4. Connector busca em Ubris via gateway-bff
       5. Componente renderiza com dados da categoria
 
   product_carousel:
@@ -113,7 +113,7 @@ affected_components:
       - Dados completos de cada produto
     integration_flow: |
       1. CMS envia array de códigos
-      2. Componente chama CommerceResolver.getProducts(codes)
+      2. Componente chama connector bulk ou loop controlado
       3. Ubris retorna bulk de produtos
       4. Componente renderiza carrossel
 
@@ -191,43 +191,28 @@ expected_ubris_api:
 # ═══════════════════════════════════════════════════════════════════
 
 data_flow:
-  
-  current_mock:
-    name: "Fluxo Atual (Mock)"
+  current_runtime:
+    name: "Fluxo Atual (Ubris + Strapi)"
     steps:
       - CMS envia estrutura com product_code
       - ProductTeaserComponent recebe via CmsComponentData
-      - Componente injeta MockCommerceResolver
-      - Resolver retorna produto mockado
+      - Componente injeta UbrisProductConnector
+      - Connector chama gateway-bff
+      - gateway-bff agrega dados de commerce
       - Componente renderiza
     diagram: |
-      Strapi → Adapter → ProductTeaserComponent → MockCommerceResolver
+      Strapi → Adapter → ProductTeaserComponent → UbrisProductConnector
                                                         ↓
-                                                    Mock Data
+                                                   gateway-bff
                                                         ↓
-                                                   UI Render
-
-  future_ubris:
-    name: "Fluxo Futuro (Ubris)"
-    steps:
-      - CMS envia estrutura com product_code (igual)
-      - ProductTeaserComponent recebe (igual)
-      - Componente injeta UbrisCommerceResolver
-      - Resolver chama API Ubris
-      - Ubris retorna dados reais
-      - Componente renderiza (igual)
-    diagram: |
-      Strapi → Adapter → ProductTeaserComponent → UbrisCommerceResolver
-                                                        ↓
-                                                  Ubris API
+                                                      Ubris
                                                         ↓
                                                    UI Render
 
   key_insight: |
-    A ÚNICA mudança é a implementação do Resolver.
-    O componente ProductTeaserComponent NÃO MUDA.
-    O modelo canônico NÃO MUDA.
-    O adapter NÃO MUDA.
+    O contrato editorial continua separado do contrato de commerce.
+    O componente ProductTeaserComponent combina intenção editorial
+    com dados vivos do Ubris sem vazar shapes brutos para a UI.
 
 # ═══════════════════════════════════════════════════════════════════
 # IMPLEMENTAÇÃO ATUAL
@@ -236,71 +221,42 @@ data_flow:
 current_implementation:
   
   files:
-    interface: src/app/core/commerce/commerce-resolver.interface.ts
-    mock: src/app/core/commerce/mock-commerce.resolver.ts
-    stub: src/app/core/commerce/ubris-commerce.resolver.stub.ts
+    product_adapter: src/app/core/commerce/adapters/product.adapter.ts
+    product_connector: src/app/core/commerce/connectors/product.connector.ts
+    category_connector: src/app/core/commerce/connectors/category.connector.ts
+    search_connector: src/app/core/commerce/connectors/search.connector.ts
+    cart_facade: src/app/core/commerce/facades/cart.facade.ts
     module: src/app/core/commerce/commerce.module.ts
   
   usage:
     registration: |
-      // Em app.module.ts ou strapi-cms.module.ts
+      // Em app.module.ts
       imports: [
-        CommerceModule.forRoot({ useMock: true })  // Dev
-        // CommerceModule.forRoot({ useMock: false, ubrisConfig: {...} })  // Prod
+        CommerceModule.forRoot()
       ]
     
     injection: |
       // Em componente
       constructor(
-        @Inject(COMMERCE_RESOLVER) private commerceResolver: CommerceResolver
+        private productConnector: UbrisProductConnector
       ) {}
       
     consumption: |
       // Buscar produto
-      this.product$ = this.commerceResolver.getProduct(productCode);
+      this.product$ = this.productConnector.get(productCode);
 
 # ═══════════════════════════════════════════════════════════════════
 # MIGRAÇÃO PARA UBRIS
 # ═══════════════════════════════════════════════════════════════════
 
 migration_plan:
-  
-  phase_1: "Preparação"
+  next_steps:
     tasks:
-      - Validar interfaces com equipe Ubris
-      - Confirmar endpoints da API
-      - Ajustar modelos se necessário
-    status: Pendente
-    
-  phase_2: "Implementação"
-    tasks:
-      - Implementar UbrisCommerceResolver
-      - Adicionar mapeamento de respostas
-      - Implementar tratamento de erros
-      - Adicionar cache se necessário
-    status: Pendente
-    
-  phase_3: "Testes"
-    tasks:
-      - Testar integração em ambiente de staging
-      - Validar performance
-      - Testar fallback em caso de erro Ubris
-    status: Pendente
-    
-  phase_4: "Deploy"
-    tasks:
-      - Trocar provider de Mock para Ubris
-      - Monitorar erros
-      - Rollback plan se necessário
-    status: Pendente
-
-  checklist_pre_ubris:
-    - Ubris API documentada e estável
-    - Endpoints de produto funcionando
-    - Endpoints de categoria funcionando
-    - Autenticação configurada
-    - Rate limits conhecidos
-    - SLAs definidos
+      - Expandir bulk product fetch para componentes compostos
+      - Formalizar contrato de categoria e search com o gateway-bff
+      - Adicionar caching seletivo no layer de connectors
+      - Evoluir fallback e observabilidade de commerce
+    status: Em andamento
 
 # ═══════════════════════════════════════════════════════════════════
 # TRATAMENTO DE ERROS
@@ -381,19 +337,14 @@ performance:
 
 executive_summary: |
   
-  A integração com Ubris é uma troca de implementação, não uma
-  reescrita. A arquitetura atual já suporta Ubris:
+  A integração com Ubris já é o caminho oficial do runtime.
   
-  1. CMS (Strapi) continua igual
-  2. Modelo canônico não muda
-  3. Componentes não mudam
-  4. Apenas o CommerceResolver é trocado
-  
-  Tempo estimado de migração: 1-2 dias de trabalho
-  Risco: Baixo (fallback para mock disponível)
+  1. CMS (Strapi) define páginas e intenção editorial
+  2. gateway-bff expõe o contrato de commerce
+  3. Connectors e normalizers adaptam o contrato para a UI
+  4. Componentes combinam dados editoriais e dados vivos sem acoplamento bruto
   
   Próximos passos:
-  1. Aguardar API Ubris estável
-  2. Implementar UbrisCommerceResolver
-  3. Trocar provider
-  4. Testar e deploy
+  1. Consolidar contratos de commerce mais ricos
+  2. Melhorar caching e observabilidade
+  3. Expandir componentes híbridos

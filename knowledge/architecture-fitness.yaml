@@ -82,13 +82,13 @@ fallback-rules:
   - id: CONTROLLED_FALLBACK
     description: "Todo erro deve resultar em fallback controlado."
     enforcement: "FallbackPolicyService centraliza decisões"
-    check: "Nenhum erro de CMS quebra a aplicação (testar com mock error)"
+    check: "Nenhum erro de CMS quebra a aplicação (testar com página inválida no Strapi)"
     severity: "CRITICAL"
     
   - id: NO_APP_CRASH
     description: "Nenhum erro no CMS quebra a aplicação."
     enforcement: "Try-catch no adapter + fallback components"
-    check: "Mock /page/error não quebra a UI"
+    check: "/page/invalid-demo não quebra a UI"
     severity: "CRITICAL"
     
   - id: GRACEFUL_DEGRADATION
@@ -98,10 +98,10 @@ fallback-rules:
     severity: "HIGH"
 
 integration-rules:
-  - id: UBRS_READY
-    description: "Arquitetura preparada para integração Ubris futura."
-    enforcement: "CommerceResolver interface e injeção de dependência"
-    check: "ProductTeaser funciona com mock hoje, pronto para Ubris amanhã"
+  - id: UBRIS_CONNECTED
+    description: "Arquitetura conectada ao Ubris real via gateway-bff."
+    enforcement: "Adapters + connectors + normalizers"
+    check: "ProductTeaser, PDP, category e search consomem dados vivos do Ubris"
     severity: "MEDIUM"
     
   - id: CMS_COMMERCE_SEPARATION
@@ -111,10 +111,10 @@ integration-rules:
     severity: "HIGH"
 
 test-rules:
-  - id: MOCK_COVERAGE
-    description: "Mock CMS cobre todos os cenários de erro."
-    enforcement: "scripts/mock-cms.js com /page/* endpoints"
-    check: "home, partial, unknown, not-found, error, empty testáveis"
+  - id: CMS_COVERAGE
+    description: "Strapi cobre os cenários críticos de CMS e fallback."
+    enforcement: "Páginas seeded e/ou conteúdo editorial de teste no Strapi"
+    check: "home, unknown-demo, invalid-demo, not-found, preview e empty-demo testáveis"
     severity: "HIGH"
     
   - id: EXTENSION_TESTED

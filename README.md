@@ -2,57 +2,100 @@
 
 Official Angular + Spartacus storefront for Ubris headless commerce with Strapi as CMS.
 
-## Runtime model
+## Overview
 
-- Frontend runtime: Angular workspace using Spartacus packages
-- CMS source of truth: Strapi REST API
+`juli` is the official storefront runtime for this initiative.
+
+- Frontend runtime: Angular workspace with Spartacus packages
+- CMS source of truth: Strapi
 - Commerce source of truth: Ubris headless through `gateway-bff`
-- Product and category data: Ubris
-- Editorial page structure: Strapi
-- Hybrid CMS components: editorial payload from Strapi, live commerce enrichment from Ubris
+- Rendering model: Angular client runtime with CMS-driven pages and live commerce enrichment
 
-## What is in use now
+This repository does not maintain a parallel storefront path. The supported runtime is:
 
+1. Strapi running on `http://localhost:1337`
+2. `gateway-bff` running on `http://localhost:8088`
+3. `juli` running on `http://localhost:4200`
+
+## Architecture Summary
+
+CMS flow:
+
+- Strapi REST API
 - `src/app/core/cms/adapters/strapi-cms.adapter.ts`
-  - Strapi page adapter
-  - canonical regions: `header`, `main`, `sidebar`, `belowFold`, `footer`
-  - safe fallback for invalid or unsupported components
-- `src/app/core/commerce/adapters/*`
-  - low-level Ubris HTTP adapters against `gateway-bff`
-- `src/app/core/commerce/connectors/*`
-  - normalization into Spartacus-friendly product/search/cart/order models
-- `src/app/core/commerce/facades/*`
-  - page-level orchestration for cart, checkout, orders and category flows
-- `src/app/spartacus/strapi-cms.module.ts`
-  - Spartacus CMS registry aligned with the adapter output
-- `src/app/shared/components/product-teaser/*`
-  - editorial reference from Strapi
-  - live product data from Ubris through Spartacus `ProductService`
+- canonical CMS model in `src/app/core/models/cms.model.ts`
+- Spartacus CMS registry in `src/app/spartacus/strapi-cms.module.ts`
+- dynamic rendering through `src/app/pages/cms-page` and `src/app/shared/cms-runtime`
 
-## Current routes
+Commerce flow:
 
-- public:
-  - `/`
-    - redirects to `/page/home`
-  - `/login`
-  - `/page/:slug`
-  - `/page/preview/:slug`
-  - `/product/:code`
-  - `/c/:code`
-  - `/search?q=`
-  - `/terms`
-  - `/privacy`
-- protected by login:
-  - `/cart`
-  - `/checkout`
-  - `/account/orders`
+- `gateway-bff`
+- low-level adapters in `src/app/core/commerce/adapters`
+- normalization in `src/app/core/commerce/normalizers`
+- connectors and facades in `src/app/core/commerce/connectors` and `src/app/core/commerce/facades`
+- page components consuming normalized models only
+
+Separation rules:
+
+- raw Strapi payload does not go directly into Angular components
+- UI does not couple to raw backend shapes from Ubris
+- CMS defines editorial structure and intent
+- Ubris provides live commerce data and behavior
+
+## Status
+
+Validated live in the browser:
+
+- login
+- CMS home page from Strapi
+- commerce enrichment on CMS components
+- PDP
+- category / PLP
+- search
+- add to cart
+- cart
+- checkout
+- account orders
+
+Also validated:
+
+- real stock status on PDP via `gateway-bff`
+- safe CMS fallbacks for unknown and invalid component payloads
+
+Current implementation note:
+
+- cart, checkout and account are functional and integrated with Ubris
+- they are not yet a fully native reuse of every Spartacus commerce flow module
+- the runtime path is still official and production-oriented, but that detail matters for future convergence work
 
 ## Prerequisites
 
-- Node.js 16+ available locally
-- Ubris backend stack running
-  - `gateway-bff` expected at `http://localhost:8088`
+- Node.js 16 LTS recommended
+- npm available locally
 - Strapi running at `http://localhost:1337`
+- `gateway-bff` running at `http://localhost:8088`
+
+## Local Configuration
+
+This workspace does not use a `.env` file as the primary local configuration mechanism.
+
+Local runtime configuration lives in:
+
+- [src/environments/environment.ts](src/environments/environment.ts)
+- [src/environments/environment.prod.ts](src/environments/environment.prod.ts)
+- [proxy.conf.json](proxy.conf.json)
+
+Current development endpoints:
+
+- `strapiApiBaseUrl = /strapi-api`
+- `ubrisApiBaseUrl = /ubris-api`
+- `defaultCmsSlug = home`
+
+Proxy rules:
+
+- `/ubris-api` -> `http://localhost:8088`
+- `/strapi-api` -> `http://localhost:1337/api`
+- `/img` -> `http://localhost:8088`
 
 ## Install
 
@@ -60,23 +103,23 @@ Official Angular + Spartacus storefront for Ubris headless commerce with Strapi 
 npm install
 ```
 
-## Run locally
+## Run Locally
 
 ```bash
 npm start
 ```
 
-The dev server runs on:
+Dev server:
 
 - `http://localhost:4200`
 
-Proxy rules are configured in [proxy.conf.json](proxy.conf.json):
+## Useful Scripts
 
-- `/ubris-api` -> `http://localhost:8088`
-- `/strapi-api` -> `http://localhost:1337/api`
-- `/img` -> `http://localhost:8088`
+Start the local dev server:
 
-## Build
+```bash
+npm start
+```
 
 Development build:
 
@@ -90,79 +133,87 @@ Production build:
 npm run build:prod
 ```
 
+Standalone type validation:
+
+```bash
+npm run validate:types
+```
+
+`validate:types` currently uses the Angular build pipeline as the type-safety gate for this workspace. That is intentional; a standalone `tsc` pass is not yet the authoritative signal for the current Spartacus integration layer.
+
+## Main Routes
+
+Public routes:
+
+- `/`
+- `/login`
+- `/page/home`
+- `/page/:slug`
+- `/page/preview/:slug`
+- `/product/:code`
+- `/c/:code`
+- `/search?q=`
+- `/terms`
+- `/privacy`
+
+Protected routes:
+
+- `/cart`
+- `/checkout`
+- `/account/orders`
+
 ## Authentication
 
-Login is handled against `gateway-bff`:
+Login is handled through `gateway-bff`.
 
-- endpoint: `/ubris-api/api/bff/auth/login`
-- the returned bearer token is stored in local storage
-- Ubris API calls are authenticated by `AuthInterceptor`
+- login endpoint: `/ubris-api/api/bff/auth/login`
+- bearer token is stored client-side after successful login
+- authenticated API calls are decorated by `AuthInterceptor`
 
 Relevant files:
 
-- `src/app/core/auth/auth.service.ts`
-- `src/app/core/auth/auth.interceptor.ts`
-- `src/app/core/auth/auth.guard.ts`
+- [auth.service.ts](src/app/core/auth/auth.service.ts)
+- [auth.interceptor.ts](src/app/core/auth/auth.interceptor.ts)
+- [auth.guard.ts](src/app/core/auth/auth.guard.ts)
 
-## CMS integration
+## CMS Integration
 
 Strapi pages are loaded through the unified `/api/pages` contract.
 
-The Angular app uses a canonical internal CMS model before rendering anything. Raw Strapi payload does not go directly into Angular components.
+The adapter normalizes Strapi payload into a canonical UI model before rendering. Supported canonical regions are:
 
-Key files:
+- `header`
+- `main`
+- `sidebar`
+- `belowFold`
+- `footer`
 
-- `src/app/core/models/cms.model.ts`
-- `src/app/core/cms/adapters/strapi-cms.adapter.ts`
-- `src/app/pages/cms-page/cms-page.component.ts`
-- `src/app/shared/cms-runtime/cms-component-host.component.ts`
-- `src/app/spartacus/strapi-cms.module.ts`
+Minimum registered CMS components include:
 
-## Commerce integration
+- `JuliHeroBannerComponent`
+- `CMSParagraphComponent`
+- `JuliSimpleBannerComponent`
+- `JuliProductTeaserComponent`
+- `JuliCategoryTeaserComponent`
+- `JuliCtaBlockComponent`
+- `JuliInfoCardComponent`
+- `UnknownComponent`
+- `ErrorComponent`
 
-Ubris data comes from `gateway-bff` storefront endpoints:
+## Commerce Integration
+
+Commerce data comes from `gateway-bff` storefront endpoints, including:
 
 - `/api/storefront/product/{sku}`
 - `/api/storefront/category/{categoryCode}`
 - `/api/storefront/search?q=`
+- `/api/cart`
+- `/api/orders`
 
-The Angular app normalizes those payloads before components consume them.
+The Angular app normalizes backend payloads before page components consume them. PDP stock status is sourced from the live storefront product contract and rendered from normalized stock data.
 
-Key files:
+## Collaboration Notes
 
-- `src/app/core/commerce/adapters/product.adapter.ts`
-- `src/app/core/commerce/adapters/category.adapter.ts`
-- `src/app/core/commerce/adapters/search.adapter.ts`
-- `src/app/core/commerce/adapters/cart.adapter.ts`
-- `src/app/core/commerce/connectors/product.connector.ts`
-- `src/app/core/commerce/connectors/search.connector.ts`
-- `src/app/core/commerce/connectors/category.connector.ts`
-- `src/app/core/commerce/facades/cart.facade.ts`
-- `src/app/core/commerce/facades/checkout.facade.ts`
-- `src/app/core/commerce/facades/order.facade.ts`
-- `src/app/shared/components/product-teaser/product-teaser.component.ts`
-- `src/app/pages/product-detail/product-detail.component.ts`
-- `src/app/pages/category-page/category-page.component.ts`
-- `src/app/pages/search-page/search-page.component.ts`
-- `src/app/pages/cart-page/cart-page.component.ts`
-- `src/app/pages/checkout-page/checkout-page.component.ts`
-- `src/app/pages/orders-page/orders-page.component.ts`
-
-## Official path only
-
-This repository no longer treats mock CMS servers or experimental storefront slices as the main runtime path.
-
-The maintained execution path is:
-
-1. Strapi running
-2. Ubris backend running
-3. `npm start` in `juli`
-
-## Validation used for this workspace
-
-```bash
-npm run build
-npm run validate:types
-```
-
-Both commands currently use the Angular build pipeline and pass on the current codebase.
+- do not commit `node_modules`, `dist`, `.angular`, `.cache` or local log files
+- keep Strapi content models and Angular runtime aligned through the canonical CMS adapter
+- prefer changing adapters and normalizers before changing page components when a backend contract shifts

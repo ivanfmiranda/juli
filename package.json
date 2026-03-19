@@ -10,7 +10,7 @@
     "build:prod": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration production",
     "watch": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --watch --configuration development",
     "test": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng test",
-    "validate:types": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration development"
+    "validate:types": "npm run build"
   },
   "dependencies": {
     "@angular/animations": "~12.2.0",

@@ -48,7 +48,7 @@
   - Proibido: Configurações espalhadas em outros módulos
 
 - [ ] **SAFE_MAPPING**: Ausência de mapper não quebra app
-  - Teste: Acesse `/page/unknown` no mock
+  - Teste: Acesse uma página Strapi com componente desconhecido, por exemplo `/page/unknown-demo`
   - Esperado: UI mostra `UnknownComponent`, não crasha
 
 ---
@@ -79,11 +79,11 @@
   - Verifique: Página inexistente → `NotFoundPage`
 
 - [ ] **NO_APP_CRASH**: Nenhum erro quebra a aplicação
-  - Teste: Acesse `/page/error` no mock
+  - Teste: Acesse uma página Strapi com payload inválido, por exemplo `/page/invalid-demo`
   - Esperado: Mensagem de erro amigável, app continua funcional
 
 - [ ] **GRACEFUL_DEGRADATION**: Degradação gradual
-  - Teste: Acesse `/page/partial` no mock
+  - Teste: Acesse uma página Strapi com conteúdo parcial
   - Esperado: Componentes válidos renderizam, componentes inválidos mostram fallback
 
 ---
@@ -104,16 +104,16 @@ Verifique se todos os componentes estão registrados:
 
 ---
 
-## 🧪 Mock CMS Coverage Check
+## 🧪 CMS Coverage Check
 
-Teste todos os cenários do mock:
+Teste os cenários reais do Strapi:
 
 - [ ] `/api/pages?filters[slug][$eq]=home` → Conteúdo válido completo
-- [ ] `/api/pages?filters[slug][$eq]=partial` → Conteúdo incompleto (testa fallback)
-- [ ] `/api/pages?filters[slug][$eq]=unknown` → Componente desconhecido
-- [ ] `/api/pages?filters[slug][$eq]=not-found` → 404
-- [ ] `/api/pages?filters[slug][$eq]=error` → Erro 500 simulado
-- [ ] `/api/pages?filters[slug][$eq]=empty` → Página sem componentes
+- [ ] `/api/pages?filters[slug][$eq]=unknown-demo` → Componente desconhecido
+- [ ] `/api/pages?filters[slug][$eq]=invalid-demo` → Payload inválido / fallback
+- [ ] `/api/pages?filters[slug][$eq]=missing-slug` → 404 / página inexistente
+- [ ] `/api/pages?filters[slug][$eq]=preview-slug&publicationState=preview` → Preview editorial
+- [ ] `/api/pages?filters[slug][$eq]=empty-demo` → Página sem componentes
 
 ---
 
@@ -130,7 +130,7 @@ Para validar que novos componentes podem ser adicionados:
 ### Como adicionar novo componente (ex: InfoCard):
 
 1. ⬜ Adicionar `InfoCardComponentModel` em `core/models/cms.model.ts`
-2. ⬜ Criar schema no Strapi (ou mock)
+2. ⬜ Criar schema e conteúdo no Strapi
 3. ⬜ Adicionar mapper em `strapi-cms.adapter.ts` (ou criar entry separada)
 4. ⬜ Registrar em `strapi-cms.module.ts` no `ConfigModule.withConfig`
 5. ⬜ Criar componente Angular em `shared/components/info-card/`
@@ -139,12 +139,12 @@ Para validar que novos componentes podem ser adicionados:
 
 ---
 
-## 🚀 Integration Check (Ubris Ready)
+## 🚀 Integration Check (Ubris Live)
 
-- [ ] `CommerceResolver` interface definida
-- [ ] Implementação mock existe em `core/commerce/`
-- [ ] `ProductTeaser` usa resolver, não chama API diretamente
-- [ ] Separação clara: CMS = código/ID; Commerce = dados
+- [ ] Adapters HTTP de commerce existem em `core/commerce/adapters/`
+- [ ] Connectors normalizam payloads do `gateway-bff`
+- [ ] `ProductTeaser` usa connector/facade de commerce, não chama API direta na view
+- [ ] Separação clara: CMS = intenção editorial; Commerce = dados vivos
 
 ---
 
@@ -158,7 +158,7 @@ Para validar que novos componentes podem ser adicionados:
 | Rendering Rules | 3 | | | ⬜/3 |
 | Fallback Rules | 3 | | | ⬜/3 |
 | Component Registry | 7 | | | ⬜/7 |
-| Mock Coverage | 6 | | | ⬜/6 |
+| CMS Coverage | 6 | | | ⬜/6 |
 | Extension | 7 | | | ⬜/7 |
 | Ubris Ready | 4 | | | ⬜/4 |
 | **TOTAL** | **39** | | | **⬜/39** |

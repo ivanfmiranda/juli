@@ -38,26 +38,13 @@ steps:
       - Não há métodos, apenas propriedades (serializável)
 
   # ═════════════════════════════════════════════════════════════════
-  # PASSO 2: Schema no Strapi/Mock
+  # PASSO 2: Schema e Conteúdo no Strapi
   # ═════════════════════════════════════════════════════════════════
   - id: 2
-    title: Definir Schema (Strapi ou Mock)
+    title: Definir Schema e Conteúdo no Strapi
     description: |
       O schema define como o conteúdo é estruturado no CMS.
-      No Strapi: criar componente. No mock: adicionar ao JSON.
-    file_mock: scripts/mock-cms.js
-    action_mock: |
-      Adicionar exemplo no cenário demo:
-      
-      ```javascript
-      {
-        id: 2,
-        __component: "cms.info-card",
-        icon: "🚀",
-        title: "Performance",
-        description: "Arquitetura otimizada com lazy loading."
-      }
-      ```
+      No caminho oficial, o conteúdo vem do Strapi real.
     file_strapi: strapi/src/components/cms/info-card.json
     action_strapi: |
       Criar schema Strapi:
@@ -75,6 +62,17 @@ steps:
           "description": { "type": "text" },
           "link": { "type": "string" }
         }
+        }
+      ```
+      
+      Depois, adicionar o componente a uma página editorial real no Strapi:
+      
+      ```json
+      {
+        "__component": "cms.info-card",
+        "icon": "🚀",
+        "title": "Performance",
+        "description": "Arquitetura otimizada com lazy loading."
       }
       ```
 
@@ -88,7 +86,7 @@ steps:
       O adapter é o único lugar que conhece a estrutura do Strapi.
       Ele transforma o payload bruto em modelo canônico.
     action: |
-      Adicionar entrada no typeMapping:
+      Adicionar o tipo suportado e o mapper explícito:
       
       ```typescript
       const typeMapping: { [key: string]: string } = {
@@ -97,13 +95,17 @@ steps:
       };
       ```
       
-      Nota: A propagação dos campos é automática via spread:
+      E mapear explicitamente os campos normalizados:
+      
       ```typescript
       return {
-        uid: `comp_${Math.random().toString(36).substr(2, 9)}`,
-        typeCode: typeMapping[type] || type,
-        flexType: typeMapping[type] || type,
-        ...strapiComp  // ← Propaga icon, title, description, link
+        uid,
+        typeCode: 'JuliInfoCardComponent',
+        flexType: 'JuliInfoCardComponent',
+        icon: this.asString(strapiComp.icon),
+        title: this.asString(strapiComp.title),
+        description: this.asString(strapiComp.description),
+        link: this.asString(strapiComp.link)
       };
       ```
     validation: |
@@ -207,20 +209,18 @@ steps:
   - id: 7
     title: Testar o Componente
     description: |
-      Testar em diferentes cenários do mock.
+      Testar em conteúdo real do Strapi.
     commands:
-      - cmd: npm run mock-cms
-        desc: Iniciar mock server
-      - cmd: curl http://localhost:1337/api/pages?filters[slug][$eq]=demo
-        desc: Verificar se InfoCard aparece no JSON
-      - cmd: ng serve
+      - cmd: curl http://localhost:1337/api/pages?filters[slug][$eq]=home
+        desc: Verificar se InfoCard aparece no payload do Strapi
+      - cmd: npm start
         desc: Rodar Spartacus e verificar renderização
     scenarios:
-      - name: demo
-        url: /demo
+      - name: home
+        url: /page/home
         expected: InfoCards renderizam com ícone, título e descrição
       - name: partial
-        url: /partial
+        url: /page/partial-info-card
         expected: InfoCards vazios mostram estado apropriado
 
   # ═════════════════════════════════════════════════════════════════
@@ -250,12 +250,8 @@ files_modified:
     change: +15 linhas (nova interface)
     critical: true
     
-  - path: scripts/mock-cms.js
-    change: +15 linhas (dados de exemplo)
-    critical: false (para teste apenas)
-    
   - path: src/app/core/cms/adapters/strapi-cms.adapter.ts
-    change: +1 linha (typeMapping)
+    change: +mapper explícito para o novo tipo
     critical: true
     
   - path: src/app/spartacus/strapi-cms.module.ts
