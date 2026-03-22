@@ -1,0 +1,20 @@
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+body {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}

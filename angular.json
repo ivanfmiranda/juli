@@ -32,9 +32,9 @@
             ],
             "styles": [
               "src/styles.scss",
-              "../design-system/tokens.css",
-              "../design-system/components.css",
-              "../design-system/store.css"
+              "src/design-system/tokens.css",
+              "src/design-system/components.css",
+              "src/design-system/store.css"
             ],
             "scripts": []
           },
