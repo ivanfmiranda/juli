@@ -6,6 +6,7 @@
   "scripts": {
     "ng": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng",
     "start": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng serve --proxy-config proxy.conf.json --disable-host-check",
+    "serve:prod": "node server.js",
     "build": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration development",
     "build:prod": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration production",
     "watch": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --watch --configuration development",
