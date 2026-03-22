@@ -1,0 +1,39 @@
+<div class="soft-login-modal" *ngIf="isOpen" (click)="onContinueBrowsing()">
+  <div class="soft-login-modal__backdrop"></div>
+  
+  <div class="soft-login-modal__container" (click)="$event.stopPropagation()">
+    <button class="soft-login-modal__close" (click)="onClose()" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+    
+    <div class="soft-login-modal__content">
+      <div class="soft-login-modal__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+          <polyline points="10,17 15,12 10,7"/>
+          <line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+      </div>
+      
+      <h2 class="soft-login-modal__title">Sign in to continue</h2>
+      
+      <p class="soft-login-modal__message">
+        Please sign in to your account to complete your purchase. Your cart will be saved.
+      </p>
+      
+      <div class="soft-login-modal__actions">
+        <button 
+          class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full" 
+          (click)="onLogin()">
+          Sign In
+        </button>
+        
+        <button 
+          class="ub-btn ub-btn--secondary ub-btn--lg ub-btn--full" 
+          (click)="onContinueBrowsing()">
+          Continue Browsing
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

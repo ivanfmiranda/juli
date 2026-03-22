@@ -1,0 +1,269 @@
+// Site Header Styles - Premium Design
+
+$color-primary: #274060;
+$color-primary-dark: #1a2d40;
+$color-accent: #3d5a80;
+$color-white: #ffffff;
+$color-gray-100: #f7f9fc;
+$color-gray-200: #e5e9f0;
+$color-gray-600: #526075;
+$color-gray-800: #1a1a1a;
+
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 16px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+// Container
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+// Top Bar
+.top-bar {
+  background: linear-gradient(90deg, $color-primary, $color-accent);
+  color: $color-white;
+  padding: 0.5rem 0;
+  font-size: 0.875rem;
+
+  .promo-text {
+    margin: 0;
+    text-align: center;
+    font-weight: 500;
+  }
+}
+
+// Main Header
+.main-header {
+  background: $color-white;
+  border-bottom: 1px solid $color-gray-200;
+  padding: 1rem 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  .container {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+}
+
+// Mobile Menu Button
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+
+  span {
+    width: 24px;
+    height: 2px;
+    background: $color-gray-800;
+    transition: all 0.3s;
+  }
+
+  @media (max-width: 768px) {
+    display: flex;
+  }
+}
+
+// Logo
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: $color-primary;
+
+  .logo-icon {
+    font-size: 2rem;
+  }
+
+  &:hover {
+    color: $color-accent;
+  }
+}
+
+// Search Bar
+.search-bar {
+  flex: 1;
+  max-width: 600px;
+  display: flex;
+  position: relative;
+
+  input {
+    flex: 1;
+    padding: 0.875rem 1rem;
+    border: 2px solid $color-gray-200;
+    border-radius: $radius-md;
+    font-size: 1rem;
+    transition: all 0.2s;
+
+    &:focus {
+      outline: none;
+      border-color: $color-accent;
+    }
+
+    &::placeholder {
+      color: $color-gray-600;
+    }
+  }
+
+  button {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: $color-primary;
+    color: $color-white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    font-size: 1.125rem;
+    transition: background 0.2s;
+
+    &:hover {
+      background: $color-accent;
+    }
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+// Header Actions
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-decoration: none;
+  color: $color-gray-800;
+  position: relative;
+  padding: 0.5rem;
+  border-radius: $radius-sm;
+  transition: all 0.2s;
+
+  .icon {
+    font-size: 1.5rem;
+  }
+
+  .label {
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #ef4444;
+    color: $color-white;
+    font-size: 0.625rem;
+    font-weight: 700;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover {
+    background: $color-gray-100;
+    color: $color-primary;
+  }
+}
+
+// Navigation
+.main-nav {
+  background: $color-white;
+  border-bottom: 1px solid $color-gray-200;
+
+  .nav-list {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    gap: 0.5rem;
+    overflow-x: auto;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem;
+    text-decoration: none;
+    color: $color-gray-800;
+    font-weight: 500;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+
+    .nav-icon {
+      font-size: 1.25rem;
+    }
+
+    &:hover {
+      color: $color-primary;
+      border-bottom-color: $color-accent;
+    }
+
+    &.sale {
+      color: #dc2626;
+      font-weight: 600;
+
+      &:hover {
+        background: #fef2f2;
+      }
+    }
+  }
+
+  .nav-highlight {
+    margin-left: auto;
+  }
+
+  @media (max-width: 768px) {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: $color-white;
+    box-shadow: $shadow-lg;
+    padding: 1rem;
+
+    &.open {
+      display: block;
+    }
+
+    .nav-list {
+      flex-direction: column;
+    }
+
+    .nav-link {
+      padding: 0.875rem;
+      border-bottom: 1px solid $color-gray-200;
+    }
+  }
+}

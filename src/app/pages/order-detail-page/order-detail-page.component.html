@@ -1,42 +1,183 @@
-<ng-container *ngIf="order$ | async as order">
-  <section class="order-detail-page">
-    <header class="page-header">
-      <p class="eyebrow">Account</p>
-      <h1>Order {{ order.code }}</h1>
-      <p>{{ order.status }}</p>
-      <a routerLink="/account/orders">Back to orders</a>
+<div class="order-detail-page">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="spinner"></div>
+    <p>Carregando detalhes do pedido...</p>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error$ | async as error">
+    <div class="error-icon">⚠️</div>
+    <h3>Erro ao carregar pedido</h3>
+    <p>{{ error }}</p>
+    <div class="error-actions">
+      <button class="btn-secondary" (click)="goBack()">← Voltar para pedidos</button>
+      <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+    </div>
+  </div>
+
+  <!-- Order Content -->
+  <ng-container *ngIf="(order$ | async) as order">
+    <!-- Back Navigation -->
+    <nav class="back-nav">
+      <button class="btn-back" (click)="goBack()">
+        <span>←</span> Voltar para pedidos
+      </button>
+    </nav>
+
+    <!-- Header -->
+    <header class="order-header">
+      <div class="header-main">
+        <p class="eyebrow">Detalhes do Pedido</p>
+        <h1>Pedido #{{ order.code }}</h1>
+        <p class="order-date">Realizado em {{ order.createdAt | date: 'dd \'de\' MMMM \'de\' yyyy' }}</p>
+      </div>
+      
+      <div class="status-section">
+        <div class="status-badge" [class]="getStatusClass(order.status)">
+          <span class="status-icon">{{ getStatusIcon(order.status) }}</span>
+          <span class="status-text">{{ getStatusLabel(order.status) }}</span>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-container" *ngIf="order.status !== 'CANCELLED' && order.status !== 'RETURNED' && order.status !== 'REFUNDED'">
+          <div class="progress-bar">
+            <div class="progress-fill" [style.width.%]="getOrderProgress(order.status)"></div>
+          </div>
+          <div class="progress-steps">
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 10">Pedido</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 30">Processamento</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 50">Preparação</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 75">Envio</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 100">Entrega</span>
+          </div>
+        </div>
+      </div>
     </header>
 
-    <section class="detail-grid">
-      <article class="detail-card">
-        <h2>Summary</h2>
-        <p><strong>Placed:</strong> {{ order.created | date: 'medium' }}</p>
-        <p><strong>Items:</strong> {{ order.totalItems || order.entries?.length || 0 }}</p>
-        <p><strong>Subtotal:</strong> {{ order.subTotal?.formattedValue || '-' }}</p>
-        <p><strong>Tax:</strong> {{ order.totalTax?.formattedValue || '-' }}</p>
-        <p><strong>Total:</strong> {{ order.totalPriceWithTax?.formattedValue || order.totalPrice?.formattedValue || '-' }}</p>
-      </article>
-
-      <article class="detail-card">
-        <h2>Line items</h2>
-        <ng-container *ngIf="order.entries?.length; else noEntries">
-          <article class="line-item" *ngFor="let entry of order.entries">
-            <div>
-              <strong>{{ entry.product?.name || entry.product?.code }}</strong>
-              <p>{{ entry.product?.code }}</p>
+    <!-- Main Content Grid -->
+    <div class="detail-grid">
+      <!-- Left Column: Items -->
+      <section class="items-section">
+        <h2>Itens do pedido ({{ order.totalItems }})</h2>
+        
+        <div class="items-list" *ngIf="order.entries?.length; else noItems">
+          <article class="item-card" *ngFor="let entry of order.entries">
+            <div class="item-image" *ngIf="entry.product?.imageUrl; else placeholderImage">
+              <img [src]="entry.product!.imageUrl" [alt]="entry.product!.name">
             </div>
-            <div>
-              <p>Qty {{ entry.quantity }}</p>
-              <p>{{ entry.basePrice?.formattedValue }}</p>
-              <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+            <ng-template #placeholderImage>
+              <div class="item-image-placeholder">
+                <span>📦</span>
+              </div>
+            </ng-template>
+            
+            <div class="item-details">
+              <h3 class="item-name">{{ entry.product?.name }}</h3>
+              <p class="item-code">SKU: {{ entry.product?.code }}</p>
+              <div class="item-meta">
+                <span class="item-quantity">Qtd: {{ entry.quantity }}</span>
+                <span class="item-unit-price" *ngIf="entry.basePrice">
+                  {{ entry.basePrice.formattedValue }} un
+                </span>
+              </div>
+            </div>
+            
+            <div class="item-total">
+              <span class="total-value" *ngIf="entry.totalPrice">
+                {{ entry.totalPrice.formattedValue }}
+              </span>
             </div>
           </article>
-        </ng-container>
-      </article>
-    </section>
-  </section>
-</ng-container>
+        </div>
+        
+        <ng-template #noItems>
+          <div class="empty-items">
+            <p>Nenhum item encontrado para este pedido.</p>
+          </div>
+        </ng-template>
+      </section>
 
-<ng-template #noEntries>
-  <p>No line items available for this order.</p>
-</ng-template>
+      <!-- Right Column: Summary & Address -->
+      <aside class="summary-section">
+        <!-- Order Summary -->
+        <div class="summary-card">
+          <h2>Resumo do pedido</h2>
+          
+          <div class="summary-rows">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>{{ order.subTotal?.formattedValue || '-' }}</span>
+            </div>
+            
+            <div class="summary-row" *ngIf="order.deliveryCost">
+              <span>Frete</span>
+              <span>{{ order.deliveryCost.formattedValue }}</span>
+            </div>
+            
+            <div class="summary-row" *ngIf="order.totalTax">
+              <span>Taxas</span>
+              <span>{{ order.totalTax.formattedValue }}</span>
+            </div>
+            
+            <div class="summary-row savings" *ngIf="calculateSavings(order) > 0">
+              <span>Economia</span>
+              <span class="savings-value">-{{ calculateSavings(order) | currency:order.totalWithTax?.currencyIso }}</span>
+            </div>
+          </div>
+          
+          <div class="summary-total">
+            <span>Total</span>
+            <span class="total-value">{{ order.totalWithTax?.formattedValue || order.total?.formattedValue || '-' }}</span>
+          </div>
+        </div>
+
+        <!-- Delivery Address -->
+        <div class="address-card" *ngIf="order.deliveryAddress">
+          <h2>Endereço de entrega</h2>
+          <address>
+            <p class="address-name">{{ order.deliveryAddress.fullName }}</p>
+            <p class="address-line">{{ order.deliveryAddress.line1 }}</p>
+            <p class="address-line" *ngIf="order.deliveryAddress.line2">{{ order.deliveryAddress.line2 }}</p>
+            <p class="address-city">
+              {{ order.deliveryAddress.city }}
+              <span *ngIf="order.deliveryAddress.region">, {{ order.deliveryAddress.region }}</span>
+            </p>
+            <p class="address-postal">CEP: {{ order.deliveryAddress.postalCode }}</p>
+            <p class="address-country">{{ order.deliveryAddress.countryName || order.deliveryAddress.countryIso }}</p>
+            <p class="address-phone" *ngIf="order.deliveryAddress.phone">
+              📞 {{ order.deliveryAddress.phone }}
+            </p>
+          </address>
+        </div>
+
+        <!-- Delivery Info -->
+        <div class="delivery-card" *ngIf="order.deliveryInfo">
+          <h2>Informações de entrega</h2>
+          <div class="delivery-details">
+            <p *ngIf="order.deliveryInfo.modeName">
+              <strong>Modo:</strong> {{ order.deliveryInfo.modeName }}
+            </p>
+            <p *ngIf="order.deliveryInfo.estimatedDate">
+              <strong>Entrega estimada:</strong> {{ order.deliveryInfo.estimatedDate | date:'dd/MM/yyyy' }}
+            </p>
+            <p *ngIf="order.deliveryInfo.trackingCode">
+              <strong>Código de rastreio:</strong>
+              <a 
+                *ngIf="order.deliveryInfo.trackingUrl; else noLink"
+                [href]="order.deliveryInfo.trackingUrl" 
+                target="_blank" 
+                rel="noopener"
+                class="tracking-link">
+                {{ order.deliveryInfo.trackingCode }} ↗
+              </a>
+              <ng-template #noLink>
+                <span>{{ order.deliveryInfo.trackingCode }}</span>
+              </ng-template>
+            </p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </ng-container>
+</div>

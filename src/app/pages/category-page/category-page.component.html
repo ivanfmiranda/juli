@@ -1,33 +1,113 @@
-<ng-container *ngIf="vm$ | async as vm">
-  <section class="listing-page">
-    <header class="listing-page__header">
-      <p class="eyebrow">Category</p>
-      <h1>{{ vm.name || 'Category' }}</h1>
-      <p>{{ vm.total }} products</p>
-    </header>
-
-    <div class="listing-grid" *ngIf="vm.products.length; else noProducts">
-      <article class="listing-card" *ngFor="let product of vm.products">
-        <a [routerLink]="product.url || ['/product', product.code]">
-          <img *ngIf="imageUrl(product)" [src]="imageUrl(product)" [alt]="imageAlt(product)">
-          <h2>{{ product.name }}</h2>
-          <p>{{ product.price?.formattedValue }}</p>
-        </a>
-        <button type="button" class="btn-add" (click)="addToCart(product.code)">Add to cart</button>
-      </article>
+<div class="category-page">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="skeleton-grid">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
     </div>
+  </div>
 
-    <ng-template #noProducts>
-      <section class="listing-empty">
-        <h2>No products published for this category yet</h2>
-        <p>Publish catalog content in Strapi or add items to the mapped category in Ubris.</p>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error$ | async as error">
+    <div class="error-icon">⚠️</div>
+    <h3>Ops! Algo deu errado</h3>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="(vm$ | async) as vm">
+    <ng-container *ngIf="vm.listing">
+      <!-- Header -->
+      <header class="category-header">
+        <!-- Breadcrumbs -->
+        <nav class="breadcrumbs" *ngIf="vm.listing.breadcrumbs?.length">
+          <a routerLink="/">Início</a>
+          <span class="separator">/</span>
+          <ng-container *ngFor="let crumb of vm.listing.breadcrumbs; let last = last">
+            <a *ngIf="!last" [routerLink]="crumb.url">{{ crumb.name }}</a>
+            <span *ngIf="!last" class="separator">/</span>
+            <span *ngIf="last" class="current">{{ crumb.name }}</span>
+          </ng-container>
+        </nav>
+
+        <h1 class="category-title">{{ vm.listing.name }}</h1>
+        <p class="category-description" *ngIf="vm.listing.description">
+          {{ vm.listing.description }}
+        </p>
+
+        <div class="category-meta">
+          <span class="results-count">
+            {{ vm.listing.pagination.totalResults }} produto{{ vm.listing.pagination.totalResults !== 1 ? 's' : '' }}
+          </span>
+
+          <!-- Sort Control -->
+          <div class="sort-control" *ngIf="vm.listing.sorts?.length">
+            <label for="sort-select">Ordenar por:</label>
+            <select id="sort-select" 
+                    [value]="getSelectedSort(vm.listing.sorts)"
+                    (change)="changeSort($any($event.target).value)">
+              <option *ngFor="let sort of vm.listing.sorts" [value]="sort.code">
+                {{ sort.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <!-- Products Grid -->
+      <section class="products-section" *ngIf="vm.listing.products?.length; else noProducts">
+        <div class="products-grid">
+          <app-product-card 
+            *ngFor="let product of vm.listing.products"
+            [product]="product"
+            (addToCart)="addToCart($event)">
+          </app-product-card>
+        </div>
+
+        <!-- Pagination -->
+        <footer class="pagination" *ngIf="vm.listing.pagination.totalPages > 1">
+          <button type="button"
+                  class="btn-page"
+                  (click)="changePage(vm.listing.pagination.currentPage - 1)"
+                  [disabled]="!vm.listing.pagination.hasPrevious">
+            ← Anterior
+          </button>
+
+          <div class="page-numbers">
+            <button *ngFor="let pageNum of getPageNumbers(vm.listing.pagination)"
+                    type="button"
+                    class="btn-page-number"
+                    [class.active]="pageNum === vm.listing.pagination.currentPage"
+                    (click)="changePage(pageNum)">
+              {{ pageNum + 1 }}
+            </button>
+          </div>
+
+          <button type="button"
+                  class="btn-page"
+                  (click)="changePage(vm.listing.pagination.currentPage + 1)"
+                  [disabled]="!vm.listing.pagination.hasNext">
+            Próxima →
+          </button>
+        </footer>
       </section>
-    </ng-template>
 
-    <footer class="listing-pagination">
-      <button type="button" (click)="changePage(vm.page - 1)" [disabled]="vm.page <= 0">Previous</button>
-      <span>Page {{ vm.page + 1 }} of {{ vm.totalPages }}</span>
-      <button type="button" (click)="changePage(vm.page + 1)" [disabled]="vm.page + 1 >= vm.totalPages">Next</button>
-    </footer>
-  </section>
-</ng-container>
+      <!-- Empty State -->
+      <ng-template #noProducts>
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>Nenhum produto encontrado</h3>
+          <p>Não encontramos produtos nesta categoria no momento.</p>
+          <a routerLink="/" class="btn-primary">Explorar outras categorias</a>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+</div>

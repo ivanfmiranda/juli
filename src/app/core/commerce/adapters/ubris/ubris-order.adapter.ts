@@ -13,9 +13,9 @@ import {
 } from '@spartacus/core';
 import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { environment } from '../../../../environments/environment';
-import { GatewayEnvelope } from '../models/ubris-commerce.models';
-import { UbrisOrderNormalizer } from '../normalizers/order.normalizer';
+import { environment } from '../../../../../environments/environment';
+import { GatewayEnvelope } from '../../models/ubris-commerce.models';
+import { UbrisOrderNormalizer } from '../../normalizers/order.normalizer';
 
 @Injectable({ providedIn: 'root' })
 export class UbrisOrderAdapter implements UserOrderAdapter {

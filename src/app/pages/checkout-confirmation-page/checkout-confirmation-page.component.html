@@ -1,50 +1,217 @@
+<!-- Order Confirmation usando Design System UBRIS -->
 <ng-container *ngIf="vm$ | async as vm">
-  <section class="checkout-confirmation-page">
-    <header class="page-header">
-      <p class="eyebrow">Checkout</p>
-      <h1>Order confirmation</h1>
-      <p class="status-pill" [ngClass]="vm.phase">{{ vm.status }}</p>
-      <p class="detail">{{ vm.detail }}</p>
-    </header>
-
-    <section class="confirmation-grid">
-      <article class="confirmation-card">
-        <h2>Processing status</h2>
-        <p><strong>Checkout ID:</strong> {{ vm.checkoutId }}</p>
-        <p><strong>Status:</strong> {{ vm.status }}</p>
-        <p><strong>Approval required:</strong> {{ vm.approvalRequired ? 'Yes' : 'No' }}</p>
-        <p *ngIf="vm.orderId"><strong>Order ID:</strong> {{ vm.orderId }}</p>
-        <p *ngIf="vm.updatedAt"><strong>Last update:</strong> {{ vm.updatedAt | date: 'medium' }}</p>
-        <p *ngIf="vm.createdAt"><strong>Created:</strong> {{ vm.createdAt | date: 'medium' }}</p>
-        <p *ngIf="vm.retries !== undefined"><strong>Retries:</strong> {{ vm.retries }}</p>
-      </article>
-
-      <article class="confirmation-card">
-        <h2>Next steps</h2>
-        <ng-container [ngSwitch]="vm.phase">
-          <p *ngSwitchCase="'processing'">
-            Keep this page open while the backend finishes the checkout saga. The status refreshes automatically.
-          </p>
-          <p *ngSwitchCase="'confirmed'">
-            The order is complete. You can review the order detail or go back to order history.
-          </p>
-          <p *ngSwitchCase="'failed'">
-            The checkout did not complete successfully. Review the error detail and go back to the cart before trying again.
-          </p>
-          <p *ngSwitchCase="'notFound'">
-            The confirmation state could not be found. Check whether the checkout id is correct.
-          </p>
-          <p *ngSwitchDefault>
-            The confirmation state is temporarily unavailable. Try again shortly.
-          </p>
-        </ng-container>
-
-        <div class="actions">
-          <a *ngIf="vm.orderId" [routerLink]="['/account/orders', vm.orderId]" class="primary-link">Open order detail</a>
-          <a routerLink="/account/orders">Go to order history</a>
-          <a routerLink="/cart" *ngIf="vm.phase === 'failed'">Back to cart</a>
+  <main class="ub-store__main confirmation-page" [class]="'confirmation-page--' + vm.phase">
+    <div class="ub-store__container">
+      
+      <!-- Success Header -->
+      <header class="confirmation-header" *ngIf="vm.phase === 'confirmed'">
+        <div class="confirmation-header__icon confirmation-header__icon--success">
+          <i class="fas fa-check"></i>
         </div>
-      </article>
-    </section>
-  </section>
+        <h1 class="confirmation-header__title">Order Confirmed!</h1>
+        <p class="confirmation-header__subtitle">Thank you for your purchase</p>
+      </header>
+      
+      <!-- Processing Header -->
+      <header class="confirmation-header" *ngIf="vm.phase === 'processing'">
+        <div class="confirmation-header__icon confirmation-header__icon--processing">
+          <i class="fas fa-sync-alt fa-spin"></i>
+        </div>
+        <h1 class="confirmation-header__title">Processing Order</h1>
+        <p class="confirmation-header__subtitle">Please wait while we complete your order</p>
+      </header>
+      
+      <!-- Error Header -->
+      <header class="confirmation-header" *ngIf="vm.phase === 'failed' || vm.phase === 'notFound'">
+        <div class="confirmation-header__icon confirmation-header__icon--error">
+          <i class="fas fa-times"></i>
+        </div>
+        <h1 class="confirmation-header__title">
+          {{ vm.phase === 'notFound' ? 'Order Not Found' : 'Order Failed' }}
+        </h1>
+        <p class="confirmation-header__subtitle">{{ vm.detail }}</p>
+      </header>
+
+      <div class="confirmation-grid">
+        <!-- Order Status Card -->
+        <article class="ub-card">
+          <div class="ub-card__header">
+            <h2 class="ub-card__title">Order Status</h2>
+            <span class="ub-badge" [class]="'ub-badge--' + (vm.phase === 'confirmed' ? 'success' : vm.phase === 'processing' ? 'warning' : 'error')">
+              {{ vm.status }}
+            </span>
+          </div>
+          
+          <div class="ub-card__body">
+            <div class="info-list">
+              <div class="info-item">
+                <span class="info-item__label">Checkout ID</span>
+                <code class="info-item__value info-item__value--code">{{ vm.checkoutId }}</code>
+              </div>
+              
+              <div class="info-item" *ngIf="vm.orderId">
+                <span class="info-item__label">Order ID</span>
+                <span class="info-item__value info-item__value--highlight">{{ vm.orderId }}</span>
+              </div>
+              
+              <div class="info-item">
+                <span class="info-item__label">Approval Required</span>
+                <span class="info-item__value">
+                  <i class="fas" [class.fa-check]="vm.approvalRequired" [class.fa-times]="!vm.approvalRequired"
+                     [style.color]="vm.approvalRequired ? 'var(--color-success)' : 'var(--color-text-muted)'"></i>
+                  {{ vm.approvalRequired ? 'Yes' : 'No' }}
+                </span>
+              </div>
+              
+              <div class="info-item" *ngIf="vm.createdAt">
+                <span class="info-item__label">Created</span>
+                <span class="info-item__value">{{ vm.createdAt | date: 'medium' }}</span>
+              </div>
+              
+              <div class="info-item" *ngIf="vm.updatedAt && vm.updatedAt !== vm.createdAt">
+                <span class="info-item__label">Last Update</span>
+                <span class="info-item__value">{{ vm.updatedAt | date: 'medium' }}</span>
+              </div>
+              
+              <div class="info-item" *ngIf="vm.retries !== undefined">
+                <span class="info-item__label">Retry Attempts</span>
+                <span class="info-item__value">{{ vm.retries }}</span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Next Steps Card -->
+        <article class="ub-card">
+          <div class="ub-card__header">
+            <h2 class="ub-card__title">What happens next?</h2>
+          </div>
+          
+          <div class="ub-card__body">
+            <div class="next-steps" [ngSwitch]="vm.phase">
+              <!-- Processing -->
+              <ng-container *ngSwitchCase="'processing'">
+                <div class="next-step next-step--active">
+                  <div class="next-step__number">1</div>
+                  <div class="next-step__content">
+                    <h3>Processing your order</h3>
+                    <p>We're securely processing your payment and inventory allocation. This usually takes a few moments.</p>
+                  </div>
+                </div>
+                <div class="next-step">
+                  <div class="next-step__number">2</div>
+                  <div class="next-step__content">
+                    <h3>Order confirmation</h3>
+                    <p>You'll receive a confirmation email with your order details.</p>
+                  </div>
+                </div>
+                <div class="next-step">
+                  <div class="next-step__number">3</div>
+                  <div class="next-step__content">
+                    <h3>Shipping</h3>
+                    <p>Your order will be prepared and shipped to your address.</p>
+                  </div>
+                </div>
+              </ng-container>
+              
+              <!-- Confirmed -->
+              <ng-container *ngSwitchCase="'confirmed'">
+                <div class="next-step next-step--complete">
+                  <div class="next-step__icon">
+                    <i class="fas fa-check"></i>
+                  </div>
+                  <div class="next-step__content">
+                    <h3>Order confirmed</h3>
+                    <p>Your order has been successfully processed and confirmed.</p>
+                  </div>
+                </div>
+                <div class="next-step next-step--complete">
+                  <div class="next-step__icon">
+                    <i class="fas fa-envelope"></i>
+                  </div>
+                  <div class="next-step__content">
+                    <h3>Confirmation email</h3>
+                    <p>We've sent a confirmation email with your order details and tracking information.</p>
+                  </div>
+                </div>
+                <div class="next-step">
+                  <div class="next-step__number">3</div>
+                  <div class="next-step__content">
+                    <h3>Track your order</h3>
+                    <p>You can track your order status anytime from your account.</p>
+                  </div>
+                </div>
+              </ng-container>
+              
+              <!-- Failed -->
+              <ng-container *ngSwitchCase="'failed'">
+                <div class="next-step next-step--error">
+                  <div class="next-step__icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </div>
+                  <div class="next-step__content">
+                    <h3>Order could not be completed</h3>
+                    <p>We encountered an issue processing your order. Your payment has not been charged.</p>
+                  </div>
+                </div>
+                <div class="next-step">
+                  <div class="next-step__number">2</div>
+                  <div class="next-step__content">
+                    <h3>Review and try again</h3>
+                    <p>Please review your cart and payment information, then try again.</p>
+                  </div>
+                </div>
+              </ng-container>
+              
+              <!-- Not Found -->
+              <ng-container *ngSwitchCase="'notFound'">
+                <div class="next-step next-step--error">
+                  <div class="next-step__icon">
+                    <i class="fas fa-search"></i>
+                  </div>
+                  <div class="next-step__content">
+                    <h3>Order not found</h3>
+                    <p>We couldn't find an order with the provided ID. Please check your order number.</p>
+                  </div>
+                </div>
+              </ng-container>
+              
+              <!-- Default -->
+              <ng-container *ngSwitchDefault>
+                <div class="next-step next-step--active">
+                  <div class="next-step__icon">
+                    <i class="fas fa-sync-alt fa-spin"></i>
+                  </div>
+                  <div class="next-step__content">
+                    <h3>Checking status</h3>
+                    <p>We're retrieving your order information. Please wait...</p>
+                  </div>
+                </div>
+              </ng-container>
+            </div>
+          </div>
+        </article>
+      </div>
+
+      <!-- Actions -->
+      <div class="confirmation-actions">
+        <a *ngIf="vm.orderId" [routerLink]="['/account/orders', vm.orderId]" class="ub-btn ub-btn--primary ub-btn--lg">
+          <i class="fas fa-file-invoice"></i>
+          View Order Details
+        </a>
+        <a routerLink="/account/orders" class="ub-btn ub-btn--secondary">
+          <i class="fas fa-history"></i>
+          Order History
+        </a>
+        <a routerLink="/cart" *ngIf="vm.phase === 'failed'" class="ub-btn ub-btn--secondary">
+          <i class="fas fa-shopping-cart"></i>
+          Return to Cart
+        </a>
+        <a routerLink="/search" class="ub-btn ub-btn--ghost">
+          <i class="fas fa-store"></i>
+          Continue Shopping
+        </a>
+      </div>
+    </div>
+  </main>
 </ng-container>

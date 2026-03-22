@@ -1,8 +1,10 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
-import { finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { catchError, finalize, switchMap } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { JuliCartFacade } from '../../core/commerce';
 
 @Component({
   selector: 'app-login-page',
@@ -18,10 +20,12 @@ export class LoginComponent {
 
   submitting = false;
   errorMessage?: string;
+  warningMessage?: string;
 
   constructor(
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
+    private readonly cartFacade: JuliCartFacade,
     private readonly router: Router
   ) {}
 
@@ -37,8 +41,22 @@ export class LoginComponent {
 
     this.submitting = true;
     this.errorMessage = undefined;
+    this.warningMessage = undefined;
 
     this.authService.login(username, password).pipe(
+      switchMap(() => {
+        if (!this.authService.hasAnonymousCart()) {
+          return of(null);
+        }
+
+        return this.cartFacade.promoteAnonymousCart().pipe(
+          catchError(error => {
+            this.cartFacade.discardAnonymousCart();
+            this.warningMessage = 'Login concluído, mas o carrinho anterior expirou e não pôde ser recuperado.';
+            return of(null);
+          })
+        );
+      }),
       finalize(() => {
         this.submitting = false;
       })

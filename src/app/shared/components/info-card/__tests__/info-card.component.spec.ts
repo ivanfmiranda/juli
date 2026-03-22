@@ -23,6 +23,7 @@ describe('InfoCardComponent', () => {
   const mockData: InfoCardComponentModel = {
     uid: 'test-123',
     typeCode: 'JuliInfoCardComponent',
+    flexType: 'JuliInfoCardComponent',
     icon: '🚀',
     title: 'Performance',
     description: 'Arquitetura otimizada com lazy loading.',

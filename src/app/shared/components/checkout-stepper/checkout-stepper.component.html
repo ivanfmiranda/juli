@@ -1,0 +1,34 @@
+<nav class="checkout-stepper" aria-label="Checkout progress">
+  <ol class="stepper-list">
+    <li 
+      *ngFor="let step of steps; let i = index; let first = first; let last = last"
+      class="stepper-item"
+      [class.completed]="step.completed"
+      [class.active]="step.active"
+      [class.disabled]="step.disabled || !isStepAccessible(i)"
+      [attr.aria-current]="step.active ? 'step' : null"
+    >
+      <!-- Connector line before step -->
+      <div class="step-connector step-connector-before" *ngIf="!first" [class.completed]="step.completed"></div>
+      
+      <!-- Step indicator -->
+      <div class="step-indicator">
+        <div class="step-circle">
+          <svg *ngIf="step.completed && !step.active" class="step-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span *ngIf="!step.completed || step.active" class="step-number">{{ i + 1 }}</span>
+        </div>
+      </div>
+      
+      <!-- Connector line after step -->
+      <div class="step-connector step-connector-after" *ngIf="!last" [class.completed]="step.completed"></div>
+      
+      <!-- Step content -->
+      <div class="step-content">
+        <span class="step-label">{{ step.label }}</span>
+        <span class="step-description" *ngIf="step.description">{{ step.description }}</span>
+      </div>
+    </li>
+  </ol>
+</nav>

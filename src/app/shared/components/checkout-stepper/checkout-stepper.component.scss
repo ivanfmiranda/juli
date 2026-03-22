@@ -1,0 +1,226 @@
+// ========================================
+// UBRIS DESIGN SYSTEM - CHECKOUT STEPPER
+// ========================================
+
+:host {
+  // Tokens do design system
+  --ubris-primary-50: #eef2ff;
+  --ubris-primary-100: #e0e7ff;
+  --ubris-primary-500: #6366f1;
+  --ubris-primary-600: #4f46e5;
+  --ubris-primary-700: #4338ca;
+  --ubris-success-500: #10b981;
+  --ubris-success-600: #059669;
+  --ubris-gray-100: #f1f5f9;
+  --ubris-gray-200: #e2e8f0;
+  --ubris-gray-300: #cbd5e1;
+  --ubris-gray-400: #94a3b8;
+  --ubris-gray-500: #64748b;
+  --ubris-gray-600: #475569;
+  
+  --color-primary: var(--ubris-primary-600);
+  --color-success: var(--ubris-success-500);
+  --color-text-primary: var(--ubris-gray-600);
+  --color-text-secondary: var(--ubris-gray-500);
+  --color-text-muted: var(--ubris-gray-400);
+  --color-border: var(--ubris-gray-200);
+  --color-bg: #ffffff;
+  
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --radius-full: 9999px;
+  
+  --shadow-focus: 0 0 0 4px var(--ubris-primary-100);
+  --duration-fast: 150ms;
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+}
+
+.checkout-stepper {
+  width: 100%;
+  padding: var(--space-6, 1.5rem) 0;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.stepper-list {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-4, 1rem);
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.stepper-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  text-align: center;
+  
+  &.completed {
+    .step-circle {
+      background: var(--color-success);
+      border-color: var(--color-success);
+      color: white;
+      transform: scale(1.05);
+    }
+    
+    .step-label {
+      color: var(--ubris-gray-700);
+      font-weight: 600;
+    }
+    
+    .step-connector-after {
+      background: var(--color-success);
+    }
+  }
+  
+  &.active {
+    .step-circle {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+      box-shadow: var(--shadow-focus);
+      transform: scale(1.1);
+    }
+    
+    .step-label {
+      color: var(--color-primary);
+      font-weight: 700;
+    }
+  }
+  
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+    
+    .step-circle {
+      background: var(--ubris-gray-100);
+      border-color: var(--color-border);
+      color: var(--color-text-muted);
+    }
+    
+    .step-label {
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.step-check {
+  width: 20px;
+  height: 20px;
+}
+
+.step-number {
+  line-height: 1;
+}
+
+.step-connector {
+  position: absolute;
+  top: 20px;
+  height: 2px;
+  background: var(--color-border);
+  transition: all var(--duration-fast) var(--ease-out);
+  z-index: 1;
+  
+  &.completed {
+    background: var(--color-success);
+  }
+  
+  &-before {
+    left: -50%;
+    width: 50%;
+  }
+  
+  &-after {
+    right: -50%;
+    width: 50%;
+  }
+}
+
+.step-content {
+  margin-top: var(--space-3, 0.75rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0 var(--space-2, 0.5rem);
+}
+
+.step-label {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.step-description {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  display: none;
+}
+
+// Mobile responsiveness
+@media (max-width: 640px) {
+  .checkout-stepper {
+    padding: var(--space-4, 1rem) var(--space-2, 0.5rem);
+  }
+  
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: var(--font-size-xs);
+  }
+  
+  .step-check {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .step-connector {
+    top: 16px;
+  }
+  
+  .step-label {
+    font-size: var(--font-size-xs);
+  }
+  
+  .step-content {
+    margin-top: var(--space-2, 0.5rem);
+  }
+}
+
+// Reduced motion
+@media (prefers-reduced-motion: reduce) {
+  .step-circle,
+  .step-connector {
+    transition: none;
+  }
+}

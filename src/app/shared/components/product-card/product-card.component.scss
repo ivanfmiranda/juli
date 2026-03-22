@@ -1,0 +1,268 @@
+// Product Card Styles - Premium Design
+
+$color-primary: #274060;
+$color-accent: #3d5a80;
+$color-white: #ffffff;
+$color-gray-100: #f7f9fc;
+$color-gray-200: #e5e9f0;
+$color-gray-600: #526075;
+$color-gray-800: #1a1a1a;
+$color-success: #22c55e;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+// Product Card
+.product-card {
+  background: $color-white;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid $color-gray-200;
+
+  &:hover {
+    box-shadow: $shadow-lg;
+    transform: translateY(-4px);
+
+    .hover-image {
+      opacity: 1;
+    }
+
+    .btn-quick-add {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+.card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+// Card Image
+.card-image {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: $color-gray-100;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+  }
+
+  .hover-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  &:hover img:first-child {
+    transform: scale(1.05);
+  }
+}
+
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: $color-gray-200;
+}
+
+// Card Badges
+.card-badges {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.badge {
+  padding: 0.375rem 0.75rem;
+  border-radius: $radius-sm;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+
+  &.badge-new {
+    background: $color-success;
+    color: $color-white;
+  }
+
+  &.badge-sale {
+    background: $color-danger;
+    color: $color-white;
+  }
+
+  &.badge-top {
+    background: #f59e0b;
+    color: $color-white;
+  }
+
+  &.badge-limited {
+    background: #8b5cf6;
+    color: $color-white;
+  }
+}
+
+// Quick Add Button
+.btn-quick-add {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  width: 44px;
+  height: 44px;
+  background: $color-white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+  box-shadow: $shadow-md;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: $color-primary;
+    color: $color-white;
+  }
+}
+
+// Card Info
+.card-info {
+  padding: 1.25rem;
+}
+
+// Rating
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .stars {
+    display: flex;
+  }
+
+  .star {
+    font-size: 0.875rem;
+    opacity: 0.3;
+
+    &.filled {
+      opacity: 1;
+    }
+  }
+
+  .count {
+    font-size: 0.75rem;
+    color: $color-gray-600;
+  }
+}
+
+// Product Name
+.product-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: $color-gray-800;
+  margin: 0 0 0.75rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &:hover {
+    color: $color-primary;
+  }
+}
+
+// Price
+.product-price {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+
+  .current-price {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: $color-gray-800;
+
+    &.on-sale {
+      color: $color-danger;
+    }
+  }
+
+  .original-price {
+    font-size: 0.875rem;
+    color: $color-gray-600;
+    text-decoration: line-through;
+  }
+}
+
+// Stock
+.product-stock {
+  font-size: 0.75rem;
+  font-weight: 500;
+
+  &.stock-in_stock {
+    color: $color-success;
+  }
+
+  &.stock-low_stock {
+    color: $color-warning;
+  }
+
+  &.stock-out_of_stock {
+    color: $color-danger;
+  }
+
+  &.stock-unknown {
+    color: $color-gray-600;
+  }
+}
+
+// List Layout
+.layout-list {
+  .card-link {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 120px 1fr;
+    }
+  }
+
+  .card-image {
+    aspect-ratio: auto;
+    height: 100%;
+  }
+
+  .card-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}

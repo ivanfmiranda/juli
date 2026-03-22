@@ -31,7 +31,10 @@
               "src/assets"
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.scss",
+              "../design-system/tokens.css",
+              "../design-system/components.css",
+              "../design-system/store.css"
             ],
             "scripts": []
           },

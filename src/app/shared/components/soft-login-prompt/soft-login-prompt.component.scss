@@ -1,0 +1,159 @@
+/**
+ * SoftLoginPrompt Component Styles
+ * Modal dialog for prompting users to login during checkout
+ */
+
+// Import design system variables
+:host {
+  display: contents;
+}
+
+.soft-login-modal {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal, 500);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 1rem);
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__container {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-bg-primary, #ffffff);
+    border-radius: var(--radius-2xl, 1.5rem);
+    box-shadow: var(--shadow-xl, 0 20px 25px -5px rgb(0 0 0 / 0.1));
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  &__close {
+    position: absolute;
+    top: var(--space-4, 1rem);
+    right: var(--space-4, 1rem);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md, 0.5rem);
+    color: var(--color-text-tertiary, #94a3b8);
+    font-size: var(--font-size-2xl, 1.5rem);
+    line-height: 1;
+    cursor: pointer;
+    transition: all var(--duration-fast, 150ms) ease-out;
+
+    &:hover {
+      background: var(--ubris-gray-100, #f1f5f9);
+      color: var(--color-text-primary, #0f172a);
+    }
+
+    span {
+      margin-top: -2px;
+    }
+  }
+
+  &__content {
+    padding: var(--space-8, 2rem);
+    text-align: center;
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--space-6, 1.5rem);
+    background: linear-gradient(135deg, var(--ubris-primary-50, #eef2ff), var(--ubris-primary-100, #e0e7ff));
+    border-radius: var(--radius-2xl, 1.5rem);
+    color: var(--color-primary, #4f46e5);
+
+    svg {
+      width: 40px;
+      height: 40px;
+    }
+  }
+
+  &__title {
+    margin: 0 0 var(--space-3, 0.75rem);
+    font-size: var(--font-size-2xl, 1.5rem);
+    font-weight: var(--font-weight-bold, 700);
+    color: var(--color-text-primary, #0f172a);
+    letter-spacing: -0.025em;
+  }
+
+  &__message {
+    margin: 0 0 var(--space-8, 2rem);
+    font-size: var(--font-size-base, 1rem);
+    line-height: 1.6;
+    color: var(--color-text-secondary, #475569);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3, 0.75rem);
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 480px) {
+  .soft-login-modal {
+    padding: var(--space-4, 1rem);
+
+    &__content {
+      padding: var(--space-6, 1.5rem);
+    }
+
+    &__icon {
+      width: 64px;
+      height: 64px;
+
+      svg {
+        width: 32px;
+        height: 32px;
+      }
+    }
+
+    &__title {
+      font-size: var(--font-size-xl, 1.25rem);
+    }
+
+    &__message {
+      font-size: var(--font-size-sm, 0.875rem);
+    }
+  }
+}

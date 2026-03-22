@@ -1,49 +1,146 @@
+<!-- Cart Page usando Design System UBRIS -->
 <ng-container *ngIf="cart$ | async as cart; else emptyState">
-  <section class="cart-page" *ngIf="cart; else emptyState">
-    <header class="cart-page__header">
-      <div>
-        <p class="eyebrow">Cart</p>
-        <h1>Your cart</h1>
-      </div>
-      <a routerLink="/checkout" class="btn-primary" *ngIf="(itemCount$ | async) as itemCount" [class.btn-disabled]="itemCount === 0">
-        Checkout
-      </a>
-    </header>
+  <main class="ub-store__main" *ngIf="cart; else emptyState">
+    <div class="ub-store__container">
+      
+      <!-- Header -->
+      <header class="cart-header">
+        <div class="cart-header__title">
+          <span class="cart-header__eyebrow">Shopping Cart</span>
+          <h1 class="ub-page-title">
+            Your Cart 
+            <span class="cart-header__count" *ngIf="(itemCount$ | async) as itemCount">({{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }})</span>
+          </h1>
+        </div>
+        <a routerLink="/checkout" 
+           class="ub-btn ub-btn--primary ub-btn--lg" 
+           *ngIf="(itemCount$ | async) as itemCount" 
+           [class.ub-btn--disabled]="itemCount === 0">
+          <span>Proceed to Checkout</span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+      </header>
 
-    <div class="cart-page__items" *ngIf="cart.entries?.length; else emptyState">
-      <article class="cart-entry" *ngFor="let entry of cart.entries">
-        <div>
-          <h2>{{ entry.product?.name }}</h2>
-          <p>SKU: {{ entry.product?.code }}</p>
+      <!-- Cart Content -->
+      <div class="cart-content" *ngIf="cart.entries?.length; else emptyState">
+        <!-- Cart Items -->
+        <div class="cart-items">
+          <article class="cart-item" *ngFor="let entry of cart.entries">
+            <!-- Product Image -->
+            <div class="cart-item__image">
+              <div class="cart-item__image-placeholder">
+                <i class="fas fa-image"></i>
+              </div>
+            </div>
+            
+            <!-- Product Info -->
+            <div class="cart-item__info">
+              <h2 class="cart-item__name">{{ entry.product?.name }}</h2>
+              <p class="cart-item__sku">SKU: {{ entry.product?.code }}</p>
+              <p class="cart-item__price-unit" *ngIf="entry.basePrice">
+                {{ entry.basePrice.formattedValue }} each
+              </p>
+            </div>
+            
+            <!-- Quantity -->
+            <div class="cart-item__quantity">
+              <div class="ub-pdp__qty">
+                <button type="button" class="ub-pdp__qty-btn" aria-label="Decrease quantity">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <span class="ub-pdp__qty-input">{{ entry.quantity }}</span>
+                <button type="button" class="ub-pdp__qty-btn" aria-label="Increase quantity">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
+            </div>
+            
+            <!-- Price -->
+            <div class="cart-item__price">
+              <strong>{{ entry.totalPrice?.formattedValue }}</strong>
+            </div>
+            
+            <!-- Actions -->
+            <div class="cart-item__actions">
+              <button type="button" class="ub-btn ub-btn--ghost ub-btn--icon" title="Remove item">
+                <i class="fas fa-trash-alt"></i>
+              </button>
+            </div>
+          </article>
         </div>
-        <div>
-          <strong>Qty {{ entry.quantity }}</strong>
-          <p>{{ entry.totalPrice?.formattedValue }}</p>
-        </div>
-      </article>
+
+        <!-- Cart Summary -->
+        <aside class="cart-summary">
+          <div class="ub-card">
+            <div class="ub-card__header">
+              <h2 class="ub-card__title">Order Summary</h2>
+            </div>
+            <div class="ub-card__body">
+              <div class="ub-order-totals">
+                <div class="ub-order-total-row">
+                  <span>Subtotal</span>
+                  <strong>{{ cart.subTotal?.formattedValue }}</strong>
+                </div>
+                
+                <div class="ub-order-total-row" *ngIf="(cart.totalDiscounts?.value || 0) > 0">
+                  <span>Discounts</span>
+                  <strong class="text-success">-{{ cart.totalDiscounts?.formattedValue }}</strong>
+                </div>
+                
+                <div class="ub-order-total-row">
+                  <span>Estimated Tax</span>
+                  <strong>{{ cart.totalTax?.formattedValue }}</strong>
+                </div>
+                
+                <div class="ub-order-total-row ub-order-total-row--final">
+                  <span>Estimated Total</span>
+                  <strong class="total-amount">{{ cart.totalPrice?.formattedValue }}</strong>
+                </div>
+              </div>
+              
+              <div class="cart-actions">
+                <a routerLink="/checkout" 
+                   class="ub-btn ub-btn--primary ub-btn--full ub-btn--lg"
+                   *ngIf="(itemCount$ | async) as itemCount"
+                   [class.ub-btn--disabled]="itemCount === 0">
+                  <span>Proceed to Checkout</span>
+                  <i class="fas fa-arrow-right"></i>
+                </a>
+                <a routerLink="/search" class="ub-btn ub-btn--secondary ub-btn--full">
+                  <i class="fas fa-arrow-left"></i>
+                  <span>Continue Shopping</span>
+                </a>
+              </div>
+              
+              <p class="cart-security-note">
+                <i class="fas fa-shield-alt"></i>
+                Secure checkout. Your data is protected.
+              </p>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
-
-    <aside class="cart-summary">
-      <div>
-        <span>Subtotal</span>
-        <strong>{{ cart.subTotal?.formattedValue }}</strong>
-      </div>
-      <div>
-        <span>Tax</span>
-        <strong>{{ cart.totalTax?.formattedValue }}</strong>
-      </div>
-      <div>
-        <span>Total</span>
-        <strong>{{ cart.totalPrice?.formattedValue }}</strong>
-      </div>
-    </aside>
-  </section>
+  </main>
 </ng-container>
 
+<!-- Empty State -->
 <ng-template #emptyState>
-  <section class="cart-empty">
-    <h1>Your cart is empty</h1>
-    <p>Add products from search, category pages or CMS teasers.</p>
-    <a routerLink="/search" class="btn-primary">Browse catalog</a>
-  </section>
+  <main class="ub-store__main">
+    <div class="ub-store__container">
+      <div class="cart-empty">
+        <div class="ub-empty">
+          <div class="ub-empty__icon">
+            <i class="fas fa-shopping-cart"></i>
+          </div>
+          <h1 class="ub-empty__title">Your cart is empty</h1>
+          <p class="ub-empty__description">Looks like you haven't added any products yet. Browse our catalog to find what you're looking for.</p>
+          <a routerLink="/search" class="ub-btn ub-btn--primary ub-btn--lg">
+            <i class="fas fa-search"></i>
+            Browse Catalog
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
 </ng-template>

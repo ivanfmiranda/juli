@@ -1,0 +1,98 @@
+<footer class="site-footer">
+  <!-- Newsletter -->
+  <section class="newsletter-section">
+    <div class="container">
+      <div class="newsletter-content">
+        <div class="newsletter-text">
+          <h3>📧 Fique por dentro das novidades</h3>
+          <p>Cadastre-se e receba ofertas exclusivas e novidades em primeira mão</p>
+        </div>
+        <form class="newsletter-form" onsubmit="return false;">
+          <input type="email" placeholder="Seu melhor e-mail" aria-label="E-mail para newsletter">
+          <button type="submit">Cadastrar</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Footer -->
+  <div class="main-footer">
+    <div class="container">
+      <!-- Brand -->
+      <div class="footer-brand">
+        <a routerLink="/" class="logo">
+          <span class="logo-icon">🛍️</span>
+          <span class="logo-text">JULI</span>
+        </a>
+        <p class="brand-tagline">Sua loja online de confiança. Os melhores produtos com entrega rápida.</p>
+        
+        <!-- Social -->
+        <div class="social-links">
+          <a *ngFor="let social of socialLinks" [href]="social.url" [attr.aria-label]="social.name">
+            <span>{{ social.icon }}</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Links -->
+      <div class="footer-links">
+        <div class="link-column">
+          <h4>Loja</h4>
+          <ul>
+            <li *ngFor="let link of footerLinks.shop">
+              <a [routerLink]="link.url">{{ link.name }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="link-column">
+          <h4>Ajuda</h4>
+          <ul>
+            <li *ngFor="let link of footerLinks.support">
+              <a [routerLink]="link.url">{{ link.name }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="link-column">
+          <h4>Empresa</h4>
+          <ul>
+            <li *ngFor="let link of footerLinks.company">
+              <a [routerLink]="link.url">{{ link.name }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <div class="link-column">
+          <h4>Contato</h4>
+          <ul class="contact-list">
+            <li>📞 0800 123 4567</li>
+            <li>✉️ contato@juli.com.br</li>
+            <li>🕐 Atendimento 24h</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Bar -->
+  <div class="bottom-bar">
+    <div class="container">
+      <p class="copyright">
+        © {{ currentYear }} JULI. Todos os direitos reservados.
+      </p>
+      
+      <div class="payment-methods">
+        <span *ngFor="let method of paymentMethods">{{ method }}</span>
+      </div>
+
+      <div class="legal-links">
+        <a routerLink="/page/privacidade">Privacidade</a>
+        <span>•</span>
+        <a routerLink="/page/termos">Termos</a>
+        <span>•</span>
+        <a routerLink="/page/cookies">Cookies</a>
+      </div>
+    </div>
+  </div>
+</footer>

@@ -6,12 +6,14 @@ import {
   OnDestroy,
   ViewChild
 } from '@angular/core';
+import { trigger, transition, style, animate } from '@angular/animations';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, of, Subject, Subscription, timer } from 'rxjs';
 import { finalize, switchMap, takeUntil } from 'rxjs/operators';
 import { loadStripe, Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
+import { SoftLoginPromptComponent } from '../../shared/components/soft-login-prompt/soft-login-prompt.component';
 import {
   JuliCartFacade,
   JuliCheckoutAddressState,
@@ -23,12 +25,30 @@ import {
   JuliCheckoutReviewSnapshot
 } from '../../core/commerce';
 import { JuliDeliveryOption } from '../../core/commerce/models/ubris-commerce.models';
+import { CheckoutStep } from '../../shared/components/checkout-stepper/checkout-stepper.component';
 
 @Component({
   selector: 'app-checkout-page',
   templateUrl: './checkout-page.component.html',
   styleUrls: ['./checkout-page.component.scss'],
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('fadeIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('200ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ]),
+    trigger('fadeInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('150ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('150ms ease-in', style({ opacity: 0, transform: 'translateY(-10px)' }))
+      ])
+    ])
+  ]
 })
 export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   @ViewChild('stripeCardElementHost')
@@ -73,6 +93,19 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   submitting = false;
   errorMessage?: string;
   statusMessage?: string;
+  
+  // UI State
+  currentStepId = 'address';
+  summaryExpanded = false;
+  showCopyToast = false;
+  showSoftLoginPrompt = false;
+
+  readonly checkoutSteps: CheckoutStep[] = [
+    { id: 'address', label: 'Address', completed: false, active: true },
+    { id: 'delivery', label: 'Delivery', completed: false, active: false },
+    { id: 'payment', label: 'Payment', completed: false, active: false },
+    { id: 'review', label: 'Review', completed: false, active: false }
+  ];
 
   constructor(
     private readonly fb: FormBuilder,
@@ -96,6 +129,12 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   }
 
   saveAddressAndLoadDelivery(): void {
+    // Check if user is authenticated
+    if (!this.authService.isAuthenticated) {
+      this.showSoftLoginPrompt = true;
+      return;
+    }
+
     const session = this.authService.currentSession;
     const cartId = this.cartFacade.currentCartId;
     if (!session || !cartId || this.form.invalid || this.loadingDelivery || this.reviewing || this.submitting) {
@@ -140,6 +179,8 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.resetPaymentState();
         this.invalidateReview(undefined);
         this.loadCheckoutOptions(savedAddress.checkoutId);
+        this.currentStepId = 'delivery';
+        this.updateSteps();
       },
       error: error => {
         this.errorMessage = error?.error?.message || error?.message || 'Saving checkout address failed';
@@ -173,6 +214,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.reviewSnapshot = undefined;
         this.reviewStale = true;
         this.errorMessage = undefined;
+        this.updateSteps();
         if (this.showStripeCardForm) {
           this.pendingStripeMount = true;
           this.statusMessage = 'Secure card session initialized. Enter card details and confirm payment before reviewing the checkout.';
@@ -272,6 +314,8 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.selectedDeliveryCode = review.deliveryMode?.code || this.selectedDeliveryCode;
         this.errorMessage = review.errors[0];
         this.statusMessage = review.messages[0] || (review.readyToPlace ? 'Checkout review is ready.' : 'Checkout review requires fixes.');
+        this.currentStepId = 'review';
+        this.updateSteps();
       },
       error: error => {
         this.errorMessage = error?.error?.message || error?.message || 'Refreshing checkout review failed';
@@ -315,6 +359,60 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     if (this.reviewSnapshot && this.reviewSnapshot.deliveryMode?.code !== code) {
       this.invalidateReview('Delivery mode changed. Re-apply payment before place-order.');
     }
+  }
+
+  get selectedDelivery(): JuliDeliveryOption | null {
+    return this.deliveryOptions.find(o => o.code === this.selectedDeliveryCode) || null;
+  }
+
+  get currentStep(): CheckoutStep | undefined {
+    return this.checkoutSteps.find(s => s.id === this.currentStepId);
+  }
+
+  updateSteps(): void {
+    const stepOrder = ['address', 'delivery', 'payment', 'review'];
+    const currentIndex = stepOrder.indexOf(this.currentStepId);
+    
+    this.checkoutSteps.forEach((step, index) => {
+      step.active = step.id === this.currentStepId;
+      step.completed = index < currentIndex;
+      
+      // Update descriptions based on state
+      if (step.id === 'address' && this.savedAddress) {
+        step.description = 'Completed';
+      } else if (step.id === 'delivery' && this.selectedDeliveryCode) {
+        step.description = this.selectedDelivery?.name || 'Selected';
+      } else if (step.id === 'payment' && this.paymentStatus) {
+        step.description = this.paymentStatus.status || 'In progress';
+      } else if (step.id === 'review' && this.reviewSnapshot?.readyToPlace) {
+        step.description = 'Ready';
+      } else {
+        step.description = undefined;
+      }
+    });
+  }
+
+  isStepCompleted(stepId: string): boolean {
+    const stepOrder = ['address', 'delivery', 'payment', 'review'];
+    const currentIndex = stepOrder.indexOf(this.currentStepId);
+    const stepIndex = stepOrder.indexOf(stepId);
+    return stepIndex < currentIndex;
+  }
+
+  isStepPending(stepId: string): boolean {
+    const stepOrder = ['address', 'delivery', 'payment', 'review'];
+    const currentIndex = stepOrder.indexOf(this.currentStepId);
+    const stepIndex = stepOrder.indexOf(stepId);
+    return stepIndex > currentIndex;
+  }
+
+  copyPixCode(code: unknown): void {
+    const codeStr = String(code || '');
+    if (!codeStr) return;
+    navigator.clipboard.writeText(codeStr).then(() => {
+      this.showCopyToast = true;
+      setTimeout(() => this.showCopyToast = false, 2000);
+    });
   }
 
   get reviewButtonDisabled(): boolean {
@@ -444,6 +542,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       this.refreshingPaymentStatus = true;
       this.statusMessage = message;
       this.paymentStatus = await this.checkoutFacade.paymentStatus(this.checkoutId).toPromise();
+      this.updateSteps();
       if (this.paymentReadyForReview) {
         this.stopPaymentStatusPolling();
         this.statusMessage = 'Payment is ready. Refresh the checkout review now.';
@@ -550,5 +649,19 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
   private asString(value: unknown): string | undefined {
     return typeof value === 'string' && value.trim() ? value : undefined;
+  }
+
+  onSoftLogin(): void {
+    this.showSoftLoginPrompt = false;
+    // Navigate to login page with returnUrl
+    this.router.navigate(['/login'], { 
+      queryParams: { returnUrl: '/checkout' }
+    });
+  }
+
+  onContinueBrowsing(): void {
+    this.showSoftLoginPrompt = false;
+    // Navigate to cart page
+    this.router.navigate(['/cart']);
   }
 }

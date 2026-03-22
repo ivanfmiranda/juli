@@ -10,6 +10,7 @@
     "build:prod": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration production",
     "watch": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --watch --configuration development",
     "test": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng test",
+    "test:occ-smoke": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng test --watch=false --browsers=ChromeHeadless --include=src/app/core/commerce/adapters/hybris/__tests__/occ-compatibility.smoke.spec.ts",
     "validate:types": "npm run build"
   },
   "dependencies": {

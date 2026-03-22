@@ -1,23 +1,216 @@
-<ng-container *ngIf="product$ | async as product; else missing">
-  <section class="product-page" *ngIf="product; else missing">
-    <div class="product-page__media">
-      <img *ngIf="imageUrl(product)"
-           [src]="imageUrl(product)"
-           [alt]="imageAlt(product)">
-    </div>
-    <div class="product-page__summary">
-      <p class="eyebrow">Ubris live data</p>
-      <h1>{{ product.name }}</h1>
-      <p class="price">{{ product.price?.formattedValue }}</p>
-      <p class="stock" [class.out]="product.stock?.stockLevelStatus !== 'IN_STOCK' && product.stock?.stockLevelStatus !== 'LOW_STOCK'">
-        {{ (product.stock?.stockLevelStatus === 'IN_STOCK' || product.stock?.stockLevelStatus === 'LOW_STOCK') ? 'In stock' : 'Stock unavailable' }}
-      </p>
-      <p class="description">{{ product.summary || product.description }}</p>
-      <button type="button" class="cta" (click)="addToCart(product.code)">Add to cart</button>
-    </div>
-  </section>
-</ng-container>
+<div class="product-detail-page">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="spinner"></div>
+    <p>Carregando produto...</p>
+  </div>
 
-<ng-template #missing>
-  <app-not-found-page></app-not-found-page>
-</ng-template>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error$ | async as error">
+    <div class="error-icon">⚠️</div>
+    <h3>Erro ao carregar produto</h3>
+    <p>{{ error }}</p>
+    <div class="error-actions">
+      <button class="btn-secondary" (click)="goBack()">← Voltar</button>
+      <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+    </div>
+  </div>
+
+  <!-- Product Content -->
+  <ng-container *ngIf="(product$ | async) as product">
+    <ng-container *ngIf="(variantSelection$ | async) as selection">
+      <!-- Breadcrumbs -->
+      <nav class="breadcrumbs" *ngIf="product.categories?.length">
+        <a routerLink="/">Home</a>
+        <span class="separator">/</span>
+        <a *ngFor="let category of product.categories; let last = last"
+           [routerLink]="category.url"
+           [class.current]="last">
+          {{ category.name }}
+          <span *ngIf="!last" class="separator">/</span>
+        </a>
+      </nav>
+
+      <!-- Main Content -->
+      <div class="product-main">
+        <!-- Gallery -->
+        <section class="product-gallery">
+          <div class="main-image">
+            <button class="nav-btn prev" *ngIf="product.gallery && product.gallery.length > 1"
+                    (click)="previousImage(product.gallery.length)">←</button>
+
+            <img *ngIf="product.gallery?.[selectedImageIndex]?.url"
+                 [src]="product.gallery![selectedImageIndex].url"
+                 [alt]="product.gallery![selectedImageIndex].altText || product.name">
+
+            <div class="image-placeholder" *ngIf="!product.gallery?.length">
+              <span>📦</span>
+            </div>
+
+            <button class="nav-btn next" *ngIf="product.gallery && product.gallery.length > 1"
+                    (click)="nextImage(product.gallery.length)">→</button>
+
+            <!-- Zoom hint -->
+            <div class="zoom-hint" *ngIf="product.gallery?.[selectedImageIndex]?.zoomUrl">
+              🔍 Passe o mouse para zoom
+            </div>
+          </div>
+
+          <!-- Thumbnails -->
+          <div class="thumbnails" *ngIf="product.gallery && product.gallery.length > 1">
+            <button *ngFor="let image of product.gallery; let i = index"
+                    class="thumb"
+                    [class.active]="i === selectedImageIndex"
+                    (click)="selectImage(i)">
+              <img [src]="image.thumbnailUrl || image.url" [alt]="image.altText || ''">
+            </button>
+          </div>
+        </section>
+
+        <!-- Info -->
+        <section class="product-info">
+          <!-- Brand -->
+          <div class="product-brand" *ngIf="product.brand">
+            {{ product.brand.name }}
+          </div>
+
+          <!-- Name -->
+          <h1 class="product-name">{{ product.name }}</h1>
+
+          <!-- Rating -->
+          <div class="product-rating" *ngIf="product.rating">
+            <span class="stars">{{ '⭐'.repeat(Math.floor(product.rating)) }}</span>
+            <span class="rating-value">{{ product.rating | number:'1.1-1' }}</span>
+            <span class="reviews">({{ product.reviewCount }} avaliações)</span>
+          </div>
+
+          <!-- Price -->
+          <div class="product-price">
+            <span class="current-price" [class.on-sale]="product.price.discounted">
+              {{ product.price.formattedValue }}
+            </span>
+            <span class="original-price" *ngIf="product.price.discounted">
+              {{ product.price.originalFormattedValue }}
+            </span>
+            <span class="discount-badge" *ngIf="product.price.discounted">
+              -{{ product.price.discountPercentage }}%
+            </span>
+          </div>
+
+          <!-- Short Description -->
+          <p class="product-summary" *ngIf="product.summary">
+            {{ product.summary }}
+          </p>
+
+          <!-- Stock -->
+          <div class="product-stock" [class]="getStockClass(product.stock.status)">
+            {{ getStockMessage(product) }}
+          </div>
+
+          <!-- Variants -->
+          <div class="product-variants" *ngIf="product.variants?.length">
+            <div class="variant-group" *ngFor="let attrName of getVariantAttributeNames(product.variants!)">
+              <label>{{ attrName }}:</label>
+              <div class="variant-options">
+                <button *ngFor="let value of getUniqueAttributeValues(product.variants!, attrName)"
+                        class="variant-btn"
+                        [class.selected]="isAttributeSelected(selection, attrName, value)"
+                        [class.disabled]="!selection.valid && !isAttributeSelected(selection, attrName, value)"
+                        (click)="selectVariantAttribute(attrName, value)">
+                  {{ value }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Variant Error -->
+            <div class="variant-error" *ngIf="selection.errorMessage">
+              {{ selection.errorMessage }}
+            </div>
+          </div>
+
+          <!-- Quantity -->
+          <div class="product-quantity">
+            <label>Quantidade:</label>
+            <div class="quantity-control">
+              <button (click)="decreaseQuantity()" [disabled]="quantity <= 1">−</button>
+              <input type="number" [(ngModel)]="quantity" min="1" [max]="product.stock.quantity ?? 99">
+              <button (click)="increaseQuantity(product.stock.quantity)">+</button>
+            </div>
+          </div>
+
+          <!-- Add to Cart -->
+          <div class="product-actions">
+            <button class="btn-add-cart"
+                    [class.loading]="loading$ | async"
+                    [disabled]="!canAddToCart(product, selection)"
+                    (click)="addToCart(product, selection)">
+              <span *ngIf="canAddToCart(product, selection)">🛒 Adicionar ao Carrinho</span>
+              <span *ngIf="!canAddToCart(product, selection)">Indisponível</span>
+            </button>
+
+            <button class="btn-wishlist" title="Adicionar à lista de desejos">
+              ♡
+            </button>
+          </div>
+
+          <!-- Delivery Info -->
+          <div class="delivery-info" *ngIf="product.deliveryInfo">
+            <div class="delivery-item">
+              <span class="icon">🚚</span>
+              <span>{{ product.deliveryInfo.message }}</span>
+            </div>
+            <div class="delivery-item" *ngIf="product.deliveryInfo.freeShipping">
+              <span class="icon">✓</span>
+              <span>Frete grátis disponível</span>
+            </div>
+          </div>
+
+          <!-- SKU -->
+          <div class="product-sku" *ngIf="product.manufacturerSku || product.ean">
+            <span *ngIf="product.manufacturerSku">SKU: {{ product.manufacturerSku }}</span>
+            <span *ngIf="product.ean">EAN: {{ product.ean }}</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Description & Attributes -->
+      <div class="product-details">
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active">Descrição</button>
+          <button class="tab-btn" *ngIf="product.attributes?.length">Especificações</button>
+          <button class="tab-btn">Avaliações</button>
+        </div>
+
+        <!-- Description -->
+        <div class="tab-content" *ngIf="product.description">
+          <div class="description" [innerHTML]="product.description"></div>
+        </div>
+
+        <!-- Attributes -->
+        <div class="tab-content" *ngIf="product.attributes?.length">
+          <table class="attributes-table">
+            <tr *ngFor="let attr of product.attributes">
+              <th>{{ attr.name }}</th>
+              <td>{{ attr.formattedValue || attr.value }} {{ attr.unit }}</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Related Products -->
+      <section class="related-products" *ngIf="product.relatedProducts?.length">
+        <h2>Produtos Relacionados</h2>
+        <div class="related-grid">
+          <article class="related-card" *ngFor="let related of product.relatedProducts">
+            <a [routerLink]="related.url">
+              <img *ngIf="related.mainImage?.url" [src]="related.mainImage!.url" [alt]="related.name">
+              <h3>{{ related.name }}</h3>
+              <p class="price">{{ related.price.formattedValue }}</p>
+            </a>
+          </article>
+        </div>
+      </section>
+    </ng-container>
+  </ng-container>
+</div>

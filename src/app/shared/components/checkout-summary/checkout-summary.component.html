@@ -1,0 +1,99 @@
+<!-- Checkout Summary usando Design System UBRIS -->
+<aside class="ub-order-summary" [class.expanded]="mobileExpanded">
+  <!-- Mobile toggle header -->
+  <div class="summary-mobile-header" (click)="onMobileToggle()">
+    <div class="summary-mobile-info">
+      <span class="summary-toggle-label">Order Summary</span>
+      <span class="summary-item-count">{{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }}</span>
+    </div>
+    <div class="summary-mobile-total">
+      <strong class="summary-total-amount">{{ formatMoney(total) }}</strong>
+      <svg 
+        class="summary-toggle-icon" 
+        [class.expanded]="mobileExpanded"
+        viewBox="0 0 24 24" 
+        fill="none" 
+        stroke="currentColor" 
+        stroke-width="2"
+      >
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Collapsible content -->
+  <div class="summary-content" [class.collapsed]="!mobileExpanded">
+    <h3 class="ub-order-summary__title">Order Summary</h3>
+    
+    <!-- Cart Items -->
+    <div class="summary-section summary-items" *ngIf="cart?.entries?.length">
+      <div class="ub-order-item" *ngFor="let entry of cart?.entries">
+        <div class="ub-order-item__image">
+          <i class="fas fa-image"></i>
+        </div>
+        <div class="ub-order-item__details">
+          <div class="ub-order-item__name">{{ entry.product?.name }}</div>
+          <div class="ub-order-item__qty">Qty: {{ entry.quantity }}</div>
+        </div>
+        <div class="ub-order-item__price">{{ entry.totalPrice?.formattedValue }}</div>
+      </div>
+    </div>
+
+    <!-- Empty cart message -->
+    <div class="ub-empty ub-empty--sm" *ngIf="!cart?.entries?.length">
+      <p>Your cart is empty</p>
+    </div>
+
+    <!-- Delivery Info -->
+    <div class="summary-section summary-delivery" *ngIf="selectedDelivery">
+      <div class="delivery-row">
+        <span class="delivery-label">{{ selectedDelivery.name }}</span>
+        <span class="delivery-value">{{ formatMoney(deliveryCost) }}</span>
+      </div>
+      <div class="delivery-estimate">
+        <i class="fas fa-clock"></i>
+        {{ selectedDelivery.estimatedDays }} days
+      </div>
+    </div>
+
+    <!-- Divider -->
+    <div class="ub-order-totals">
+      <div class="ub-order-total-row">
+        <span>Subtotal</span>
+        <strong>{{ formatMoney(subtotal) }}</strong>
+      </div>
+      <div class="ub-order-total-row" *ngIf="selectedDelivery">
+        <span>Delivery</span>
+        <strong>{{ deliveryCost === 0 ? 'Free' : formatMoney(deliveryCost) }}</strong>
+      </div>
+      <div class="ub-order-total-row ub-order-total-row--final">
+        <span>Total</span>
+        <strong class="total-amount">{{ formatMoney(total) }}</strong>
+      </div>
+    </div>
+
+    <!-- Payment Status -->
+    <div class="summary-section summary-payment" *ngIf="paymentStatus">
+      <div class="payment-status-row">
+        <span class="status-icon" [class]="paymentStatusClass">
+          <i class="fas" [class.fa-check-circle]="paymentStatus.status === 'AUTHORIZED' || paymentStatus.status === 'CAPTURED'"
+             [class.fa-clock]="paymentStatus.status === 'PENDING' || paymentStatus.status === 'PENDING_CUSTOMER_ACTION'"
+             [class.fa-times-circle]="paymentStatus.status === 'FAILED' || paymentStatus.status === 'CANCELLED'"></i>
+        </span>
+        <div class="payment-info">
+          <span class="payment-method">{{ paymentStatus.method || 'Payment' }}</span>
+          <span class="payment-state" [class]="paymentStatusClass">{{ paymentStatus.status }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Status -->
+    <div class="summary-section summary-review" *ngIf="reviewSnapshot">
+      <div class="review-status" [class.ready]="reviewSnapshot.readyToPlace">
+        <i class="fas" [class.fa-check-circle]="reviewSnapshot.readyToPlace" [class.fa-exclamation-circle]="!reviewSnapshot.readyToPlace"></i>
+        <span *ngIf="reviewSnapshot.readyToPlace">Ready to place order</span>
+        <span *ngIf="!reviewSnapshot.readyToPlace">Review required</span>
+      </div>
+    </div>
+  </div>
+</aside>

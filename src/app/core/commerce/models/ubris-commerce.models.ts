@@ -214,3 +214,20 @@ export interface JuliSearchQuery {
   query: string;
   config?: SearchConfig;
 }
+
+export interface PromoteResult {
+  cart: unknown;
+  mergeOccurred: boolean;
+  cartChanged: boolean;
+  mergeReport: {
+    itemsAdded: number;
+    quantitiesMerged: number;
+    warnings: Array<{
+      type: string;
+      sku: string;
+      requestedQuantity?: number;
+      actualQuantity?: number;
+      reason?: string;
+    }>;
+  };
+}

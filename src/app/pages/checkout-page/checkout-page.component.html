@@ -1,237 +1,587 @@
-<section class="checkout-page" *ngIf="cart$ | async as cart; else emptyCheckout">
-  <header>
-    <p class="eyebrow">Checkout</p>
-    <h1>Address, payment, review and place order</h1>
-    <p class="page-copy">
-      Save the checkout address, select delivery, initialize a real payment session, refresh review/reprice, and only then place the order.
-    </p>
+<!-- Checkout Page usando Design System UBRIS -->
+<div class="ub-store" *ngIf="cart$ | async as cart; else emptyCheckout">
+  
+  <!-- Header -->
+  <header class="ub-store__header">
+    <div class="brand">
+      <span class="brand-logo">U</span>
+      <span class="brand-name">Ubris</span>
+    </div>
+    <div class="header-secure">
+      <svg class="secure-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Secure Checkout</span>
+    </div>
   </header>
 
-  <div class="checkout-grid">
-    <form [formGroup]="form" class="checkout-form">
-      <section class="form-section">
-        <h2>Address</h2>
-        <div class="field-grid">
-          <label>
-            Full name
-            <input formControlName="fullName" type="text" placeholder="Customer One">
-          </label>
+  <!-- Stepper usando Design System -->
+  <nav class="ub-stepper" aria-label="Checkout progress">
+    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('address')" 
+         [class.ub-step--current]="currentStepId === 'address'"
+         [class.ub-step--pending]="isStepPending('address')">
+      <span class="ub-step__indicator">1</span>
+      <span class="ub-step__label">Address</span>
+    </div>
+    <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('address')"></div>
+    
+    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('delivery')"
+         [class.ub-step--current]="currentStepId === 'delivery'"
+         [class.ub-step--pending]="isStepPending('delivery')">
+      <span class="ub-step__indicator">2</span>
+      <span class="ub-step__label">Delivery</span>
+    </div>
+    <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('delivery')"></div>
+    
+    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('payment')"
+         [class.ub-step--current]="currentStepId === 'payment'"
+         [class.ub-step--pending]="isStepPending('payment')">
+      <span class="ub-step__indicator">3</span>
+      <span class="ub-step__label">Payment</span>
+    </div>
+    <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('payment')"></div>
+    
+    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('review')"
+         [class.ub-step--current]="currentStepId === 'review'"
+         [class.ub-step--pending]="isStepPending('review')">
+      <span class="ub-step__indicator">4</span>
+      <span class="ub-step__label">Review</span>
+    </div>
+  </nav>
 
-          <label>
-            Phone
-            <input formControlName="phone" type="text" placeholder="+55 11 99999-0000">
-          </label>
+  <!-- Main Layout -->
+  <main class="ub-store__main">
+    <div class="ub-store__container">
+      <div class="checkout-layout">
+        
+        <!-- Left Column: Current Step -->
+        <div class="checkout-main">
+          
+          <!-- Step 1: Address -->
+          <section class="ub-checkout__form" *ngIf="currentStepId === 'address'" [@fadeIn]>
+            <h2 class="ub-checkout__section-title">
+              <span class="ub-checkout__section-number">1</span>
+              Shipping Address
+            </h2>
 
-          <label class="field-span-2">
-            Address line 1
-            <input formControlName="line1" type="text" placeholder="Rua Commerce, 100">
-          </label>
+            <form [formGroup]="form">
+              <div class="ub-form-row">
+                <div class="ub-form-group">
+                  <label class="ub-form-label" for="fullName">
+                    Full name <span class="ub-form-label__required">*</span>
+                  </label>
+                  <input 
+                    id="fullName"
+                    formControlName="fullName" 
+                    type="text" 
+                    placeholder="John Doe"
+                    class="ub-input"
+                    [class.ub-input--error]="form.get('fullName')?.invalid && form.get('fullName')?.touched">
+                  <span class="ub-form-error" *ngIf="form.get('fullName')?.invalid && form.get('fullName')?.touched">
+                    Full name is required
+                  </span>
+                </div>
 
-          <label class="field-span-2">
-            Address line 2
-            <input formControlName="line2" type="text" placeholder="Apt 12">
-          </label>
+                <div class="ub-form-group">
+                  <label class="ub-form-label" for="phone">Phone</label>
+                  <input 
+                    id="phone"
+                    formControlName="phone" 
+                    type="tel" 
+                    placeholder="+1 (555) 000-0000"
+                    class="ub-input">
+                </div>
+              </div>
 
-          <label>
-            City
-            <input formControlName="city" type="text" placeholder="Sao Paulo">
-          </label>
+              <div class="ub-form-group ub-form-group--full">
+                <label class="ub-form-label" for="line1">
+                  Address line 1 <span class="ub-form-label__required">*</span>
+                </label>
+                <input 
+                  id="line1"
+                  formControlName="line1" 
+                  type="text" 
+                  placeholder="123 Main Street"
+                  class="ub-input"
+                  [class.ub-input--error]="form.get('line1')?.invalid && form.get('line1')?.touched">
+                <span class="ub-form-error" *ngIf="form.get('line1')?.invalid && form.get('line1')?.touched">
+                  Address is required
+                </span>
+              </div>
 
-          <label>
-            Region / state
-            <input formControlName="region" type="text" placeholder="SP">
-          </label>
+              <div class="ub-form-group ub-form-group--full">
+                <label class="ub-form-label" for="line2">Address line 2</label>
+                <input 
+                  id="line2"
+                  formControlName="line2" 
+                  type="text" 
+                  placeholder="Apt, suite, unit, etc. (optional)"
+                  class="ub-input">
+              </div>
 
-          <label>
-            Postal code
-            <input formControlName="postalCode" type="text" placeholder="01000-000">
-          </label>
+              <div class="ub-form-row">
+                <div class="ub-form-group">
+                  <label class="ub-form-label" for="city">
+                    City <span class="ub-form-label__required">*</span>
+                  </label>
+                  <input 
+                    id="city"
+                    formControlName="city" 
+                    type="text" 
+                    placeholder="New York"
+                    class="ub-input"
+                    [class.ub-input--error]="form.get('city')?.invalid && form.get('city')?.touched">
+                  <span class="ub-form-error" *ngIf="form.get('city')?.invalid && form.get('city')?.touched">
+                    City is required
+                  </span>
+                </div>
 
-          <label>
-            Country ISO
-            <input formControlName="countryIso" type="text" placeholder="BR">
-          </label>
+                <div class="ub-form-group">
+                  <label class="ub-form-label" for="region">State / Region</label>
+                  <input 
+                    id="region"
+                    formControlName="region" 
+                    type="text" 
+                    placeholder="NY"
+                    class="ub-input">
+                </div>
 
-          <label class="field-span-2">
-            Notes
-            <input formControlName="notes" type="text" placeholder="Leave at lobby">
-          </label>
+                <div class="ub-form-group">
+                  <label class="ub-form-label" for="postalCode">
+                    Postal code <span class="ub-form-label__required">*</span>
+                  </label>
+                  <input 
+                    id="postalCode"
+                    formControlName="postalCode" 
+                    type="text" 
+                    placeholder="10001"
+                    class="ub-input"
+                    [class.ub-input--error]="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
+                  <span class="ub-form-error" *ngIf="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
+                    Postal code is required
+                  </span>
+                </div>
+              </div>
+
+              <div class="ub-form-group" style="max-width: 200px;">
+                <label class="ub-form-label" for="countryIso">Country</label>
+                <select id="countryIso" formControlName="countryIso" class="ub-input">
+                  <option value="US">United States</option>
+                  <option value="BR">Brazil</option>
+                  <option value="CA">Canada</option>
+                  <option value="GB">United Kingdom</option>
+                  <option value="DE">Germany</option>
+                  <option value="FR">France</option>
+                </select>
+              </div>
+
+              <div class="ub-form-group ub-form-group--full">
+                <label class="ub-form-label" for="notes">Delivery notes</label>
+                <input 
+                  id="notes"
+                  formControlName="notes" 
+                  type="text" 
+                  placeholder="Leave at door, ring bell, etc. (optional)"
+                  class="ub-input">
+              </div>
+
+              <div class="form-actions">
+                <button 
+                  type="button" 
+                  class="ub-btn ub-btn--primary ub-btn--lg"
+                  (click)="saveAddressAndLoadDelivery()"
+                  [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
+                  <span *ngIf="loadingDelivery" class="btn-spinner"></span>
+                  <span>{{ loadingDelivery ? 'Saving...' : 'Continue to Delivery' }}</span>
+                  <svg *ngIf="!loadingDelivery" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </form>
+          </section>
+
+          <!-- Step 2: Delivery -->
+          <section class="ub-checkout__form" *ngIf="currentStepId === 'delivery'" [@fadeIn]>
+            <h2 class="ub-checkout__section-title">
+              <span class="ub-checkout__section-number">2</span>
+              Delivery Method
+            </h2>
+
+            <div class="ub-payment-methods" *ngIf="deliveryOptions.length; else noDelivery">
+              <div 
+                class="ub-payment-method"
+                *ngFor="let option of deliveryOptions"
+                [class.ub-payment-method--selected]="selectedDeliveryCode === option.code"
+                [class.disabled]="!option.available"
+                (click)="option.available && selectDeliveryMode(option.code)">
+                
+                <div class="ub-payment-method__radio"></div>
+
+                <div class="ub-payment-method__icon">
+                  <i class="fas fa-truck"></i>
+                </div>
+
+                <div class="ub-payment-method__info">
+                  <div class="ub-payment-method__name">{{ option.name }}</div>
+                  <div class="ub-payment-method__description" *ngIf="option.description">
+                    {{ option.description }}
+                  </div>
+                  <div class="delivery-estimate">
+                    <i class="fas fa-clock"></i>
+                    {{ option.estimatedDays }} business days
+                  </div>
+                </div>
+
+                <div class="delivery-price" [class.free]="option.cost === 0">
+                  {{ option.cost === 0 ? 'Free' : formatMoney(option.cost, option.currency) }}
+                </div>
+              </div>
+            </div>
+
+            <ng-template #noDelivery>
+              <div class="ub-empty">
+                <div class="ub-empty__icon">📦</div>
+                <h3 class="ub-empty__title">No delivery options</h3>
+                <p class="ub-empty__description">Please check your address and try again.</p>
+                <button type="button" class="ub-btn ub-btn--secondary" (click)="currentStepId = 'address'">
+                  Go back
+                </button>
+              </div>
+            </ng-template>
+
+            <div class="step-navigation">
+              <button type="button" class="ub-btn ub-btn--ghost" (click)="currentStepId = 'address'">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Back
+              </button>
+              
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary"
+                (click)="currentStepId = 'payment'"
+                [disabled]="!selectedDeliveryCode">
+                Continue to Payment
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 3: Payment -->
+          <section class="ub-checkout__form" *ngIf="currentStepId === 'payment'" [@fadeIn]>
+            <h2 class="ub-checkout__section-title">
+              <span class="ub-checkout__section-number">3</span>
+              Payment
+            </h2>
+
+            <!-- Payment Method Selection -->
+            <div class="ub-payment-methods" *ngIf="paymentMethods.length">
+              <div 
+                class="ub-payment-method"
+                *ngFor="let method of paymentMethods"
+                [class.ub-payment-method--selected]="selectedPaymentMethodCode === method.code"
+                (click)="form.patchValue({ paymentMethod: method.code })">
+                
+                <div class="ub-payment-method__radio"></div>
+
+                <div class="ub-payment-method__icon">
+                  <i class="fas" [class.fa-credit-card]="method.code === 'CARD'" [class.fa-qrcode]="method.code === 'PIX'"></i>
+                </div>
+
+                <div class="ub-payment-method__info">
+                  <div class="ub-payment-method__name">{{ method.label }}</div>
+                  <div class="ub-payment-method__description">{{ method.provider }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Initialize Payment Button -->
+            <div class="payment-initialize" *ngIf="!paymentInitialization">
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full"
+                (click)="initializePayment()"
+                [disabled]="initializingPayment || !selectedDeliveryCode || !selectedPaymentMethodCode">
+                <span *ngIf="initializingPayment" class="btn-spinner"></span>
+                <span>{{ initializingPayment ? 'Initializing...' : 'Initialize Payment' }}</span>
+              </button>
+            </div>
+
+            <!-- Payment Status -->
+            <div class="ub-payment-status" *ngIf="paymentStatus" [class]="'ub-payment-status--' + (paymentStatus.status?.toLowerCase() || 'default')">
+              <div class="ub-payment-status__icon">
+                <i class="fas" [class.fa-check-circle]="paymentStatus.status === 'AUTHORIZED' || paymentStatus.status === 'CAPTURED'"
+                   [class.fa-clock]="paymentStatus.status === 'PENDING' || paymentStatus.status === 'PENDING_CUSTOMER_ACTION'"
+                   [class.fa-times-circle]="paymentStatus.status === 'FAILED' || paymentStatus.status === 'CANCELLED'"></i>
+              </div>
+              <h3 class="ub-payment-status__title">{{ paymentStatus.status }}</h3>
+              <p class="ub-payment-status__description" *ngIf="paymentStatus.detail">{{ paymentStatus.detail }}</p>
+            </div>
+
+            <!-- Stripe Card Form -->
+            <div class="stripe-container" *ngIf="showStripeCardForm">
+              <div class="stripe-header">
+                <svg class="stripe-secure-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Secure card payment powered by Stripe</span>
+              </div>
+              
+              <div class="stripe-card-wrapper">
+                <div class="stripe-card-element" #stripeCardElementHost></div>
+              </div>
+
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary ub-btn--full"
+                (click)="confirmCardPayment()"
+                [disabled]="confirmingPayment">
+                <span *ngIf="confirmingPayment" class="btn-spinner"></span>
+                <span>{{ confirmingPayment ? 'Processing...' : 'Confirm Card Payment' }}</span>
+              </button>
+            </div>
+
+            <!-- PIX Payment -->
+            <div class="pix-container" *ngIf="showPixAction && pixActionPayload as pixAction">
+              <div class="pix-header">
+                <h3>Pix Payment</h3>
+                <p>Scan the QR code or copy the code below</p>
+              </div>
+
+              <div class="pix-qr" *ngIf="pixAction['imageUrlPng'] as imageUrlPng">
+                <img [src]="imageUrlPng" alt="Pix QR Code">
+              </div>
+
+              <div class="pix-code-section" *ngIf="pixAction['pixCode'] as pixCode">
+                <label>Pix Code</label>
+                <div class="pix-code-box">
+                  <code>{{ pixCode }}</code>
+                  <button type="button" class="btn-copy" (click)="copyPixCode(pixCode)">
+                    <i class="fas fa-copy"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="pix-expires" *ngIf="pixExpiresAt">
+                <span>Expires: {{ pixExpiresAt | date: 'medium' }}</span>
+              </div>
+
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--secondary ub-btn--full"
+                (click)="refreshPaymentStatus()"
+                [disabled]="refreshingPaymentStatus">
+                <span *ngIf="refreshingPaymentStatus" class="btn-spinner"></span>
+                <span>{{ refreshingPaymentStatus ? 'Checking...' : 'I\'ve completed the payment' }}</span>
+              </button>
+            </div>
+
+            <div class="step-navigation">
+              <button type="button" class="ub-btn ub-btn--ghost" (click)="currentStepId = 'delivery'">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Back
+              </button>
+              
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary"
+                (click)="currentStepId = 'review'"
+                [disabled]="!paymentReadyForReview">
+                Continue to Review
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
+          </section>
+
+          <!-- Step 4: Review -->
+          <section class="ub-checkout__form" *ngIf="currentStepId === 'review'" [@fadeIn]>
+            <h2 class="ub-checkout__section-title">
+              <span class="ub-checkout__section-number">4</span>
+              Review Order
+            </h2>
+
+            <!-- Review Action -->
+            <div class="review-action" *ngIf="!reviewSnapshot || reviewStale">
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full"
+                (click)="review()"
+                [disabled]="reviewing || !paymentReadyForReview">
+                <span *ngIf="reviewing" class="btn-spinner"></span>
+                <span>{{ reviewing ? 'Reviewing...' : 'Review Order' }}</span>
+              </button>
+              <p class="review-hint" *ngIf="!paymentReadyForReview">
+                Complete payment before reviewing
+              </p>
+            </div>
+
+            <!-- Review Results -->
+            <div class="review-results" *ngIf="reviewSnapshot">
+              <!-- Validation Status -->
+              <div class="validation-grid">
+                <div class="validation-item" [class.valid]="reviewSnapshot.addressValidated">
+                  <i class="fas" [class.fa-check-circle]="reviewSnapshot.addressValidated" [class.fa-circle]="!reviewSnapshot.addressValidated"></i>
+                  <span>Address</span>
+                </div>
+                <div class="validation-item" [class.valid]="reviewSnapshot.deliveryValidated">
+                  <i class="fas" [class.fa-check-circle]="reviewSnapshot.deliveryValidated" [class.fa-circle]="!reviewSnapshot.deliveryValidated"></i>
+                  <span>Delivery</span>
+                </div>
+                <div class="validation-item" [class.valid]="reviewSnapshot.paymentValidated">
+                  <i class="fas" [class.fa-check-circle]="reviewSnapshot.paymentValidated" [class.fa-circle]="!reviewSnapshot.paymentValidated"></i>
+                  <span>Payment</span>
+                </div>
+                <div class="validation-item" [class.valid]="reviewSnapshot.pricingValidated">
+                  <i class="fas" [class.fa-check-circle]="reviewSnapshot.pricingValidated" [class.fa-circle]="!reviewSnapshot.pricingValidated"></i>
+                  <span>Pricing</span>
+                </div>
+                <div class="validation-item" [class.valid]="reviewSnapshot.stockValidated">
+                  <i class="fas" [class.fa-check-circle]="reviewSnapshot.stockValidated" [class.fa-circle]="!reviewSnapshot.stockValidated"></i>
+                  <span>Stock</span>
+                </div>
+              </div>
+
+              <!-- Messages -->
+              <div class="ub-alert ub-alert--info" *ngIf="reviewSnapshot.messages.length">
+                <div class="ub-alert__item" *ngFor="let message of reviewSnapshot.messages">
+                  <i class="fas fa-info-circle"></i>
+                  <span>{{ message }}</span>
+                </div>
+              </div>
+
+              <!-- Warnings -->
+              <div class="ub-alert ub-alert--warning" *ngIf="reviewSnapshot.warnings.length">
+                <div class="ub-alert__item" *ngFor="let warning of reviewSnapshot.warnings">
+                  <i class="fas fa-exclamation-triangle"></i>
+                  <span>{{ warning }}</span>
+                </div>
+              </div>
+
+              <!-- Errors -->
+              <div class="ub-alert ub-alert--error" *ngIf="reviewSnapshot.errors.length">
+                <div class="ub-alert__item" *ngFor="let err of reviewSnapshot.errors">
+                  <i class="fas fa-times-circle"></i>
+                  <span>{{ err }}</span>
+                </div>
+              </div>
+
+              <!-- Ready State -->
+              <div class="ready-state" *ngIf="reviewSnapshot.readyToPlace">
+                <div class="ready-icon">✓</div>
+                <div class="ready-text">
+                  <h3>Ready to place order</h3>
+                  <p>All validations passed</p>
+                </div>
+              </div>
+
+              <!-- Not Ready State -->
+              <div class="not-ready-state" *ngIf="!reviewSnapshot.readyToPlace">
+                <div class="not-ready-icon">!</div>
+                <div class="not-ready-text">
+                  <h3>Review blocked</h3>
+                  <p>Please fix the issues above</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Status Messages -->
+            <div class="status-messages">
+              <div class="ub-alert ub-alert--success" *ngIf="statusMessage && !errorMessage">
+                <i class="fas fa-check-circle"></i>
+                <span>{{ statusMessage }}</span>
+              </div>
+              
+              <div class="ub-alert ub-alert--error" *ngIf="errorMessage">
+                <i class="fas fa-times-circle"></i>
+                <span>{{ errorMessage }}</span>
+              </div>
+
+              <div class="ub-alert ub-alert--warning" *ngIf="reviewStale">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>Review is stale. Please review again before placing order.</span>
+              </div>
+            </div>
+
+            <!-- Place Order -->
+            <div class="place-order-section" *ngIf="reviewSnapshot">
+              <button 
+                type="button" 
+                class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full place-order-btn"
+                (click)="submit()"
+                [disabled]="placeOrderDisabled">
+                <span *ngIf="submitting" class="btn-spinner"></span>
+                <span class="btn-text">
+                  {{ submitting ? 'Placing Order...' : 'Place Order' }}
+                </span>
+                <span class="btn-total" *ngIf="!submitting && reviewSnapshot?.total">
+                  {{ formatMoney(reviewSnapshot.total, reviewSnapshot.currency) }}
+                </span>
+              </button>
+              
+              <p class="place-order-terms">
+                By placing your order, you agree to our Terms of Service and Privacy Policy
+              </p>
+            </div>
+
+            <div class="step-navigation single">
+              <button type="button" class="ub-btn ub-btn--ghost" (click)="currentStepId = 'payment'">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Back to Payment
+              </button>
+            </div>
+          </section>
         </div>
-      </section>
 
-      <section class="form-section">
-        <h2>Payment selection</h2>
-        <label>
-          Payment method
-          <select formControlName="paymentMethod">
-            <option *ngFor="let method of paymentMethods" [value]="method.code">
-              {{ method.label }} · {{ method.provider }}
-            </option>
-          </select>
-        </label>
-        <p class="payment-copy">
-          Payment methods come from the backend payment boundary. The storefront only consumes the edge contracts and renders the provider action when required.
-        </p>
-      </section>
-
-      <section class="form-section review-step">
-        <h2>Review and place order</h2>
-        <p>
-          The flow is explicit: save address, select delivery, initialize payment, complete any customer action, run review/reprice, and only then place the order.
-        </p>
-      </section>
-    </form>
-
-    <aside class="checkout-summary">
-      <h2>Order summary</h2>
-
-      <div class="summary-items">
-        <div *ngFor="let entry of cart.entries">
-          <span>{{ entry.product?.name }} x {{ entry.quantity }}</span>
-          <strong>{{ entry.totalPrice?.formattedValue }}</strong>
-        </div>
+        <!-- Right Column: Summary -->
+        <aside class="checkout-sidebar">
+          <app-checkout-summary
+            [cart]="cart"
+            [selectedDelivery]="selectedDelivery"
+            [paymentStatus]="paymentStatus"
+            [reviewSnapshot]="reviewSnapshot"
+            [loading]="loadingDelivery || loadingPaymentMethods"
+            [mobileExpanded]="summaryExpanded"
+            (mobileToggle)="summaryExpanded = !summaryExpanded">
+          </app-checkout-summary>
+        </aside>
       </div>
+    </div>
+  </main>
+</div>
 
-      <div class="total-row">
-        <span>Total</span>
-        <strong>{{ cart.totalPrice?.formattedValue }}</strong>
-      </div>
-
-      <section class="delivery-section">
-        <h3>Delivery mode</h3>
-        <p class="delivery-copy">
-          Save the address first. Delivery options are bound to the current checkout and feed the reviewed total.
-        </p>
-
-        <button type="button" class="secondary-action" (click)="saveAddressAndLoadDelivery()" [disabled]="loadingDelivery || reviewing || submitting || initializingPayment || confirmingPayment || form.invalid">
-          {{ loadingDelivery || loadingPaymentMethods ? 'Loading checkout options...' : 'Save address and load checkout options' }}
-        </button>
-
-        <div class="delivery-options" *ngIf="deliveryOptions.length">
-          <label class="delivery-option" *ngFor="let option of deliveryOptions" [class.selected]="selectedDeliveryCode === option.code">
-            <input
-              type="radio"
-              name="deliveryMode"
-              [value]="option.code"
-              [checked]="selectedDeliveryCode === option.code"
-              (change)="selectDeliveryMode(option.code)">
-            <span class="delivery-option-copy">
-              <strong>{{ option.name }}</strong>
-              <small *ngIf="option.description">{{ option.description }}</small>
-              <small>{{ formatMoney(option.cost, option.currency || 'USD') }} · {{ option.estimatedDays }} day(s)</small>
-            </span>
-          </label>
-        </div>
-      </section>
-
-      <section class="payment-session-section">
-        <h3>Payment session</h3>
-        <p class="payment-copy">
-          Apply the selected delivery mode and initialize a payment session before review. Real providers can require customer action.
-        </p>
-
-        <button type="button" class="secondary-action" (click)="initializePayment()" [disabled]="initializingPayment || reviewing || submitting || loadingDelivery || loadingPaymentMethods || form.invalid || !checkoutId || !selectedDeliveryCode || !selectedPaymentMethodCode">
-          {{ initializingPayment ? 'Initializing payment...' : 'Apply delivery and initialize payment' }}
-        </button>
-
-        <section class="payment-state" *ngIf="paymentInitialization as paymentInit">
-          <p><strong>Provider:</strong> {{ paymentInit.provider }}</p>
-          <p><strong>Method:</strong> {{ paymentInit.method }}</p>
-          <p><strong>Status:</strong> {{ paymentStatus?.status || paymentInit.status }}</p>
-          <p *ngIf="paymentStatus?.detail || paymentInit.detail"><strong>Detail:</strong> {{ paymentStatus?.detail || paymentInit.detail }}</p>
-          <p><strong>Payment session:</strong> {{ paymentInit.paymentSessionId }}</p>
-        </section>
-
-        <section class="stripe-card-section" *ngIf="showStripeCardForm">
-          <h4>Secure card confirmation</h4>
-          <p>Card details are confirmed with Stripe hosted fields. The checkout only advances after the payment session becomes authorized.</p>
-          <div class="stripe-card-host" #stripeCardElementHost></div>
-          <button type="button" class="secondary-action" (click)="confirmCardPayment()" [disabled]="confirmingPayment || initializingPayment || reviewing || submitting">
-            {{ confirmingPayment ? 'Confirming card...' : 'Confirm card payment' }}
-          </button>
-        </section>
-
-        <section class="pix-section" *ngIf="showPixAction && pixActionPayload as pixAction">
-          <h4>Pix customer action</h4>
-          <p *ngIf="pixAction['pixCode']"><strong>Copy and paste:</strong> {{ pixAction['pixCode'] }}</p>
-          <p *ngIf="pixAction['hostedInstructionsUrl'] as hostedInstructionsUrl">
-            <strong>Hosted instructions:</strong>
-            <a [href]="hostedInstructionsUrl" rel="noreferrer" target="_blank">Open provider instructions</a>
-          </p>
-          <p *ngIf="pixAction['imageUrlPng'] as imageUrlPng">
-            <img [src]="imageUrlPng" alt="Pix QR code">
-          </p>
-          <p *ngIf="pixExpiresAt"><strong>Expires:</strong> {{ pixExpiresAt | date: 'medium' }}</p>
-          <button type="button" class="secondary-action" (click)="refreshPaymentStatus()" [disabled]="refreshingPaymentStatus || initializingPayment || reviewing || submitting">
-            {{ refreshingPaymentStatus ? 'Refreshing payment status...' : 'Refresh payment status' }}
-          </button>
-        </section>
-      </section>
-
-      <div class="review-actions">
-        <button type="button" (click)="review()" [disabled]="reviewButtonDisabled">
-          {{ reviewing ? 'Reviewing...' : 'Review order' }}
-        </button>
-
-        <p class="status-message" *ngIf="statusMessage">{{ statusMessage }}</p>
-        <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-        <p class="stale-state" *ngIf="reviewStale">Review is stale. Refresh review before place-order.</p>
-
-        <section class="review-snapshot" *ngIf="reviewSnapshot as review">
-          <h3>Review snapshot</h3>
-          <p><strong>Status:</strong> {{ review.readyToPlace ? 'Ready to place' : 'Review blocked' }}</p>
-          <p><strong>Checkout ID:</strong> {{ review.checkoutId }}</p>
-          <p><strong>Address validated:</strong> {{ review.addressValidated ? 'Yes' : 'No' }}</p>
-          <p><strong>Delivery validated:</strong> {{ review.deliveryValidated ? 'Yes' : 'No' }}</p>
-          <p><strong>Payment validated:</strong> {{ review.paymentValidated ? 'Yes' : 'No' }}</p>
-          <p><strong>Pricing validated:</strong> {{ review.pricingValidated ? 'Yes' : 'No' }}</p>
-          <p><strong>Stock validated:</strong> {{ review.stockValidated ? 'Yes' : 'No' }}</p>
-          <p *ngIf="review.deliveryMode"><strong>Delivery mode:</strong> {{ review.deliveryMode.name }} ({{ review.deliveryMode.estimatedDays }} day(s))</p>
-          <p *ngIf="review.payment"><strong>Payment method:</strong> {{ review.payment.method }} via {{ review.payment.provider }}</p>
-          <p *ngIf="review.payment"><strong>Payment status:</strong> {{ review.payment.status }}</p>
-          <p *ngIf="review.payment?.paymentSessionId"><strong>Payment session:</strong> {{ review.payment?.paymentSessionId }}</p>
-          <p *ngIf="review.payment?.detail"><strong>Payment detail:</strong> {{ review.payment?.detail }}</p>
-          <p><strong>Delivery cost:</strong> {{ formatMoney(review.deliveryCost, review.currency || review.deliveryMode?.currency || 'USD') }}</p>
-          <p><strong>Reviewed total:</strong> {{ formatMoney(review.total, review.currency || 'USD') }}</p>
-          <p *ngIf="review.updatedAt"><strong>Updated:</strong> {{ review.updatedAt | date: 'medium' }}</p>
-
-          <div class="review-messages" *ngIf="review.messages.length">
-            <p><strong>Messages</strong></p>
-            <ul>
-              <li *ngFor="let message of review.messages">{{ message }}</li>
-            </ul>
-          </div>
-
-          <div class="review-warnings" *ngIf="review.warnings.length">
-            <p><strong>Warnings</strong></p>
-            <ul>
-              <li *ngFor="let warning of review.warnings">{{ warning }}</li>
-            </ul>
-          </div>
-
-          <div class="review-errors" *ngIf="review.errors.length">
-            <p><strong>Errors</strong></p>
-            <ul>
-              <li *ngFor="let reviewError of review.errors">{{ reviewError }}</li>
-            </ul>
-          </div>
-        </section>
-
-        <button type="button" class="place-order-button" (click)="submit()" [disabled]="placeOrderDisabled">
-          {{ submitting ? 'Placing order...' : 'Place order' }}
-        </button>
-      </div>
-    </aside>
-  </div>
-</section>
-
+<!-- Empty Cart -->
 <ng-template #emptyCheckout>
-  <section class="checkout-page">
-    <header>
-      <p class="eyebrow">Checkout</p>
-      <h1>No active cart</h1>
-      <p class="page-copy">Add products to the cart before starting checkout.</p>
-      <a routerLink="/cart">Go to cart</a>
-    </header>
-  </section>
+  <div class="checkout-empty">
+    <div class="ub-empty">
+      <div class="ub-empty__icon">🛒</div>
+      <h1 class="ub-empty__title">Your cart is empty</h1>
+      <p class="ub-empty__description">Add some products to start checkout</p>
+      <a routerLink="/cart" class="ub-btn ub-btn--primary ub-btn--lg">Go to Cart</a>
+    </div>
+  </div>
 </ng-template>
+
+<!-- Copy Toast -->
+<div class="copy-toast" *ngIf="showCopyToast" [@fadeInOut]>
+  <i class="fas fa-check"></i>
+  <span>Copied to clipboard</span>
+</div>
+
+<!-- Soft Login Prompt -->
+<app-soft-login-prompt
+  [isOpen]="showSoftLoginPrompt"
+  (login)="onSoftLogin()"
+  (continueBrowsing)="onContinueBrowsing()">
+</app-soft-login-prompt>

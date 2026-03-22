@@ -1,0 +1,75 @@
+<article class="product-card" [class.layout-list]="layout === 'list'">
+  <a [routerLink]="product.url" class="card-link">
+    <!-- Image -->
+    <div class="card-image">
+      <img 
+        *ngIf="product.mainImage?.url" 
+        [src]="product.mainImage!.url" 
+        [alt]="product.mainImage?.altText || product.name"
+        loading="lazy">
+      
+      <div class="image-placeholder" *ngIf="!product.mainImage?.url">
+        <span>📦</span>
+      </div>
+
+      <!-- Hover Image -->
+      <img 
+        *ngIf="product.additionalImages?.[0]?.url"
+        [src]="product.additionalImages![0].url" 
+        class="hover-image"
+        loading="lazy"
+        [alt]="product.name">
+
+      <!-- Badges -->
+      <div class="card-badges">
+        <span 
+          *ngIf="getClassificationBadge() as badge"
+          class="badge"
+          [class]="badge.class">
+          {{ badge.text }}
+        </span>
+      </div>
+
+      <!-- Quick Add -->
+      <button 
+        *ngIf="showQuickAdd && product.available"
+        class="btn-quick-add"
+        (click)="onAddToCart($event)"
+        [title]="product.stock.status === 'OUT_OF_STOCK' ? 'Indisponível' : 'Adicionar ao carrinho'">
+        <span *ngIf="product.stock.status !== 'OUT_OF_STOCK'">🛒</span>
+        <span *ngIf="product.stock.status === 'OUT_OF_STOCK'">✕</span>
+      </button>
+    </div>
+
+    <!-- Info -->
+    <div class="card-info">
+      <!-- Rating -->
+      <div class="product-rating" *ngIf="product.rating">
+        <div class="stars">
+          <span *ngFor="let star of [1,2,3,4,5]" 
+                class="star"
+                [class.filled]="star <= Math.floor(product.rating)">⭐</span>
+        </div>
+        <span class="count">({{ product.reviewCount }})</span>
+      </div>
+
+      <!-- Name -->
+      <h3 class="product-name">{{ product.name }}</h3>
+
+      <!-- Price -->
+      <div class="product-price">
+        <span class="current-price" [class.on-sale]="product.price.discounted">
+          {{ product.price.formattedValue }}
+        </span>
+        <span class="original-price" *ngIf="product.price.discounted">
+          {{ product.price.originalFormattedValue }}
+        </span>
+      </div>
+
+      <!-- Stock -->
+      <div class="product-stock" [class]="getStockClass()">
+        {{ getStockMessage() }}
+      </div>
+    </div>
+  </a>
+</article>

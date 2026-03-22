@@ -1,0 +1,195 @@
+// ========================================
+// CHECKOUT SUMMARY - Estilos específicos
+// Usa classes do Design System UBRIS
+// ========================================
+
+// Mobile Header
+.summary-mobile-header {
+  display: none;
+  padding: var(--space-4) var(--space-5);
+  background: linear-gradient(135deg, var(--ubris-gray-800), var(--ubris-gray-900));
+  color: white;
+  cursor: pointer;
+  
+  @media (max-width: 900px) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.summary-mobile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.summary-toggle-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+}
+
+.summary-item-count {
+  font-size: var(--font-size-xs);
+  opacity: 0.8;
+}
+
+.summary-mobile-total {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.summary-total-amount {
+  font-size: var(--font-size-lg);
+}
+
+.summary-toggle-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform var(--duration-fast) var(--ease-out);
+  
+  &.expanded {
+    transform: rotate(180deg);
+  }
+}
+
+// Content
+.summary-content {
+  @media (max-width: 900px) {
+    &.collapsed {
+      display: none;
+    }
+  }
+}
+
+// Summary sections
+.summary-section {
+  margin-top: var(--space-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+// Delivery row
+.delivery-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+}
+
+.delivery-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.delivery-value {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.delivery-estimate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  
+  i {
+    margin-right: var(--space-1);
+  }
+}
+
+// Payment status
+.payment-status-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.status-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-lg);
+  flex-shrink: 0;
+  
+  &.success {
+    background: var(--ubris-success-100);
+    color: var(--ubris-success-600);
+  }
+  
+  &.pending {
+    background: var(--ubris-warning-100);
+    color: var(--ubris-warning-600);
+  }
+  
+  &.error {
+    background: var(--ubris-error-100);
+    color: var(--ubris-error-600);
+  }
+}
+
+.payment-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.payment-method {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+}
+
+.payment-state {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: 0.025em;
+  
+  &.success {
+    color: var(--ubris-success-600);
+  }
+  
+  &.pending {
+    color: var(--ubris-warning-600);
+  }
+  
+  &.error {
+    color: var(--ubris-error-600);
+  }
+}
+
+// Review status
+.review-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  
+  &.ready {
+    color: var(--ubris-success-600);
+  }
+  
+  i {
+    font-size: var(--font-size-base);
+  }
+}
+
+// Total highlight
+.total-amount {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+}
+
+// Loading state
+.summary-loading {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-muted);
+}

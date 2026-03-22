@@ -1,0 +1,74 @@
+<header class="site-header" [class.scrolled]="false">
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="container">
+      <p class="promo-text">🚚 Frete grátis em compras acima de R$ 199 | 🎁 10% OFF na primeira compra</p>
+    </div>
+  </div>
+
+  <!-- Main Header -->
+  <div class="main-header">
+    <div class="container">
+      <!-- Mobile Menu Button -->
+      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" aria-label="Menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <!-- Logo -->
+      <a routerLink="/" class="logo">
+        <span class="logo-icon">🛍️</span>
+        <span class="logo-text">JULI</span>
+      </a>
+
+      <!-- Search -->
+      <div class="search-bar">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (keyup.enter)="onSearch()"
+          placeholder="O que você está procurando?"
+          aria-label="Buscar produtos">
+        <button (click)="onSearch()" aria-label="Buscar">
+          🔍
+        </button>
+      </div>
+
+      <!-- Actions -->
+      <div class="header-actions">
+        <a routerLink="/account/orders" class="action-btn" title="Minha Conta">
+          <span class="icon">👤</span>
+          <span class="label" *ngIf="isLoggedIn$ | async">Minha Conta</span>
+          <span class="label" *ngIf="!(isLoggedIn$ | async)">Entrar</span>
+        </a>
+
+        <a routerLink="/cart" class="action-btn cart-btn" title="Carrinho">
+          <span class="icon">🛒</span>
+          <span class="badge" *ngIf="cartTotal$ | async as total">{{ total }}</span>
+          <span class="label">Carrinho</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="main-nav" [class.open]="mobileMenuOpen">
+    <div class="container">
+      <ul class="nav-list">
+        <li *ngFor="let cat of categories">
+          <a [routerLink]="['/c', cat.code]" class="nav-link">
+            <span class="nav-icon">{{ cat.icon }}</span>
+            <span>{{ cat.name }}</span>
+          </a>
+        </li>
+        <li class="nav-highlight">
+          <a routerLink="/c/promocoes" class="nav-link sale">
+            <span class="nav-icon">🏷️</span>
+            <span>Promoções</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>

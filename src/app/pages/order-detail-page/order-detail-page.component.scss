@@ -1,41 +1,584 @@
+// Order Detail Page Styles
+// Design System JULI - Ubris-inspired
+
+// Variables (should match orders-page)
+$color-primary: #274060;
+$color-primary-light: #3d5a80;
+$color-text: #1a1a1a;
+$color-text-muted: #526075;
+$color-border: #d8dee8;
+$color-border-light: #eef2f7;
+$color-bg: #f7f9fc;
+$color-white: #ffffff;
+$color-success: #22c55e;
+$color-warning: #f59e0b;
+$color-danger: #ef4444;
+$color-info: #3b82f6;
+
+$radius-sm: 8px;
+$radius-md: 12px;
+$radius-lg: 16px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+
+// Layout
 .order-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
   display: grid;
   gap: 1.5rem;
 }
 
-.page-header {
-  display: grid;
-  gap: 0.35rem;
+// Loading State
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem;
+  gap: 1rem;
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid $color-border-light;
+    border-top-color: $color-primary;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  p {
+    color: $color-text-muted;
+  }
 }
 
-.detail-grid {
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Error State
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  gap: 0.75rem;
+  background: $color-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  .error-icon {
+    font-size: 3rem;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    color: $color-text;
+  }
+
+  p {
+    margin: 0;
+    color: $color-text-muted;
+  }
+
+  .error-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+// Navigation
+.back-nav {
+  .btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: $color-text-muted;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: $color-primary;
+    }
+  }
+}
+
+// Header
+.order-header {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: $color-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+
+  .header-main {
+    text-align: center;
+
+    .eyebrow {
+      margin: 0 0 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: $color-text-muted;
+    }
+
+    h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $color-text;
+    }
+
+    .order-date {
+      margin: 0;
+      color: $color-text-muted;
+      font-size: 0.875rem;
+    }
+  }
+}
+
+// Status Section
+.status-section {
   display: grid;
   gap: 1rem;
+  justify-items: center;
 }
 
-.detail-card {
-  background: #fff;
-  border: 1px solid #d8dee8;
-  border-radius: 14px;
-  padding: 1rem 1.25rem;
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 999px;
+
+  .status-icon {
+    font-size: 1rem;
+  }
+
+  &.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  &.status-processing {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  &.status-ready {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+
+  &.status-shipped {
+    background: #c7d2fe;
+    color: #312e81;
+  }
+
+  &.status-delivered,
+  &.status-completed {
+    background: #d1fae5;
+    color: #065f46;
+  }
+
+  &.status-cancelled {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  &.status-returned,
+  &.status-refunded {
+    background: #f3e8ff;
+    color: #6b21a8;
+  }
+
+  &.status-on-hold {
+    background: #ffedd5;
+    color: #9a3412;
+  }
+
+  &.status-unknown {
+    background: $color-border-light;
+    color: $color-text-muted;
+  }
 }
 
-.line-item {
+// Progress Bar
+.progress-container {
+  width: 100%;
+  max-width: 600px;
+}
+
+.progress-bar {
+  height: 8px;
+  background: $color-border-light;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary, $color-primary-light);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.progress-steps {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.9rem 0;
-  border-top: 1px solid #eef2f7;
-}
-
-.line-item:first-of-type {
-  border-top: 0;
-}
-
-.eyebrow {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   font-size: 0.75rem;
-  color: #526075;
+  color: $color-text-muted;
+
+  .step {
+    position: relative;
+    padding-top: 0.5rem;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      background: $color-border;
+      border-radius: 50%;
+    }
+
+    &.active {
+      color: $color-primary;
+      font-weight: 600;
+
+      &::before {
+        background: $color-primary;
+      }
+    }
+  }
+}
+
+// Detail Grid
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 1.5rem;
+  align-items: start;
+
+  @media (max-width: 992px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// Items Section
+.items-section {
+  background: $color-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 1.25rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: $color-text;
+  }
+}
+
+.items-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.item-card {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  gap: 1rem;
+  padding: 1rem;
+  background: $color-bg;
+  border-radius: $radius-md;
+  align-items: center;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 60px 1fr;
+  }
+}
+
+.item-image,
+.item-image-placeholder {
+  width: 80px;
+  height: 80px;
+  border-radius: $radius-sm;
+  overflow: hidden;
+  background: $color-white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  @media (max-width: 640px) {
+    width: 60px;
+    height: 60px;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  span {
+    font-size: 2rem;
+  }
+}
+
+.item-image-placeholder {
+  background: $color-border-light;
+}
+
+.item-details {
+  min-width: 0;
+
+  .item-name {
+    margin: 0 0 0.25rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: $color-text;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-code {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    color: $color-text-muted;
+  }
+
+  .item-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: $color-text-muted;
+  }
+}
+
+.item-total {
+  @media (max-width: 640px) {
+    grid-column: 1 / -1;
+    text-align: right;
+    padding-top: 0.5rem;
+    border-top: 1px solid $color-border;
+  }
+
+  .total-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: $color-text;
+  }
+}
+
+.empty-items {
+  text-align: center;
+  padding: 3rem;
+  color: $color-text-muted;
+}
+
+// Summary Section
+.summary-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.summary-card,
+.address-card,
+.delivery-card {
+  background: $color-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: 1.5rem;
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: $color-text;
+  }
+}
+
+.summary-rows {
+  display: grid;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid $color-border-light;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: $color-text-muted;
+
+  &.savings {
+    color: $color-success;
+    font-weight: 500;
+
+    .savings-value {
+      color: $color-success;
+    }
+  }
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $color-text;
+
+  .total-value {
+    font-size: 1.25rem;
+    color: $color-primary;
+  }
+}
+
+// Address Card
+.address-card {
+  address {
+    font-style: normal;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: $color-text;
+
+    p {
+      margin: 0;
+    }
+
+    .address-name {
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .address-line {
+      color: $color-text-muted;
+    }
+
+    .address-city {
+      margin-top: 0.5rem;
+      color: $color-text;
+    }
+
+    .address-postal,
+    .address-country {
+      color: $color-text-muted;
+      font-size: 0.8125rem;
+    }
+
+    .address-phone {
+      margin-top: 0.75rem;
+      color: $color-text;
+    }
+  }
+}
+
+// Delivery Card
+.delivery-card {
+  .delivery-details {
+    font-size: 0.875rem;
+    color: $color-text;
+
+    p {
+      margin: 0 0 0.5rem;
+    }
+
+    strong {
+      color: $color-text-muted;
+      font-weight: 500;
+    }
+  }
+
+  .tracking-link {
+    color: $color-primary;
+    text-decoration: none;
+    font-weight: 500;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Buttons
+.btn-primary,
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: none;
+}
+
+.btn-primary {
+  color: $color-white;
+  background: $color-primary;
+
+  &:hover {
+    background: $color-primary-light;
+  }
+}
+
+.btn-secondary {
+  color: $color-text;
+  background: $color-white;
+  border: 1px solid $color-border;
+
+  &:hover {
+    background: $color-bg;
+    border-color: $color-primary;
+  }
+}
+
+// Responsive
+@media (max-width: 640px) {
+  .order-detail-page {
+    padding: 1rem;
+  }
+
+  .order-header {
+    padding: 1.25rem;
+
+    .header-main h1 {
+      font-size: 1.25rem;
+    }
+  }
+
+  .progress-steps {
+    display: none;
+  }
+
+  .summary-section {
+    order: -1;
+  }
 }

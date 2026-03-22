@@ -29,7 +29,6 @@ export class AppComponent {
   }
 
   logout(): void {
-    this.cartFacade.clear();
     this.authService.logout();
   }
 }
