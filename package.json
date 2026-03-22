@@ -5,7 +5,7 @@
   "description": "Official Spartacus storefront for Ubris + Strapi",
   "scripts": {
     "ng": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng",
-    "start": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng serve --proxy-config proxy.conf.json",
+    "start": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng serve --proxy-config proxy.conf.json --disable-host-check",
     "build": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration development",
     "build:prod": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --configuration production",
     "watch": "node --openssl-legacy-provider ./node_modules/@angular/cli/bin/ng build --watch --configuration development",
