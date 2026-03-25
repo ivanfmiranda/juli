@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Cart, CartModification } from '@spartacus/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { UbrisCartAdapter, CartPromotionResponse } from '../adapters/cart.adapter';
 import { UbrisCartNormalizer } from '../normalizers/cart.normalizer';
+import { JuliObservabilityService } from '../../services/observability.service';
+import { JuliEvent } from '../../models/observability.models';
 
 export interface ConnectorCartPromotionResult {
   cart: Cart;
@@ -16,7 +18,8 @@ export interface ConnectorCartPromotionResult {
 export class UbrisCartConnector {
   constructor(
     private readonly adapter: UbrisCartAdapter,
-    private readonly normalizer: UbrisCartNormalizer
+    private readonly normalizer: UbrisCartNormalizer,
+    private readonly obs: JuliObservabilityService
   ) {}
 
   create(customerId: string): Observable<Cart> {
@@ -43,9 +46,15 @@ export class UbrisCartConnector {
     );
   }
 
-  addEntry(cartId: string, sku: string, quantity: number): Observable<CartModification> {
-    return this.adapter.addEntry(cartId, sku, quantity).pipe(
-      map(response => this.normalizer.normalizeModification(response.data, sku, quantity))
+  addEntry(
+    cartId: string,
+    sku: string,
+    quantity: number,
+    options?: { customizations?: any; forceNewEntry?: boolean }
+  ): Observable<CartModification> {
+    return this.adapter.addEntry(cartId, sku, quantity, options).pipe(
+      map(response => this.normalizer.normalizeModification(response.data, sku, quantity)),
+      tap(mod => this.obs.emitEvent(JuliEvent.CART_ENTRY_ADDED, { cartId, sku, quantity, mod }))
     );
   }
 
@@ -53,10 +62,49 @@ export class UbrisCartConnector {
     cartId: string,
     sku: string,
     quantity: number,
+    anonymousToken: string,
+    options?: { customizations?: any; forceNewEntry?: boolean }
+  ): Observable<CartModification> {
+    return this.adapter.addEntryAnonymous(cartId, sku, quantity, anonymousToken, options).pipe(
+      map(response => this.normalizer.normalizeModification(response.data, sku, quantity)),
+      tap(mod => this.obs.emitEvent(JuliEvent.CART_ENTRY_ADDED, { cartId, sku, quantity, mod, anonymous: true }))
+    );
+  }
+
+  updateEntry(cartId: string, entryNumber: string | number, quantity: number): Observable<CartModification> {
+    return this.adapter.updateEntry(cartId, entryNumber, quantity).pipe(
+      map(response => this.normalizer.normalizeModification(response.data, `entry-${entryNumber}`, quantity)),
+      tap(mod => this.obs.emitEvent(JuliEvent.CART_ENTRY_UPDATED, { cartId, entryNumber, quantity, mod }))
+    );
+  }
+
+  updateEntryAnonymous(
+    cartId: string,
+    entryNumber: string | number,
+    quantity: number,
     anonymousToken: string
   ): Observable<CartModification> {
-    return this.adapter.addEntryAnonymous(cartId, sku, quantity, anonymousToken).pipe(
-      map(response => this.normalizer.normalizeModification(response.data, sku, quantity))
+    return this.adapter.updateEntryAnonymous(cartId, entryNumber, quantity, anonymousToken).pipe(
+      map(response => this.normalizer.normalizeModification(response.data, `entry-${entryNumber}`, quantity)),
+      tap(mod => this.obs.emitEvent(JuliEvent.CART_ENTRY_UPDATED, { cartId, entryNumber, quantity, mod, anonymous: true }))
+    );
+  }
+
+  removeEntry(cartId: string, entryNumber: string | number): Observable<void> {
+    return this.adapter.removeEntry(cartId, entryNumber).pipe(
+      tap(() => this.obs.emitEvent(JuliEvent.CART_ENTRY_REMOVED, { cartId, entryNumber })),
+      map(() => undefined)
+    );
+  }
+
+  removeEntryAnonymous(
+    cartId: string,
+    entryNumber: string | number,
+    anonymousToken: string
+  ): Observable<void> {
+    return this.adapter.removeEntryAnonymous(cartId, entryNumber, anonymousToken).pipe(
+      tap(() => this.obs.emitEvent(JuliEvent.CART_ENTRY_REMOVED, { cartId, entryNumber, anonymous: true })),
+      map(() => undefined)
     );
   }
 
@@ -88,7 +136,9 @@ export class UbrisCartConnector {
           cartChanged: !!data.cartChanged,
           warnings: data.warnings ?? []
         };
-      })
+      }),
+      tap(result => this.obs.emitEvent(JuliEvent.CART_PROMOTED, { customerId, result }))
     );
   }
 }
+

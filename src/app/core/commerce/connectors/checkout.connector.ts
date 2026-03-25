@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { UbrisCheckoutAdapter } from '../adapters/checkout.adapter';
+import { JuliObservabilityService } from '../../services/observability.service';
+import { JuliEvent } from '../../models/observability.models';
 import {
   JuliCheckoutAddressState,
   JuliCheckoutAddressUpsertRequest,
@@ -20,7 +22,10 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class UbrisCheckoutConnector {
-  constructor(private readonly adapter: UbrisCheckoutAdapter) {}
+  constructor(
+    private readonly adapter: UbrisCheckoutAdapter,
+    private readonly obs: JuliObservabilityService
+  ) {}
 
   saveAddress(body: JuliCheckoutAddressUpsertRequest): Observable<JuliCheckoutAddressState> {
     return this.adapter.saveAddress(body).pipe(
@@ -36,7 +41,8 @@ export class UbrisCheckoutConnector {
           address: (data as any).address,
           updatedAt: this.asString((data as any).updatedAt) ?? undefined
         };
-      })
+      }),
+      tap(state => this.obs.emitEvent(JuliEvent.CHECKOUT_STEP_COMPLETED, { step: 'ADDRESS', checkoutId: state.checkoutId }))
     );
   }
 
@@ -65,7 +71,8 @@ export class UbrisCheckoutConnector {
           deliveryMode: this.asDeliveryOption((data as any).deliveryMode),
           updatedAt: this.asString((data as any).updatedAt) ?? undefined
         };
-      })
+      }),
+      tap(state => this.obs.emitEvent(JuliEvent.CHECKOUT_STEP_COMPLETED, { step: 'DELIVERY_MODE', checkoutId: state.checkoutId, code }))
     );
   }
 
@@ -98,7 +105,8 @@ export class UbrisCheckoutConnector {
           providerReference: this.asString((data as any).providerReference) ?? undefined,
           updatedAt: this.asString((data as any).updatedAt) ?? undefined
         };
-      })
+      }),
+      tap(state => this.obs.emitEvent(JuliEvent.PAYMENT_STARTED, { checkoutId, methodCode, provider: state.provider }))
     );
   }
 
@@ -119,6 +127,13 @@ export class UbrisCheckoutConnector {
           nextAction: this.asRecord((data as any).nextAction),
           updatedAt: this.asString((data as any).updatedAt) ?? undefined
         };
+      }),
+      tap(state => {
+        if (state.status === 'AUTHORIZED' || state.status === 'CAPTURED') {
+          this.obs.emitEvent(JuliEvent.PAYMENT_CONFIRMED, { checkoutId, status: state.status });
+        } else if (state.status === 'FAILED') {
+          this.obs.emitEvent(JuliEvent.PAYMENT_FAILED, { checkoutId, detail: state.detail });
+        }
       })
     );
   }
@@ -159,17 +174,34 @@ export class UbrisCheckoutConnector {
     );
   }
 
-  submitById(checkoutId: string): Observable<JuliCheckoutResult> {
-    return this.adapter.submitById(checkoutId).pipe(
-      map(response => response.data ?? {})
+  submitById(checkoutId: string, idempotencyKey?: string): Observable<JuliCheckoutResult> {
+    return this.adapter.submitById(checkoutId, idempotencyKey).pipe(
+      map(response => response.data ?? {}),
+      tap(result => {
+        if (result.orderId) {
+          this.obs.emitEvent(JuliEvent.ORDER_PLACED, { checkoutId, orderId: result.orderId });
+          this.obs.rotateCorrelationId(); // Nova jornada começa aqui
+        } else {
+          this.obs.emitEvent(JuliEvent.ORDER_PLACE_FAILED, { checkoutId, result });
+        }
+      })
     );
   }
 
-  submit(body: JuliCheckoutSubmission): Observable<JuliCheckoutResult> {
-    return this.adapter.submit(body).pipe(
-      map(response => response.data ?? {})
+  submit(body: JuliCheckoutSubmission, idempotencyKey?: string): Observable<JuliCheckoutResult> {
+    return this.adapter.submit(body, idempotencyKey).pipe(
+      map(response => response.data ?? {}),
+      tap(result => {
+        if (result.orderId) {
+          this.obs.emitEvent(JuliEvent.ORDER_PLACED, { cartId: body.cartId, orderId: result.orderId });
+          this.obs.rotateCorrelationId();
+        } else {
+          this.obs.emitEvent(JuliEvent.ORDER_PLACE_FAILED, { cartId: body.cartId, result });
+        }
+      })
     );
   }
+
 
   status(checkoutId: string): Observable<JuliCheckoutResult> {
     return this.adapter.getStatus(checkoutId).pipe(

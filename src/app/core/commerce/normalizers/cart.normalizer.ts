@@ -38,7 +38,7 @@ export class UbrisCartNormalizer {
     const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'USD';
     const productCode = this.firstNonBlank(raw, 'productCode', 'sku', 'code') ?? `entry-${index}`;
     return {
-      entryNumber: index,
+      entryNumber: this.asNumber(raw.entryNumber, index),
       quantity: this.asNumber(raw.quantity, 0),
       product: {
         code: productCode,
@@ -46,7 +46,8 @@ export class UbrisCartNormalizer {
       },
       basePrice: this.money(raw.unitPrice, currencyIso),
       totalPrice: this.money(raw.lineTotal, currencyIso),
-      updateable: false
+      customizations: raw.customizations ?? null,
+      updateable: true // Agora suportamos atualização
     };
   }
 

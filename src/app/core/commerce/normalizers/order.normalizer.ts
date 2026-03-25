@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Order, OrderHistoryList, OrderEntry, Price } from '@spartacus/core';
+import { Order, OrderHistoryList, OrderEntry, Price, ReturnRequest } from '@spartacus/core';
 
 type NormalizeHistoryOptions = {
   currentPage?: number;
@@ -48,9 +48,12 @@ export class UbrisOrderNormalizer {
     const placedValue = this.firstNonBlank(source, 'placedAt', 'updatedAt', 'createdAt');
     const totalItems = this.asNumber(source.totalItems, this.sumQuantities(source.entries) ?? 0);
     const currency = this.firstNonBlank(source, 'currency') ?? 'USD';
+    const rawStatus = this.firstNonBlank(source, 'status') ?? 'CREATED';
+
     return {
       code: this.firstNonBlank(source, 'id', 'orderId') ?? undefined,
-      status: this.firstNonBlank(source, 'status') ?? undefined,
+      status: this.mapStatus(rawStatus),
+      statusDisplay: this.mapStatusDisplay(rawStatus),
       created: this.asDate(placedValue) ?? undefined,
       totalPrice: this.normalizePrice(source.total, currency),
       totalPriceWithTax: this.normalizePrice(this.pickPriceCandidate(source, 'totalWithTax', 'totalPriceWithTax', 'grandTotal', 'total'), currency),
@@ -65,12 +68,39 @@ export class UbrisOrderNormalizer {
   private normalizeOrderHistory(raw: Record<string, unknown>) {
     const placedValue = this.firstNonBlank(raw, 'placedAt', 'updatedAt', 'createdAt');
     const currency = this.firstNonBlank(raw, 'currency') ?? 'USD';
+    const rawStatus = this.firstNonBlank(raw, 'status') ?? 'CREATED';
+
     return {
       code: this.firstNonBlank(raw, 'id', 'orderId') ?? undefined,
-      status: this.firstNonBlank(raw, 'status') ?? undefined,
+      status: this.mapStatus(rawStatus),
+      statusDisplay: this.mapStatusDisplay(rawStatus),
       placed: this.asDate(placedValue) ?? undefined,
       total: this.normalizePrice(raw.total, currency)
     };
+  }
+
+  private mapStatus(status: string): string {
+    const mapping: Record<string, string> = {
+      'CREATED': 'CREATED',
+      'PAID': 'PAID',
+      'PROCESSING': 'PROCESSING',
+      'SHIPPED': 'SHIPPED',
+      'DELIVERED': 'DELIVERED',
+      'CANCELLED': 'CANCELLED'
+    };
+    return mapping[(status || '').toUpperCase()] ?? 'UNKNOWN';
+  }
+
+  private mapStatusDisplay(status: string): string {
+    const mapping: Record<string, string> = {
+      'CREATED': 'Order Created',
+      'PAID': 'Payment Confirmed',
+      'PROCESSING': 'Processing Order',
+      'SHIPPED': 'Order Shipped',
+      'DELIVERED': 'Order Delivered',
+      'CANCELLED': 'Order Cancelled'
+    };
+    return mapping[(status || '').toUpperCase()] ?? status;
   }
 
   private normalizePrice(raw: unknown, fallbackCurrency: string = 'USD'): Price | undefined {
@@ -115,11 +145,36 @@ export class UbrisOrderNormalizer {
           product: productCode ? {
             code: productCode,
             name: productName ?? undefined
-          } : undefined
+          } : undefined,
+          customizations: entry.customizations ?? null
         };
       });
 
     return entries.length > 0 ? entries : undefined;
+  }
+
+  normalizeReturnRequest(raw: Record<string, unknown> | undefined): ReturnRequest {
+    const source = raw ?? {};
+    return {
+      orderCode: this.firstNonBlank(source, 'orderCode') ?? undefined,
+      code: this.firstNonBlank(source, 'code', 'returnId') ?? undefined,
+      status: this.firstNonBlank(source, 'status') ?? 'RECEIVED',
+      returnEntries: this.normalizeReturnEntries(source.entries ?? source.returnEntries),
+      cancellable: this.asBoolean(source.cancellable)
+    };
+  }
+
+  private normalizeReturnEntries(raw: unknown): any[] {
+    if (!Array.isArray(raw)) {
+      return [];
+    }
+    return raw.map(entry => ({
+      orderEntry: {
+        product: { code: entry.sku || entry.productCode }
+      },
+      quantity: entry.quantity,
+      returnReason: entry.reason
+    }));
   }
 
   private pickPriceCandidate(source: Record<string, unknown>, ...keys: string[]): unknown {

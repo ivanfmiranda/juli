@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_cms_contact_forms",
+  "info": {
+    "displayName": "Contact Form",
+    "icon": "mail",
+    "description": "A contact form component for customers to send messages."
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "buttonLabel": {
+      "type": "string",
+      "default": "Send Message"
+    },
+    "successMessage": {
+      "type": "string",
+      "default": "Thank you! Your message has been sent."
+    }
+  }
+}

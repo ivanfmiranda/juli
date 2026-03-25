@@ -47,10 +47,19 @@ import { JuliSpartacusCartAdapter } from './adapters/spartacus-cart.adapter';
 import { JuliSpartacusCartEntryAdapter } from './adapters/spartacus-cart-entry.adapter';
 import { JuliSpartacusCartValidationAdapter, JuliSpartacusCartVoucherAdapter, JuliSpartacusSaveCartAdapter } from './adapters/spartacus-cart-support.adapter';
 import { JuliSpartacusSiteAdapter } from './adapters/spartacus-site.adapter';
+import { JuliSpartacusCheckoutAdapter } from './adapters/spartacus-checkout.adapter';
 
 // Ubris Adapters (Backend Ativo)
 import { UbrisOrderAdapter } from './adapters/ubris/ubris-order.adapter';
-
+import { JuliSpartacusOrderAdapter } from './adapters/spartacus-order.adapter';
+import { 
+CheckoutAdapter, 
+CheckoutDeliveryAdapter, 
+CheckoutPaymentAdapter,
+UserAddressAdapter,
+UserConsentAdapter,
+UserPaymentAdapter
+} from '@spartacus/core';
 // Placeholder Adapters (Capabilities Futuras)
 import { 
   // B2B Features
@@ -88,7 +97,12 @@ export class CommerceModule {
         { provide: SaveCartAdapter, useClass: JuliSpartacusSaveCartAdapter },
         
         // Orders (Ubris Backend)
-        { provide: UserOrderAdapter, useClass: UbrisOrderAdapter },
+        { provide: UserOrderAdapter, useClass: JuliSpartacusOrderAdapter },
+
+        // Checkout & Payment (Ubris Backend)
+        { provide: CheckoutAdapter, useClass: JuliSpartacusCheckoutAdapter },
+        { provide: CheckoutDeliveryAdapter, useClass: JuliSpartacusCheckoutAdapter },
+        { provide: CheckoutPaymentAdapter, useClass: JuliSpartacusCheckoutAdapter },
         
         // ==========================================
         // USER ADAPTERS - Configuração MINIMAL

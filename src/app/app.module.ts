@@ -9,6 +9,7 @@ import { StoreModule } from '@ngrx/store';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
+import { ObservabilityInterceptor } from './core/services/observability.interceptor';
 import { CommerceModule } from './core/commerce';
 import { MinimalUserModule } from './core/user'; // Solução minimalista
 import { CmsPageComponent } from './pages/cms-page/cms-page.component';
@@ -29,6 +30,16 @@ import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { CmsComponentHostComponent } from './shared/cms-runtime/cms-component-host.component';
 import { StrapiCmsModule } from './spartacus/strapi-cms.module';
+
+import { JuliFeatureService } from './core/services/juli-feature.service';
+import { JuliBrandingService } from './core/services/juli-branding.service';
+import { tap } from 'rxjs/operators';
+
+function initializeSaaSContext(featureService: JuliFeatureService, brandingService: JuliBrandingService): () => any {
+  return () => featureService.init().pipe(
+    tap(ctx => brandingService.applyBranding(ctx.branding))
+  ).toPromise();
+}
 
 @NgModule({
   declarations: [
@@ -78,6 +89,17 @@ import { StrapiCmsModule } from './spartacus/strapi-cms.module';
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: ObservabilityInterceptor,
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeSaaSContext,
+      deps: [JuliFeatureService, JuliBrandingService],
       multi: true
     }
   ],

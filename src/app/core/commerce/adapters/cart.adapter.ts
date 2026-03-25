@@ -58,10 +58,20 @@ export class UbrisCartAdapter {
     );
   }
 
-  addEntry(cartId: string, sku: string, quantity: number): Observable<GatewayEnvelope<Record<string, unknown>>> {
+  addEntry(
+    cartId: string,
+    sku: string,
+    quantity: number,
+    options?: { customizations?: any; forceNewEntry?: boolean }
+  ): Observable<GatewayEnvelope<Record<string, unknown>>> {
     return this.http.post<GatewayEnvelope<Record<string, unknown>>>(
       `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries`,
-      { sku, quantity }
+      {
+        sku,
+        quantity,
+        customizations: options?.customizations,
+        forceNewEntry: options?.forceNewEntry
+      }
     );
   }
 
@@ -69,7 +79,8 @@ export class UbrisCartAdapter {
     cartId: string,
     sku: string,
     quantity: number,
-    anonymousToken: string
+    anonymousToken: string,
+    options?: { customizations?: any; forceNewEntry?: boolean }
   ): Observable<GatewayEnvelope<Record<string, unknown>>> {
     const headers = new HttpHeaders({
       'X-Anonymous-Token': anonymousToken
@@ -77,7 +88,64 @@ export class UbrisCartAdapter {
 
     return this.http.post<GatewayEnvelope<Record<string, unknown>>>(
       `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries`,
-      { sku, quantity },
+      {
+        sku,
+        quantity,
+        customizations: options?.customizations,
+        forceNewEntry: options?.forceNewEntry
+      },
+      { headers }
+    );
+  }
+
+  updateEntry(
+    cartId: string,
+    entryNumber: string | number,
+    quantity: number
+  ): Observable<GatewayEnvelope<Record<string, unknown>>> {
+    return this.http.patch<GatewayEnvelope<Record<string, unknown>>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries/${entryNumber}`,
+      { quantity }
+    );
+  }
+
+  updateEntryAnonymous(
+    cartId: string,
+    entryNumber: string | number,
+    quantity: number,
+    anonymousToken: string
+  ): Observable<GatewayEnvelope<Record<string, unknown>>> {
+    const headers = new HttpHeaders({
+      'X-Anonymous-Token': anonymousToken
+    });
+
+    return this.http.patch<GatewayEnvelope<Record<string, unknown>>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries/${entryNumber}`,
+      { quantity },
+      { headers }
+    );
+  }
+
+  removeEntry(
+    cartId: string,
+    entryNumber: string | number
+  ): Observable<GatewayEnvelope<string>> {
+    return this.http.delete<GatewayEnvelope<string>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries/${entryNumber}`
+    );
+  }
+
+  removeEntryAnonymous(
+    cartId: string,
+    entryNumber: string | number,
+    anonymousToken: string
+  ): Observable<GatewayEnvelope<string>> {
+    const headers = new HttpHeaders({
+      'X-Anonymous-Token': anonymousToken
+    });
+
+    return this.http.delete<GatewayEnvelope<string>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/cart/${encodeURIComponent(cartId)}/entries/${entryNumber}`,
       { headers }
     );
   }

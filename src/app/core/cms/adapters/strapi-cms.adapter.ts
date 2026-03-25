@@ -7,6 +7,7 @@ import {
   CmsPage,
   CmsRegion,
   CmsRegionName,
+  ContactFormData,
   FallbackComponentData,
   HeroBannerData,
   InfoCardData,
@@ -191,6 +192,8 @@ export class StrapiCmsAdapter {
         return this.mapProductTeaser(component, regionName, index);
       case 'info-card':
         return this.mapInfoCard(component, regionName, index);
+      case 'contact-form':
+        return this.mapContactForm(component, regionName, index);
       default:
         console.warn('[StrapiCmsAdapter] Unsupported component type', { regionName, index, componentType });
         return this.createUnknownComponent(this.buildComponentUid(regionName, component, index), componentType, regionName);
@@ -290,6 +293,21 @@ export class StrapiCmsAdapter {
       title: this.optionalString(component.title),
       description: this.optionalString(component.description),
       link: this.optionalString(component.link)
+    };
+  }
+
+  private mapContactForm(component: StrapiComponentPayload, regionName: CmsRegionName, index: number): ContactFormData {
+    return {
+      uid: this.buildComponentUid(regionName, component, index),
+      typeCode: 'JuliContactFormComponent',
+      flexType: 'JuliContactFormComponent',
+      region: regionName,
+      originalType: 'contact-form',
+      status: 'ready',
+      title: this.optionalString(component.title),
+      description: this.optionalString(component.description),
+      buttonLabel: this.optionalString(component.button_label) ?? this.optionalString(component.buttonLabel) ?? 'Send Message',
+      successMessage: this.optionalString(component.success_message) ?? this.optionalString(component.successMessage) ?? 'Thank you! Your message has been sent.'
     };
   }
 

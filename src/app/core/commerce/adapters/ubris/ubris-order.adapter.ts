@@ -58,30 +58,35 @@ export class UbrisOrderAdapter implements UserOrderAdapter {
     );
   }
 
+  cancel(userId: string, orderCode: string, _cancelRequestInput: CancellationRequestEntryInputList): Observable<{}> {
+    return this.cancelOrder(userId, orderCode).pipe(map(() => ({})));
+  }
+
+  cancelOrder(userId: string, orderCode: string): Observable<void> {
+    return this.http.post<GatewayEnvelope<void>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/orders/${encodeURIComponent(orderCode)}/cancel`,
+      { userId }
+    ).pipe(map(() => undefined));
+  }
+
+  createReturnRequest(userId: string, returnRequestInput: ReturnRequestEntryInputList): Observable<ReturnRequest> {
+    // Note: Spartacus doesn't pass orderCode here, we might need a workaround or assume the input contains it
+    // In many implementations, returnRequestInput has the orderCode or it's handled via a specific connector
+    const orderCode = (returnRequestInput as any).orderCode; 
+    return this.createReturnRequestInternal(userId, orderCode, returnRequestInput).pipe(
+      map(response => this.normalizer.normalizeReturnRequest(response.data))
+    );
+  }
+
+  createReturnRequestInternal(userId: string, orderCode: string, entries: ReturnRequestEntryInputList): Observable<GatewayEnvelope<Record<string, unknown>>> {
+    return this.http.post<GatewayEnvelope<Record<string, unknown>>>(
+      `${environment.ubrisApiBaseUrl}/api/bff/orders/${encodeURIComponent(orderCode)}/returns`,
+      { userId, entries }
+    );
+  }
+
   getConsignmentTracking(_orderCode: string, _consignmentCode: string, _userId?: string): Observable<ConsignmentTracking> {
-    return throwError(() => new Error('Consignment tracking is not supported in juli yet.'));
-  }
 
-  createReturnRequest(_userId: string, _returnRequestInput: ReturnRequestEntryInputList): Observable<ReturnRequest> {
-    return throwError(() => new Error('Return requests are not supported in juli yet.'));
-  }
-
-  loadReturnRequestDetail(_userId: string, _returnRequestCode: string): Observable<ReturnRequest> {
-    return throwError(() => new Error('Return request details are not supported in juli yet.'));
-  }
-
-  loadReturnRequestList(
-    _userId: string,
-    _pageSize: number,
-    _currentPage: number,
-    _sort: string
-  ): Observable<ReturnRequestList> {
-    return throwError(() => new Error('Return request lists are not supported in juli yet.'));
-  }
-
-  cancel(_userId: string, _orderCode: string, _cancelRequestInput: CancellationRequestEntryInputList): Observable<{}> {
-    return throwError(() => new Error('Order cancellation is not supported in juli yet.'));
-  }
 
   cancelReturnRequest(
     _userId: string,

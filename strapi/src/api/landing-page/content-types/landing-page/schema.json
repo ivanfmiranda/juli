@@ -34,7 +34,8 @@
         "cms.rich-text",
         "cms.cta-block",
         "cms.product-teaser",
-        "cms.category-teaser"
+        "cms.category-teaser",
+        "cms.contact-form"
       ]
     }
   }

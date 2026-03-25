@@ -68,6 +68,13 @@ export interface InfoCardData extends CmsComponentData {
   link?: string;
 }
 
+export interface ContactFormData extends CmsComponentData {
+  title?: string;
+  description?: string;
+  buttonLabel?: string;
+  successMessage?: string;
+}
+
 export interface FallbackComponentData extends CmsComponentData {
   message?: string;
   errorMessage?: string;
@@ -91,3 +98,4 @@ export type CtaBlockComponentModel = BannerData;
 export type ProductTeaserComponentModel = ProductTeaserData;
 export type CategoryTeaserComponentModel = BannerData;
 export type InfoCardComponentModel = InfoCardData;
+export type ContactFormComponentModel = ContactFormData;

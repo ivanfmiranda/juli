@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -66,17 +66,29 @@ export class UbrisCheckoutAdapter {
     );
   }
 
-  submitById(checkoutId: string): Observable<GatewayEnvelope<JuliCheckoutResult>> {
+  submitById(checkoutId: string, idempotencyKey?: string): Observable<GatewayEnvelope<JuliCheckoutResult>> {
+    let headers = new HttpHeaders();
+    if (idempotencyKey) {
+      headers = headers.set('Idempotency-Key', idempotencyKey);
+    }
+
     return this.http.post<GatewayEnvelope<JuliCheckoutResult>>(
       `${environment.ubrisApiBaseUrl}/api/bff/checkout/${encodeURIComponent(checkoutId)}/submit`,
-      {}
+      {},
+      { headers }
     );
   }
 
-  submit(body: JuliCheckoutSubmission): Observable<GatewayEnvelope<JuliCheckoutResult>> {
+  submit(body: JuliCheckoutSubmission, idempotencyKey?: string): Observable<GatewayEnvelope<JuliCheckoutResult>> {
+    let headers = new HttpHeaders();
+    if (idempotencyKey) {
+      headers = headers.set('Idempotency-Key', idempotencyKey);
+    }
+    
     return this.http.post<GatewayEnvelope<JuliCheckoutResult>>(
       `${environment.ubrisApiBaseUrl}/api/bff/checkout/submit`,
-      body
+      body,
+      { headers }
     );
   }
 
