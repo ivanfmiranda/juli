@@ -65,6 +65,12 @@ testem.log
 # local CMS repo lives outside the storefront repo boundary
 /strapi-app/
 
+# Strapi admin build (generated at container start if missing)
+strapi/build/
+# Strapi auto-generated files
+strapi/.strapi-updater.json
+strapi/.strapi/
+
 # System Files
 .DS_Store
 Thumbs.db
