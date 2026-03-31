@@ -1,0 +1,29 @@
+<section class="cms-product-grid" *ngIf="vm$ | async as vm">
+  <header class="cms-product-grid__header" *ngIf="vm.data.title || vm.data.subtitle || vm.data.ctaLink">
+    <div>
+      <h2 *ngIf="vm.data.title">{{ vm.data.title }}</h2>
+      <p *ngIf="vm.data.subtitle">{{ vm.data.subtitle }}</p>
+    </div>
+    <a *ngIf="vm.data.ctaLink" [routerLink]="vm.data.ctaLink" class="cms-product-grid__cta">
+      {{ vm.data.ctaLabel || ('commerce.cmsGridViewAll' | juliTranslate) }}
+    </a>
+  </header>
+
+  <div class="cms-product-grid__items" *ngIf="vm.products.length; else emptyState">
+    <article class="cms-product-grid__item" *ngFor="let product of vm.products; trackBy: trackByProduct">
+      <a [routerLink]="product.url || ['/product', product.code]" class="cms-product-grid__image-link">
+        <img *ngIf="imageUrl(product) as currentImageUrl" [src]="currentImageUrl" [alt]="product.name || product.code">
+      </a>
+      <div class="cms-product-grid__content">
+        <a [routerLink]="product.url || ['/product', product.code]" class="cms-product-grid__name">
+          {{ product.name || product.code }}
+        </a>
+        <p class="cms-product-grid__price">{{ product.price?.formattedValue }}</p>
+      </div>
+    </article>
+  </div>
+
+  <ng-template #emptyState>
+    <p class="cms-product-grid__empty">{{ 'commerce.cmsGridEmpty' | juliTranslate }}</p>
+  </ng-template>
+</section>

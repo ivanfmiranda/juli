@@ -1,0 +1,65 @@
+{
+  "collectionName": "components_cms_product_grids",
+  "info": {
+    "displayName": "Product Grid",
+    "icon": "shoppingCart",
+    "description": "Editorial product grid linked to catalog products, categories or search"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "subtitle": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "product_codes": {
+      "type": "json"
+    },
+    "category_code": {
+      "type": "string"
+    },
+    "search_query": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "page_size": {
+      "type": "integer",
+      "default": 4
+    },
+    "cta_label": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "cta_link": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

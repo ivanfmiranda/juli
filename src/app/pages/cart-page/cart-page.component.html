@@ -2,21 +2,21 @@
 <ng-container *ngIf="cart$ | async as cart; else emptyState">
   <main class="ub-store__main" *ngIf="cart; else emptyState">
     <div class="ub-store__container">
-      
+
       <!-- Header -->
       <header class="cart-header">
         <div class="cart-header__title">
-          <span class="cart-header__eyebrow">Shopping Cart</span>
+          <span class="cart-header__eyebrow">{{ 'cart.eyebrow' | juliTranslate }}</span>
           <h1 class="ub-page-title">
-            Your Cart 
-            <span class="cart-header__count" *ngIf="(itemCount$ | async) as itemCount">({{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }})</span>
+            {{ 'cart.title' | juliTranslate }}
+            <span class="cart-header__count" *ngIf="(itemCount$ | async) as itemCount">({{ itemCount }} {{ itemCount === 1 ? ('cart.item' | juliTranslate) : ('cart.items' | juliTranslate) }})</span>
           </h1>
         </div>
-        <a routerLink="/checkout" 
-           class="ub-btn ub-btn--primary ub-btn--lg" 
-           *ngIf="(itemCount$ | async) as itemCount" 
+        <a routerLink="/checkout"
+           class="ub-btn ub-btn--primary ub-btn--lg"
+           *ngIf="(itemCount$ | async) as itemCount"
            [class.ub-btn--disabled]="itemCount === 0">
-          <span>Proceed to Checkout</span>
+          <span>{{ 'cart.proceedToCheckout' | juliTranslate }}</span>
           <i class="fas fa-arrow-right"></i>
         </a>
       </header>
@@ -28,43 +28,41 @@
           <article class="cart-item" *ngFor="let entry of cart.entries">
             <!-- Product Image -->
             <div class="cart-item__image">
-              <div class="cart-item__image-placeholder">
+              <img *ngIf="getProductImage(entry)"
+                   [src]="getProductImage(entry)"
+                   [alt]="entry.product?.name"
+                   class="cart-item__img">
+              <div class="cart-item__image-placeholder" *ngIf="!getProductImage(entry)">
                 <i class="fas fa-image"></i>
               </div>
             </div>
-            
+
             <!-- Product Info -->
             <div class="cart-item__info">
               <h2 class="cart-item__name">{{ entry.product?.name }}</h2>
               <p class="cart-item__sku">SKU: {{ entry.product?.code }}</p>
               <p class="cart-item__price-unit" *ngIf="entry.basePrice">
-                {{ entry.basePrice.formattedValue }} each
+                {{ entry.basePrice.formattedValue }} {{ 'cart.each' | juliTranslate }}
               </p>
             </div>
-            
+
             <!-- Quantity -->
             <div class="cart-item__quantity">
               <div class="ub-pdp__qty">
-                <button type="button" class="ub-pdp__qty-btn" aria-label="Decrease quantity">
-                  <i class="fas fa-minus"></i>
-                </button>
-                <span class="ub-pdp__qty-input">{{ entry.quantity }}</span>
-                <button type="button" class="ub-pdp__qty-btn" aria-label="Increase quantity">
-                  <i class="fas fa-plus"></i>
-                </button>
+                <button type="button" class="cart-qty-btn" [attr.aria-label]="'cart.decreaseQty' | juliTranslate" [disabled]="updating" (click)="decrementQuantity(entry)">&#8722;</button>
+                <span class="cart-qty-value">{{ entry.quantity }}</span>
+                <button type="button" class="cart-qty-btn" [attr.aria-label]="'cart.increaseQty' | juliTranslate" [disabled]="updating" (click)="incrementQuantity(entry)">&#43;</button>
               </div>
             </div>
-            
+
             <!-- Price -->
             <div class="cart-item__price">
               <strong>{{ entry.totalPrice?.formattedValue }}</strong>
             </div>
-            
+
             <!-- Actions -->
             <div class="cart-item__actions">
-              <button type="button" class="ub-btn ub-btn--ghost ub-btn--icon" title="Remove item">
-                <i class="fas fa-trash-alt"></i>
-              </button>
+              <button type="button" class="cart-remove-btn" [title]="'cart.removeItem' | juliTranslate" [disabled]="updating" (click)="removeItem(entry)">&#10005;</button>
             </div>
           </article>
         </div>
@@ -73,48 +71,48 @@
         <aside class="cart-summary">
           <div class="ub-card">
             <div class="ub-card__header">
-              <h2 class="ub-card__title">Order Summary</h2>
+              <h2 class="ub-card__title">{{ 'cart.orderSummary' | juliTranslate }}</h2>
             </div>
             <div class="ub-card__body">
               <div class="ub-order-totals">
                 <div class="ub-order-total-row">
-                  <span>Subtotal</span>
+                  <span>{{ 'cart.subtotal' | juliTranslate }}</span>
                   <strong>{{ cart.subTotal?.formattedValue }}</strong>
                 </div>
-                
+
                 <div class="ub-order-total-row" *ngIf="(cart.totalDiscounts?.value || 0) > 0">
-                  <span>Discounts</span>
+                  <span>{{ 'cart.discounts' | juliTranslate }}</span>
                   <strong class="text-success">-{{ cart.totalDiscounts?.formattedValue }}</strong>
                 </div>
-                
+
                 <div class="ub-order-total-row">
-                  <span>Estimated Tax</span>
+                  <span>{{ 'cart.estimatedTax' | juliTranslate }}</span>
                   <strong>{{ cart.totalTax?.formattedValue }}</strong>
                 </div>
-                
+
                 <div class="ub-order-total-row ub-order-total-row--final">
-                  <span>Estimated Total</span>
+                  <span>{{ 'cart.estimatedTotal' | juliTranslate }}</span>
                   <strong class="total-amount">{{ cart.totalPrice?.formattedValue }}</strong>
                 </div>
               </div>
-              
+
               <div class="cart-actions">
-                <a routerLink="/checkout" 
+                <a routerLink="/checkout"
                    class="ub-btn ub-btn--primary ub-btn--full ub-btn--lg"
                    *ngIf="(itemCount$ | async) as itemCount"
                    [class.ub-btn--disabled]="itemCount === 0">
-                  <span>Proceed to Checkout</span>
+                  <span>{{ 'cart.proceedToCheckout' | juliTranslate }}</span>
                   <i class="fas fa-arrow-right"></i>
                 </a>
                 <a routerLink="/search" class="ub-btn ub-btn--secondary ub-btn--full">
                   <i class="fas fa-arrow-left"></i>
-                  <span>Continue Shopping</span>
+                  <span>{{ 'cart.continueShopping' | juliTranslate }}</span>
                 </a>
               </div>
-              
+
               <p class="cart-security-note">
                 <i class="fas fa-shield-alt"></i>
-                Secure checkout. Your data is protected.
+                {{ 'cart.secureNote' | juliTranslate }}
               </p>
             </div>
           </div>
@@ -133,11 +131,11 @@
           <div class="ub-empty__icon">
             <i class="fas fa-shopping-cart"></i>
           </div>
-          <h1 class="ub-empty__title">Your cart is empty</h1>
-          <p class="ub-empty__description">Looks like you haven't added any products yet. Browse our catalog to find what you're looking for.</p>
-          <a routerLink="/search" class="ub-btn ub-btn--primary ub-btn--lg">
+          <h1 class="ub-empty__title">{{ 'cart.empty.title' | juliTranslate }}</h1>
+          <p class="ub-empty__description">{{ 'cart.empty.description' | juliTranslate }}</p>
+          <a routerLink="/c" class="ub-btn ub-btn--primary ub-btn--lg">
             <i class="fas fa-search"></i>
-            Browse Catalog
+            {{ 'cart.empty.browseCatalog' | juliTranslate }}
           </a>
         </div>
       </div>

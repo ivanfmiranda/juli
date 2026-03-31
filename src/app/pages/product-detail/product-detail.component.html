@@ -20,15 +20,17 @@
   <ng-container *ngIf="(product$ | async) as product">
     <ng-container *ngIf="(variantSelection$ | async) as selection">
       <!-- Breadcrumbs -->
-      <nav class="breadcrumbs" *ngIf="product.categories?.length">
+      <nav class="breadcrumbs">
         <a routerLink="/">Home</a>
         <span class="separator">/</span>
-        <a *ngFor="let category of product.categories; let last = last"
-           [routerLink]="category.url"
-           [class.current]="last">
-          {{ category.name }}
-          <span *ngIf="!last" class="separator">/</span>
-        </a>
+        <ng-container *ngIf="product.categories?.length; else productOnly">
+          <ng-container *ngFor="let category of product.categories; let last = last">
+            <a [routerLink]="category.url">{{ category.name }}</a>
+            <span class="separator">/</span>
+          </ng-container>
+        </ng-container>
+        <ng-template #productOnly></ng-template>
+        <span class="current">{{ product.name }}</span>
       </nav>
 
       <!-- Main Content -->

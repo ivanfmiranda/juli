@@ -1,25 +1,25 @@
 <div class="orders-page">
   <!-- Header -->
   <header class="page-header">
-    <p class="eyebrow">Minha Conta</p>
-    <h1>Meus Pedidos</h1>
+    <p class="eyebrow">{{ 'orders.account' | juliTranslate }}</p>
+    <h1>{{ 'orders.title' | juliTranslate }}</h1>
     <p class="subtitle" *ngIf="(vm$ | async)?.orders?.pagination?.totalResults as total">
-      {{ total }} pedido{{ total !== 1 ? 's' : '' }} encontrado{{ total !== 1 ? 's' : '' }}
+      {{ 'orders.foundCount' | juliTranslate:{ count: total, suffix: total !== 1 ? 's' : '' } }}
     </p>
   </header>
 
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading$ | async">
     <div class="spinner"></div>
-    <p>Carregando seus pedidos...</p>
+    <p>{{ 'orders.loading' | juliTranslate }}</p>
   </div>
 
   <!-- Error State -->
   <div class="error-state" *ngIf="error$ | async as error">
     <div class="error-icon">⚠️</div>
-    <h3>Erro ao carregar pedidos</h3>
+    <h3>{{ 'orders.errorTitle' | juliTranslate }}</h3>
     <p>{{ error }}</p>
-    <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+    <button class="btn-primary" (click)="retryLoad()">{{ 'orders.retry' | juliTranslate }}</button>
   </div>
 
   <!-- Content -->
@@ -28,12 +28,12 @@
     <section class="orders-toolbar" *ngIf="vm.orders?.orders?.length">
       <div class="results-info">
         <span class="results-count">
-          {{ vm.orders!.pagination.totalResults }} resultado{{ vm.orders!.pagination.totalResults !== 1 ? 's' : '' }}
+          {{ 'orders.results' | juliTranslate:{ count: vm.orders!.pagination.totalResults, suffix: vm.orders!.pagination.totalResults !== 1 ? 's' : '' } }}
         </span>
       </div>
 
       <div class="sort-control">
-        <label for="sort-select">Ordenar por:</label>
+        <label for="sort-select">{{ 'orders.sortBy' | juliTranslate }}</label>
         <select 
           id="sort-select"
           [value]="vm.currentSort" 
@@ -70,12 +70,12 @@
         </div>
 
         <div class="order-total">
-          <span class="total-label">Total</span>
+          <span class="total-label">{{ 'orders.total' | juliTranslate }}</span>
           <span class="total-value">{{ order.total.formattedValue }}</span>
         </div>
 
         <div class="order-action">
-          <span class="view-details">Ver detalhes →</span>
+          <span class="view-details">{{ 'orders.viewDetails' | juliTranslate }} →</span>
         </div>
       </article>
 
@@ -86,7 +86,7 @@
           class="btn-page"
           (click)="changePage(vm.currentPage - 1, vm.currentSort); $event.stopPropagation()"
           [disabled]="vm.currentPage <= 0">
-          ← Anterior
+          ← {{ 'orders.previous' | juliTranslate }}
         </button>
 
         <div class="page-numbers">
@@ -105,7 +105,7 @@
           class="btn-page"
           (click)="changePage(vm.currentPage + 1, vm.currentSort); $event.stopPropagation()"
           [disabled]="vm.currentPage + 1 >= vm.orders!.pagination.totalPages">
-          Próxima →
+          {{ 'orders.next' | juliTranslate }} →
         </button>
       </footer>
     </section>
@@ -114,9 +114,9 @@
     <ng-template #emptyState>
       <div class="empty-state" *ngIf="!(loading$ | async)">
         <div class="empty-icon">📦</div>
-        <h3>Nenhum pedido encontrado</h3>
-        <p>Você ainda não fez nenhum pedido.</p>
-        <a routerLink="/" class="btn-primary">Começar a comprar</a>
+        <h3>{{ 'orders.emptyTitle' | juliTranslate }}</h3>
+        <p>{{ 'orders.emptyHint' | juliTranslate }}</p>
+        <a routerLink="/" class="btn-primary">{{ 'orders.startShopping' | juliTranslate }}</a>
       </div>
     </ng-template>
   </ng-container>

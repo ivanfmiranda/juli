@@ -19,13 +19,14 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { distinctUntilChanged, filter, map, takeUntil, tap } from 'rxjs/operators';
-import { 
-  JuliOrderService, 
-  JuliOrder, 
+import {
+  JuliOrderService,
+  JuliOrder,
   JuliOrderLoadingState,
   JuliOrderEntry,
   JuliOrderStatus
 } from '../../core/commerce';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 /**
  * ViewModel para a página
@@ -55,7 +56,8 @@ export class OrderDetailPageComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly juliOrderService: JuliOrderService
+    private readonly juliOrderService: JuliOrderService,
+    private readonly i18n: JuliI18nService
   ) {}
 
   ngOnInit(): void {
@@ -98,22 +100,22 @@ export class OrderDetailPageComponent implements OnInit, OnDestroy {
    * Formata o status para exibição
    */
   getStatusLabel(status: JuliOrderStatus | undefined): string {
-    if (!status) return 'Status desconhecido';
-    
-    const labels: Record<string, string> = {
-      'PENDING': 'Aguardando processamento',
-      'PROCESSING': 'Em processamento',
-      'READY': 'Pronto para envio',
-      'SHIPPED': 'Pedido enviado',
-      'DELIVERED': 'Pedido entregue',
-      'CANCELLED': 'Pedido cancelado',
-      'RETURNED': 'Pedido devolvido',
-      'REFUNDED': 'Pedido reembolsado',
-      'ON_HOLD': 'Pedido em espera',
-      'COMPLETED': 'Pedido concluído',
-      'UNKNOWN': 'Status desconhecido'
+    if (!status) return this.i18n.translate('orderDetail.statusUnknown');
+
+    const keyMap: Record<string, string> = {
+      'PENDING': 'orderDetail.statusPending',
+      'PROCESSING': 'orderDetail.statusProcessing',
+      'READY': 'orderDetail.statusReady',
+      'SHIPPED': 'orderDetail.statusShipped',
+      'DELIVERED': 'orderDetail.statusDelivered',
+      'CANCELLED': 'orderDetail.statusCancelled',
+      'RETURNED': 'orderDetail.statusReturned',
+      'REFUNDED': 'orderDetail.statusRefunded',
+      'ON_HOLD': 'orderDetail.statusOnHold',
+      'COMPLETED': 'orderDetail.statusCompleted',
+      'UNKNOWN': 'orderDetail.statusUnknown'
     };
-    return labels[status] || status;
+    return this.i18n.translate(keyMap[status] || 'orderDetail.statusUnknown');
   }
 
   /**

@@ -3,17 +3,17 @@
   <!-- Mobile toggle header -->
   <div class="summary-mobile-header" (click)="onMobileToggle()">
     <div class="summary-mobile-info">
-      <span class="summary-toggle-label">Order Summary</span>
-      <span class="summary-item-count">{{ itemCount }} {{ itemCount === 1 ? 'item' : 'items' }}</span>
+      <span class="summary-toggle-label">{{ 'checkout.orderSummary' | juliTranslate }}</span>
+      <span class="summary-item-count">{{ itemCount }} {{ itemCount === 1 ? ('cart.item' | juliTranslate) : ('cart.items' | juliTranslate) }}</span>
     </div>
     <div class="summary-mobile-total">
       <strong class="summary-total-amount">{{ formatMoney(total) }}</strong>
-      <svg 
-        class="summary-toggle-icon" 
+      <svg
+        class="summary-toggle-icon"
         [class.expanded]="mobileExpanded"
-        viewBox="0 0 24 24" 
-        fill="none" 
-        stroke="currentColor" 
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
         stroke-width="2"
       >
         <polyline points="6 9 12 15 18 9"></polyline>
@@ -23,8 +23,8 @@
 
   <!-- Collapsible content -->
   <div class="summary-content" [class.collapsed]="!mobileExpanded">
-    <h3 class="ub-order-summary__title">Order Summary</h3>
-    
+    <h3 class="ub-order-summary__title">{{ 'checkout.orderSummary' | juliTranslate }}</h3>
+
     <!-- Cart Items -->
     <div class="summary-section summary-items" *ngIf="cart?.entries?.length">
       <div class="ub-order-item" *ngFor="let entry of cart?.entries">
@@ -33,7 +33,7 @@
         </div>
         <div class="ub-order-item__details">
           <div class="ub-order-item__name">{{ entry.product?.name }}</div>
-          <div class="ub-order-item__qty">Qty: {{ entry.quantity }}</div>
+          <div class="ub-order-item__qty">{{ 'checkout.qty' | juliTranslate }}: {{ entry.quantity }}</div>
         </div>
         <div class="ub-order-item__price">{{ entry.totalPrice?.formattedValue }}</div>
       </div>
@@ -41,33 +41,33 @@
 
     <!-- Empty cart message -->
     <div class="ub-empty ub-empty--sm" *ngIf="!cart?.entries?.length">
-      <p>Your cart is empty</p>
+      <p>{{ 'checkout.emptyCartSummary' | juliTranslate }}</p>
     </div>
 
     <!-- Delivery Info -->
     <div class="summary-section summary-delivery" *ngIf="selectedDelivery">
       <div class="delivery-row">
         <span class="delivery-label">{{ selectedDelivery.name }}</span>
-        <span class="delivery-value">{{ formatMoney(deliveryCost) }}</span>
+        <span class="delivery-value">{{ deliveryCost === 0 ? ('checkout.free' | juliTranslate) : formatMoney(deliveryCost) }}</span>
       </div>
       <div class="delivery-estimate">
         <i class="fas fa-clock"></i>
-        {{ selectedDelivery.estimatedDays }} days
+        {{ selectedDelivery.estimatedDays }} {{ 'checkout.days' | juliTranslate }}
       </div>
     </div>
 
     <!-- Divider -->
     <div class="ub-order-totals">
       <div class="ub-order-total-row">
-        <span>Subtotal</span>
+        <span>{{ 'checkout.subtotal' | juliTranslate }}</span>
         <strong>{{ formatMoney(subtotal) }}</strong>
       </div>
       <div class="ub-order-total-row" *ngIf="selectedDelivery">
-        <span>Delivery</span>
-        <strong>{{ deliveryCost === 0 ? 'Free' : formatMoney(deliveryCost) }}</strong>
+        <span>{{ 'checkout.delivery' | juliTranslate }}</span>
+        <strong>{{ deliveryCost === 0 ? ('checkout.free' | juliTranslate) : formatMoney(deliveryCost) }}</strong>
       </div>
       <div class="ub-order-total-row ub-order-total-row--final">
-        <span>Total</span>
+        <span>{{ 'checkout.total' | juliTranslate }}</span>
         <strong class="total-amount">{{ formatMoney(total) }}</strong>
       </div>
     </div>
@@ -81,7 +81,7 @@
              [class.fa-times-circle]="paymentStatus.status === 'FAILED' || paymentStatus.status === 'CANCELLED'"></i>
         </span>
         <div class="payment-info">
-          <span class="payment-method">{{ paymentStatus.method || 'Payment' }}</span>
+          <span class="payment-method">{{ paymentStatus.method || ('checkout.payment' | juliTranslate) }}</span>
           <span class="payment-state" [class]="paymentStatusClass">{{ paymentStatus.status }}</span>
         </div>
       </div>
@@ -91,8 +91,8 @@
     <div class="summary-section summary-review" *ngIf="reviewSnapshot">
       <div class="review-status" [class.ready]="reviewSnapshot.readyToPlace">
         <i class="fas" [class.fa-check-circle]="reviewSnapshot.readyToPlace" [class.fa-exclamation-circle]="!reviewSnapshot.readyToPlace"></i>
-        <span *ngIf="reviewSnapshot.readyToPlace">Ready to place order</span>
-        <span *ngIf="!reviewSnapshot.readyToPlace">Review required</span>
+        <span *ngIf="reviewSnapshot.readyToPlace">{{ 'checkout.readyToPlace' | juliTranslate }}</span>
+        <span *ngIf="!reviewSnapshot.readyToPlace">{{ 'checkout.reviewRequired' | juliTranslate }}</span>
       </div>
     </div>
   </div>

@@ -23,7 +23,7 @@ export class UserReplenishmentOrderPlaceholderAdapter implements UserReplenishme
    * Detalhes de um replenishment - não implementado
    */
   load(_userId: string, _replenishmentOrderCode: string): Observable<ReplenishmentOrder> {
-    return throwError(() => new Error('UserReplenishmentOrderAdapter.load() not supported in JULI'));
+    return throwError(new Error('UserReplenishmentOrderAdapter.load() not supported in JULI'));
   }
   
   /**
@@ -37,7 +37,7 @@ export class UserReplenishmentOrderPlaceholderAdapter implements UserReplenishme
    * Cancelar replenishment - não implementado
    */
   cancelReplenishmentOrder(_userId: string, _replenishmentOrderCode: string): Observable<ReplenishmentOrder> {
-    return throwError(() => new Error('UserReplenishmentOrderAdapter.cancelReplenishmentOrder() not supported in JULI'));
+    return throwError(new Error('UserReplenishmentOrderAdapter.cancelReplenishmentOrder() not supported in JULI'));
   }
   
   /**

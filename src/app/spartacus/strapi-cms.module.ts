@@ -11,6 +11,9 @@ import { ParagraphComponent } from '../shared/components/paragraph/paragraph.com
 import { SimpleBannerComponent } from '../shared/components/simple-banner/simple-banner.component';
 import { CategoryTeaserComponent } from '../shared/components/category-teaser/category-teaser.component';
 import { CtaBlockComponent } from '../shared/components/cta-block/cta-block.component';
+import { ContactFormComponent } from '../shared/components/contact-form/contact-form.component';
+import { ProductGridComponent } from '../shared/components/product-grid/product-grid.component';
+import { JuliI18nModule } from '../core/i18n/i18n.module';
 
 // Fallback Components
 import { 
@@ -47,8 +50,14 @@ export const CMS_COMPONENT_REGISTRY = {
   JuliProductTeaserComponent: {
     component: ProductTeaserComponent
   },
+  JuliProductGridComponent: {
+    component: ProductGridComponent
+  },
   JuliInfoCardComponent: {
     component: InfoCardComponent
+  },
+  JuliContactFormComponent: {
+    component: ContactFormComponent
   },
   UnknownComponent: {
     component: UnknownComponent
@@ -88,6 +97,7 @@ export class StrapiCmsComponentAdapter extends CmsComponentAdapter {
 @NgModule({
   imports: [
     CommonModule,
+    JuliI18nModule,
     RouterModule,
     ConfigModule.withConfig({
       cmsComponents: CMS_COMPONENT_REGISTRY
@@ -108,11 +118,13 @@ export class StrapiCmsComponentAdapter extends CmsComponentAdapter {
     HeroBannerComponent,
     InfoCardComponent,
     ProductTeaserComponent,
+    ProductGridComponent,
     ParagraphComponent,
     SimpleBannerComponent,
     CategoryTeaserComponent,
     CtaBlockComponent,
-    
+    ContactFormComponent,
+
     // Fallbacks
     UnknownComponent,
     ErrorComponent,
@@ -124,6 +136,7 @@ export class StrapiCmsComponentAdapter extends CmsComponentAdapter {
     // Exporta para uso em outros módulos se necessário
     InfoCardComponent,
     ProductTeaserComponent,
+    ProductGridComponent,
     ParagraphComponent,
     SimpleBannerComponent,
     CategoryTeaserComponent,

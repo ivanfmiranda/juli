@@ -35,6 +35,7 @@
         "cms.cta-block",
         "cms.product-teaser",
         "cms.category-teaser",
+        "cms.info-card",
         "cms.contact-form"
       ]
     }

@@ -11,6 +11,7 @@ import {
   UserOrderAdapter
 } from '@spartacus/core';
 import { Observable, throwError } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { UbrisOrderConnector } from '../connectors/order.connector';
 
 @Injectable({ providedIn: 'root' })
@@ -37,7 +38,7 @@ export class JuliSpartacusOrderAdapter extends UserOrderAdapter {
     _consignmentCode: string,
     _userId?: string
   ): Observable<ConsignmentTracking> {
-    return throwError(() => new Error('Consignment tracking not supported yet'));
+    return throwError(new Error('Consignment tracking not supported yet'));
   }
 
   cancel(
@@ -45,7 +46,7 @@ export class JuliSpartacusOrderAdapter extends UserOrderAdapter {
     orderCode: string,
     _cancelRequestInput: CancellationRequestEntryInputList
   ): Observable<{}> {
-    return this.connector.cancel(userId, orderCode);
+    return this.connector.cancel(userId, orderCode).pipe(map(() => ({})));
   }
 
   createReturnRequest(
@@ -61,7 +62,7 @@ export class JuliSpartacusOrderAdapter extends UserOrderAdapter {
     _userId: string,
     _returnRequestCode: string
   ): Observable<ReturnRequest> {
-    return throwError(() => new Error('Return request detail not supported yet'));
+    return throwError(new Error('Return request detail not supported yet'));
   }
 
   loadReturnRequestList(
@@ -70,7 +71,7 @@ export class JuliSpartacusOrderAdapter extends UserOrderAdapter {
     _currentPage?: number,
     _sort?: string
   ): Observable<ReturnRequestList> {
-    return throwError(() => new Error('Return request list not supported yet'));
+    return throwError(new Error('Return request list not supported yet'));
   }
 
   cancelReturnRequest(
@@ -78,6 +79,6 @@ export class JuliSpartacusOrderAdapter extends UserOrderAdapter {
     _returnRequestCode: string,
     _returnRequestModification: ReturnRequestModification
   ): Observable<{}> {
-    return throwError(() => new Error('Cancel return request not supported yet'));
+    return throwError(new Error('Cancel return request not supported yet'));
   }
 }

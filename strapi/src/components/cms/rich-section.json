@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_cms_rich_sections",
+  "info": {
+    "displayName": "Rich Section",
+    "icon": "layout",
+    "description": "A section with a title, rich text body, optional image and configurable alignment"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "content": {
+      "type": "richtext"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "alignment": {
+      "type": "enumeration",
+      "enum": ["left", "right", "center"],
+      "default": "left"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

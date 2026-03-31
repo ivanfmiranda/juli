@@ -1,0 +1,22 @@
+{
+  "collectionName": "components_cms_product_teasers",
+  "info": {
+    "displayName": "Product Teaser",
+    "icon": "shoppingCart",
+    "description": "Renders a product preview card from the commerce catalogue"
+  },
+  "options": {},
+  "attributes": {
+    "product_code": {
+      "type": "string",
+      "required": true
+    },
+    "teaser_text": {
+      "type": "text"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

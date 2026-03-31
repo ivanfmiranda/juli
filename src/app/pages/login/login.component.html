@@ -1,25 +1,30 @@
 <section class="login-page">
   <div class="login-card">
     <h1>Juli</h1>
-    <p>Spartacus + Strapi + Ubris</p>
+    <p>{{ 'login.subtitle' | juliTranslate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label>
-        Username
-        <input type="text" formControlName="username" autocomplete="username">
+        {{ 'login.username' | juliTranslate }}
+        <input type="text" formControlName="username" autocomplete="off">
       </label>
 
       <label>
-        Password
-        <input type="password" formControlName="password" autocomplete="current-password">
+        {{ 'login.password' | juliTranslate }}
+        <input type="password" formControlName="password" autocomplete="new-password">
       </label>
 
       <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
       <p class="warning" *ngIf="warningMessage">{{ warningMessage }}</p>
 
       <button type="submit" [disabled]="submitting">
-        {{ submitting ? 'Signing in...' : 'Sign in' }}
+        {{ submitting ? ('login.signingIn' | juliTranslate) : ('login.signIn' | juliTranslate) }}
       </button>
     </form>
+
+    <p class="register-link">
+      {{ 'login.noAccount' | juliTranslate }}
+      <a routerLink="/register">{{ 'login.createAccount' | juliTranslate }}</a>
+    </p>
   </div>
 </section>

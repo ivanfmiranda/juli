@@ -123,15 +123,23 @@ export class JuliCartFacade {
         return;
       }
 
-      // Authenticated: load cart from storage
-      const storedCartId = this.cartIdStorage.read(session.username);
-      this.cartIdSubject.next(storedCartId);
-      if (storedCartId) {
-        this.multiCartService.loadCart({
-          userId: session.username,
-          cartId: storedCartId
+      // Authenticated: check if there's an anonymous cart to promote
+      const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
+      if (anonymousToken) {
+        this.promoteAnonymousCart().subscribe({
+          next: () => {
+            // Cart promoted successfully — cartIdSubject already set inside promoteAnonymousCart
+          },
+          error: () => {
+            // Promotion failed — fall back to loading/creating authenticated cart
+            this.loadOrCreateAuthenticatedCart(session.username);
+          }
         });
+        return;
       }
+
+      // No anonymous cart to promote — load existing authenticated cart
+      this.loadOrCreateAuthenticatedCart(session.username);
     });
 
     // Initialize anonymous cart if exists
@@ -147,32 +155,23 @@ export class JuliCartFacade {
     const anonymousPrincipal = this.authService.createAnonymousPrincipal();
     const anonymousId = anonymousPrincipal.anonymousId;
 
-    // Generate token for the anonymousId
-    const anonymousToken = this.anonymousCartStorage.read()?.anonymousToken 
-      || this.generateAnonymousToken(anonymousId);
-
     this.anonymousCartLoadingSubject.next(true);
 
-    return this.cartConnector.createAnonymous(anonymousToken).pipe(
-      tap(cart => {
-        if (cart.code) {
-          this.anonymousCartStorage.write(anonymousId, cart.code);
-          this.anonymousCartIdSubject.next(cart.code);
-        }
-        this.anonymousCartSubject.next(cart);
-      }),
+    // Fetch a server-signed HMAC token before creating the cart
+    return this.cartConnector.fetchAnonymousToken(anonymousId).pipe(
+      switchMap(anonymousToken =>
+        this.cartConnector.createAnonymous(anonymousToken).pipe(
+          tap(cart => {
+            if (cart.code) {
+              this.anonymousCartStorage.write(anonymousId, cart.code, anonymousToken);
+              this.anonymousCartIdSubject.next(cart.code);
+            }
+            this.anonymousCartSubject.next(cart);
+          })
+        )
+      ),
       finalize(() => this.anonymousCartLoadingSubject.next(false))
     );
-  }
-
-  private generateAnonymousToken(anonymousId: string): string {
-    // This generates a client-side token
-    // The server will generate the official signed token in response
-    return `1.${anonymousId}.${Math.floor(Date.now() / 1000)}.${this.generateRandom()}`;
-  }
-
-  private generateRandom(): string {
-    return Math.random().toString(36).substring(2, 18);
   }
 
   /**
@@ -207,7 +206,7 @@ export class JuliCartFacade {
         switchMap(cart => {
           const cartId = cart.code;
           if (!cartId) {
-            return throwError(() => new Error('Cart id is missing'));
+            return throwError(new Error('Cart id is missing'));
           }
 
           this.multiCartService.addEntry(session.username, cartId, productCode, quantity);
@@ -221,12 +220,12 @@ export class JuliCartFacade {
       switchMap(cart => {
         const cartId = cart.code;
         if (!cartId) {
-          return throwError(() => new Error('Cart id is missing'));
+          return throwError(new Error('Cart id is missing'));
         }
 
         const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
         if (!anonymousToken) {
-          return throwError(() => new Error('Anonymous token is missing'));
+          return throwError(new Error('Anonymous token is missing'));
         }
 
         return this.cartConnector.addEntryAnonymous(cartId, productCode, quantity, anonymousToken).pipe(
@@ -234,6 +233,48 @@ export class JuliCartFacade {
         );
       })
     );
+  }
+
+  updateEntry(entryNumber: string | number, quantity: number): Observable<Cart> {
+    const session = this.authService.currentSession;
+    const cartId = this.cartIdSubject.value;
+
+    if (session && cartId) {
+      return this.cartConnector.updateEntry(cartId, entryNumber, quantity).pipe(
+        switchMap(() => this.reload())
+      );
+    }
+
+    const anonymousCartId = this.anonymousCartIdSubject.value;
+    const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
+    if (anonymousCartId && anonymousToken) {
+      return this.cartConnector.updateEntryAnonymous(anonymousCartId, entryNumber, quantity, anonymousToken).pipe(
+        switchMap(() => this.loadAnonymousCart(anonymousCartId, anonymousToken))
+      );
+    }
+
+    return EMPTY;
+  }
+
+  removeEntry(entryNumber: string | number): Observable<Cart> {
+    const session = this.authService.currentSession;
+    const cartId = this.cartIdSubject.value;
+
+    if (session && cartId) {
+      return this.cartConnector.removeEntry(cartId, entryNumber).pipe(
+        switchMap(() => this.reload())
+      );
+    }
+
+    const anonymousCartId = this.anonymousCartIdSubject.value;
+    const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
+    if (anonymousCartId && anonymousToken) {
+      return this.cartConnector.removeEntryAnonymous(anonymousCartId, entryNumber, anonymousToken).pipe(
+        switchMap(() => this.loadAnonymousCart(anonymousCartId, anonymousToken))
+      );
+    }
+
+    return EMPTY;
   }
 
   /**
@@ -244,15 +285,20 @@ export class JuliCartFacade {
   promoteAnonymousCart(): Observable<CartPromotionResult> {
     const session = this.authService.currentSession;
     if (!session) {
-      return throwError(() => new Error('Authentication required for cart promotion'));
+      return throwError(new Error('Authentication required for cart promotion'));
     }
 
     const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
     if (!anonymousToken) {
-      return throwError(() => new Error('No anonymous cart to promote'));
+      return throwError(new Error('No anonymous cart to promote'));
     }
 
-    return this.cartConnector.promoteAnonymousCart(anonymousToken, session.username).pipe(
+    const anonymousCartId = this.anonymousCartIdSubject.value ?? this.anonymousCartStorage.getCartId();
+    if (!anonymousCartId) {
+      return throwError(new Error('No anonymous cart ID found for promotion'));
+    }
+
+    return this.cartConnector.promoteAnonymousCart(anonymousCartId, anonymousToken, session.username).pipe(
       tap(result => {
         // Clear anonymous storage after successful promotion
         this.anonymousCartStorage.clearAfterPromotion();
@@ -421,7 +467,7 @@ export class JuliCartFacade {
       switchMap(entity => {
         const cart = entity.value;
         if (entity.error || !cart?.code) {
-          return throwError(() => new Error('Cart creation failed'));
+          return throwError(new Error('Cart creation failed'));
         }
 
         this.cartIdStorage.write(userId, cart.code);
@@ -437,7 +483,7 @@ export class JuliCartFacade {
       filter(entity => !entity.loading),
       switchMap(entity => {
         if (entity.error && !entity.value) {
-          return throwError(() => new Error('Cart load failed'));
+          return throwError(new Error('Cart load failed'));
         }
         if (entity.value && (entity.processesCount ?? 0) === 0) {
           return of(entity.value);
@@ -463,7 +509,7 @@ export class JuliCartFacade {
           return EMPTY;
         }
         if (entity.error && !entity.loading && !entity.value) {
-          return throwError(() => new Error('Cart update failed'));
+          return throwError(new Error('Cart update failed'));
         }
         if (entity.value && !entity.loading && (entity.processesCount ?? 0) === 0) {
           return of(entity.value);
@@ -477,6 +523,17 @@ export class JuliCartFacade {
   private resetCart(userId: string): void {
     this.cartIdStorage.clear(userId);
     this.cartIdSubject.next(null);
+  }
+
+  private loadOrCreateAuthenticatedCart(username: string): void {
+    const storedCartId = this.cartIdStorage.read(username);
+    this.cartIdSubject.next(storedCartId);
+    if (storedCartId) {
+      this.multiCartService.loadCart({
+        userId: username,
+        cartId: storedCartId
+      });
+    }
   }
 
   private restoreAnonymousCart(): void {

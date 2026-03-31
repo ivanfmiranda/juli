@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from '@angular/core';
+import { JuliI18nService } from '../../../core/i18n/i18n.service';
 // JuliCart type from commerce facade
 interface CartEntry {
   product?: { name?: string };
@@ -25,6 +26,8 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CheckoutSummaryComponent {
+  constructor(private readonly i18n: JuliI18nService) {}
+
   @Input() cart: JuliCart | null = null;
   @Input() selectedDelivery: JuliDeliveryOption | null = null;
   @Input() paymentStatus: JuliCheckoutPaymentStatus | null | undefined = null;
@@ -64,7 +67,7 @@ export class CheckoutSummaryComponent {
     if (value === null || value === undefined || Number.isNaN(value)) {
       return '-';
     }
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat(this.i18n.currentLocale, {
       style: 'currency',
       currency: this.currency
     }).format(value);

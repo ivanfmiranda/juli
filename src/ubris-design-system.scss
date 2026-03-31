@@ -1,0 +1,1572 @@
+// ============================================================================
+// UBRIS DESIGN SYSTEM
+// Comprehensive SCSS design system for the Juli Angular storefront.
+// Defines CSS custom properties, base components, and all .ub-* classes
+// referenced by cart, checkout, confirmation, summary, and login templates.
+// ============================================================================
+
+// ---------------------------------------------------------------------------
+// 1. CSS Custom Properties
+// ---------------------------------------------------------------------------
+:root {
+  // ---- Spacing scale ----
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
+  --space-11: 44px;
+  --space-12: 48px;
+
+  // ---- Brand / Primary ----
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-light: #eff6ff;
+
+  // ---- Semantic ----
+  --color-success: #16a34a;
+  --color-success-light: #f0fdf4;
+  --color-warning: #d97706;
+  --color-warning-light: #fffbeb;
+  --color-error: #dc2626;
+  --color-error-light: #fef2f2;
+
+  // ---- Backgrounds ----
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+
+  // ---- Text ----
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+
+  // ---- Borders ----
+  --color-border: #e2e8f0;
+  --color-border-focus: #2563eb;
+
+  // ---- Ubris extended palette (used by component SCSS files) ----
+  --ubris-primary-50: #eff6ff;
+  --ubris-primary-100: #dbeafe;
+  --ubris-primary-200: #bfdbfe;
+  --ubris-primary-500: #3b82f6;
+  --ubris-primary-600: #2563eb;
+  --ubris-primary-700: #1d4ed8;
+
+  --ubris-success-100: #dcfce7;
+  --ubris-success-200: #bbf7d0;
+  --ubris-success-500: #22c55e;
+  --ubris-success-600: #16a34a;
+  --ubris-success-700: #15803d;
+  --ubris-success-800: #166534;
+
+  --ubris-warning-100: #fef3c7;
+  --ubris-warning-600: #d97706;
+
+  --ubris-error-100: #fee2e2;
+  --ubris-error-200: #fecaca;
+  --ubris-error-500: #ef4444;
+  --ubris-error-600: #dc2626;
+  --ubris-error-700: #b91c1c;
+  --ubris-error-800: #991b1b;
+
+  --ubris-gray-100: #f1f5f9;
+  --ubris-gray-200: #e2e8f0;
+  --ubris-gray-300: #cbd5e1;
+  --ubris-gray-800: #1e293b;
+  --ubris-gray-900: #0f172a;
+
+  // ---- Typography ----
+  --font-family: Inter, system-ui, -apple-system, sans-serif;
+  --font-size-xs: 0.75rem;    // 12px
+  --font-size-sm: 0.875rem;   // 14px
+  --font-size-base: 1rem;     // 16px
+  --font-size-lg: 1.125rem;   // 18px
+  --font-size-xl: 1.25rem;    // 20px
+  --font-size-2xl: 1.5rem;    // 24px
+  --font-size-3xl: 1.875rem;  // 30px
+
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  // ---- Shadows ----
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+
+  // ---- Radius ----
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  // ---- Transitions ----
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+
+  // ---- Z-index ----
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 500;
+  --z-toast: 600;
+
+  // ---- Layout ----
+  --header-height: 64px;
+  --container-max: 1200px;
+}
+
+
+// ---------------------------------------------------------------------------
+// 2. Layout primitives
+// ---------------------------------------------------------------------------
+.ub-store__main {
+  padding: 2rem 1.5rem;
+  flex: 1;
+  min-height: calc(100vh - var(--header-height));
+  background: var(--color-bg-secondary);
+}
+
+.ub-store__container {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  width: 100%;
+}
+
+.ub-store__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+
+// ---------------------------------------------------------------------------
+// 3. Buttons  (.ub-btn)
+// ---------------------------------------------------------------------------
+.ub-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 10px 20px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  text-decoration: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  white-space: nowrap;
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  // --- Variants ---
+  &--primary {
+    background: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+
+    &:hover {
+      background: var(--color-primary-hover);
+      border-color: var(--color-primary-hover);
+    }
+
+    &:active {
+      background: #1e40af;
+      border-color: #1e40af;
+    }
+  }
+
+  &--secondary {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    border-color: var(--color-border);
+
+    &:hover {
+      background: var(--color-bg-secondary);
+      border-color: var(--ubris-gray-300);
+    }
+
+    &:active {
+      background: var(--color-bg-tertiary);
+    }
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--color-text-secondary);
+    border-color: transparent;
+
+    &:hover {
+      background: var(--color-bg-tertiary);
+      color: var(--color-text-primary);
+    }
+
+    &:active {
+      background: var(--ubris-gray-200);
+    }
+  }
+
+  &--danger {
+    background: var(--color-error);
+    color: #ffffff;
+    border-color: var(--color-error);
+
+    &:hover {
+      background: #b91c1c;
+      border-color: #b91c1c;
+    }
+
+    &:active {
+      background: #991b1b;
+    }
+  }
+
+  // --- Sizes ---
+  &--sm {
+    padding: 6px 12px;
+    font-size: var(--font-size-xs);
+    border-radius: var(--radius-sm);
+  }
+
+  &--lg {
+    padding: 12px 24px;
+    font-size: var(--font-size-base);
+  }
+
+  // --- Modifiers ---
+  &--full {
+    width: 100%;
+  }
+
+  &--icon {
+    padding: 8px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  // --- Disabled ---
+  &:disabled,
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  // Inline SVG icons
+  svg {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 4. Inputs  (.ub-input)
+// ---------------------------------------------------------------------------
+.ub-input {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
+  appearance: none;
+
+  &::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-border-focus);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+
+  &--error {
+    border-color: var(--color-error);
+
+    &:focus {
+      border-color: var(--color-error);
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    background: var(--color-bg-secondary);
+    cursor: not-allowed;
+  }
+}
+
+// Select styling
+select.ub-input {
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M4.646 5.646a.5.5 0 0 1 .708 0L8 8.293l2.646-2.647a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 0 1 0-.708z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+// Textarea
+textarea.ub-input {
+  resize: vertical;
+  min-height: 80px;
+}
+
+
+// ---------------------------------------------------------------------------
+// 5. Form layout  (.ub-form-*)
+// ---------------------------------------------------------------------------
+.ub-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+
+  &--full {
+    width: 100%;
+  }
+}
+
+.ub-form-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+
+  &__required {
+    color: var(--color-error);
+    font-weight: var(--font-weight-normal);
+    font-size: var(--font-size-xs);
+  }
+}
+
+.ub-form-error {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-error);
+  margin-top: -2px;
+}
+
+.ub-form-hint {
+  display: block;
+  font-size: var(--font-size-xs);
+  color: var(--color-text-muted);
+  margin-top: -2px;
+}
+
+.ub-form-row {
+  display: flex;
+  gap: var(--space-4);
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-6);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+
+
+// ---------------------------------------------------------------------------
+// 6. Card  (.ub-card)
+// ---------------------------------------------------------------------------
+.ub-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-5) var(--space-6);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  &__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  &__body {
+    padding: var(--space-5) var(--space-6);
+  }
+
+  &__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-6);
+    border-top: 1px solid var(--color-border);
+    background: var(--color-bg-secondary);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 7. Order Totals  (.ub-order-totals)
+// ---------------------------------------------------------------------------
+.ub-order-totals {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ub-order-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--ubris-gray-100);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  strong {
+    color: var(--color-text-primary);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &--final {
+    margin-top: var(--space-2);
+    padding-top: var(--space-4);
+    border-top: 2px solid var(--color-border);
+    border-bottom: none;
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+
+    strong {
+      font-weight: var(--font-weight-bold);
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 8. Empty State  (.ub-empty)
+// ---------------------------------------------------------------------------
+.ub-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+  max-width: 420px;
+  margin: 0 auto;
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-full);
+    margin-bottom: var(--space-6);
+    font-size: 2rem;
+    color: var(--color-text-muted);
+  }
+
+  &__title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3) 0;
+    letter-spacing: -0.025em;
+  }
+
+  &__description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-8) 0;
+    line-height: var(--line-height-relaxed);
+  }
+
+  &--sm {
+    padding: var(--space-6) var(--space-4);
+
+    .ub-empty__icon {
+      width: 48px;
+      height: 48px;
+      font-size: 1.25rem;
+      margin-bottom: var(--space-4);
+    }
+
+    .ub-empty__title {
+      font-size: var(--font-size-base);
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 9. Payment Methods  (.ub-payment-method)
+// ---------------------------------------------------------------------------
+.ub-payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.ub-payment-method {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--ubris-gray-300);
+    background: var(--color-bg-secondary);
+  }
+
+  &--selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+
+    .ub-payment-method__radio {
+      border-color: var(--color-primary);
+
+      &::after {
+        transform: scale(1);
+      }
+    }
+  }
+
+  &.disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  &__radio {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+    position: relative;
+    transition: border-color var(--duration-fast) var(--ease-out);
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 10px;
+      height: 10px;
+      background: var(--color-primary);
+      border-radius: var(--radius-full);
+      transform: scale(0);
+      transition: transform var(--duration-fast) var(--ease-out);
+    }
+  }
+
+  &__icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+    font-size: var(--font-size-lg);
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__description {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  &__body {
+    padding-top: var(--space-3);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 10. Alerts  (.ub-alert)
+// ---------------------------------------------------------------------------
+.ub-alert {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  margin-bottom: var(--space-4);
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+
+    i {
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+  }
+
+  // Single-line alerts (icon + text directly inside)
+  > i {
+    flex-shrink: 0;
+  }
+
+  // When used as a single row (icon + span direct children)
+  &:not(:has(.ub-alert__item)) {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: var(--space-3);
+
+    > i {
+      margin-top: 2px;
+    }
+  }
+
+  &--info {
+    background: var(--ubris-primary-50);
+    border: 1px solid var(--ubris-primary-200);
+    color: var(--ubris-primary-700);
+  }
+
+  &--success {
+    background: var(--color-success-light);
+    border: 1px solid var(--ubris-success-200);
+    color: var(--ubris-success-700);
+  }
+
+  &--warning {
+    background: var(--color-warning-light);
+    border: 1px solid #fde68a;
+    color: #92400e;
+  }
+
+  &--error {
+    background: var(--color-error-light);
+    border: 1px solid var(--ubris-error-200);
+    color: var(--ubris-error-700);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 11. Quantity Selector  (.ub-pdp__qty)
+// ---------------------------------------------------------------------------
+.ub-pdp__qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-bg-primary);
+}
+
+.ub-pdp__qty-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-xs);
+  transition: all var(--duration-fast) var(--ease-out);
+
+  &:hover {
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-primary);
+  }
+
+  &:active {
+    background: var(--ubris-gray-200);
+  }
+}
+
+.ub-pdp__qty-input {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: center;
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+}
+
+
+// ---------------------------------------------------------------------------
+// 12. Page Title  (.ub-page-title)
+// ---------------------------------------------------------------------------
+.ub-page-title {
+  font-size: var(--font-size-2xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+  letter-spacing: -0.025em;
+  line-height: var(--line-height-tight);
+
+  &__eyebrow {
+    display: block;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-primary);
+    margin-bottom: var(--space-2);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 13. Badge  (.ub-badge)
+// ---------------------------------------------------------------------------
+.ub-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 3px 10px;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.5;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+
+  // Default
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-secondary);
+
+  &--success {
+    background: var(--color-success-light);
+    color: var(--ubris-success-700);
+  }
+
+  &--warning {
+    background: var(--color-warning-light);
+    color: #92400e;
+  }
+
+  &--error {
+    background: var(--color-error-light);
+    color: var(--ubris-error-700);
+  }
+
+  &--info {
+    background: var(--ubris-primary-50);
+    color: var(--ubris-primary-700);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 14. Stepper  (.ub-stepper / .ub-step)
+// ---------------------------------------------------------------------------
+.ub-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: var(--space-5) var(--space-6);
+  background: var(--color-bg-primary);
+  border-bottom: 1px solid var(--color-border);
+
+  @media (max-width: 640px) {
+    padding: var(--space-4) var(--space-3);
+  }
+}
+
+.ub-step {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: default;
+
+  &__indicator {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    background: var(--color-bg-tertiary);
+    color: var(--color-text-muted);
+    border: 2px solid var(--color-border);
+    transition: all var(--duration-normal) var(--ease-out);
+    flex-shrink: 0;
+
+    @media (max-width: 640px) {
+      width: 28px;
+      height: 28px;
+      font-size: var(--font-size-xs);
+    }
+  }
+
+  &__label {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-muted);
+    transition: color var(--duration-normal) var(--ease-out);
+
+    @media (max-width: 640px) {
+      display: none;
+    }
+  }
+
+  &__connector {
+    width: 40px;
+    height: 2px;
+    background: var(--color-border);
+    margin: 0 var(--space-2);
+    transition: background var(--duration-normal) var(--ease-out);
+
+    @media (max-width: 768px) {
+      width: 24px;
+    }
+
+    @media (max-width: 640px) {
+      width: 16px;
+      margin: 0 var(--space-1);
+    }
+
+    &--completed {
+      background: var(--color-primary);
+    }
+  }
+
+  // States
+  &--current {
+    .ub-step__indicator {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .ub-step__label {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-semibold);
+    }
+  }
+
+  &--completed {
+    .ub-step__indicator {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #ffffff;
+    }
+
+    .ub-step__label {
+      color: var(--color-text-primary);
+    }
+  }
+
+  &--pending,
+  &--disabled {
+    .ub-step__indicator {
+      background: var(--color-bg-tertiary);
+      border-color: var(--color-border);
+      color: var(--color-text-muted);
+    }
+
+    .ub-step__label {
+      color: var(--color-text-muted);
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 15. Checkout Form  (.ub-checkout__form)
+// ---------------------------------------------------------------------------
+.ub-checkout__form {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  box-shadow: var(--shadow-sm);
+
+  @media (max-width: 640px) {
+    padding: var(--space-5);
+  }
+}
+
+.ub-checkout__section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-6) 0;
+  letter-spacing: -0.025em;
+}
+
+.ub-checkout__section-number {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary);
+  color: #ffffff;
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+
+// ---------------------------------------------------------------------------
+// 16. Divider  (.ub-divider)
+// ---------------------------------------------------------------------------
+.ub-divider {
+  height: 1px;
+  width: 100%;
+  background: var(--color-border);
+  border: none;
+  margin: var(--space-6) 0;
+}
+
+
+// ---------------------------------------------------------------------------
+// 17. Checkout Delivery Options
+// ---------------------------------------------------------------------------
+.checkout-delivery-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.delivery-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--ubris-gray-300);
+    background: var(--color-bg-secondary);
+  }
+
+  &--selected {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light);
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+
+  &__price {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin-left: auto;
+  }
+
+  &__time {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 18. Confirmation Page
+// ---------------------------------------------------------------------------
+.confirmation-page {
+  padding: var(--space-10) 0;
+}
+
+.confirmation-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.confirmation-header__icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-6);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #ffffff;
+
+  &--success {
+    background: linear-gradient(135deg, var(--ubris-success-500), var(--ubris-success-600));
+    box-shadow: 0 20px 40px -10px rgba(22, 163, 74, 0.35);
+  }
+
+  &--processing {
+    background: linear-gradient(135deg, var(--ubris-primary-500), var(--ubris-primary-600));
+    box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.35);
+  }
+
+  &--error {
+    background: linear-gradient(135deg, var(--ubris-error-500), var(--ubris-error-600));
+    box-shadow: 0 20px 40px -10px rgba(220, 38, 38, 0.35);
+  }
+}
+
+.confirmation-header__title {
+  font-size: var(--font-size-3xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-2) 0;
+  letter-spacing: -0.025em;
+}
+
+.confirmation-header__subtitle {
+  font-size: var(--font-size-lg);
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.confirmation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-6);
+  margin-bottom: var(--space-10);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.confirmation-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    .ub-btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 19. Info List (used in confirmation)
+// ---------------------------------------------------------------------------
+.info-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--ubris-gray-100);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+
+    &--code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: var(--font-size-xs);
+      padding: var(--space-1) var(--space-2);
+      background: var(--color-bg-secondary);
+      border-radius: var(--radius-md);
+    }
+
+    &--highlight {
+      color: var(--color-primary);
+      font-weight: var(--font-weight-bold);
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-1);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 20. Next Steps (used in confirmation)
+// ---------------------------------------------------------------------------
+.next-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.next-step {
+  display: flex;
+  gap: var(--space-4);
+
+  &__number,
+  &__icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__number {
+    background: var(--color-bg-secondary);
+    color: var(--color-text-muted);
+    border: 2px solid var(--color-border);
+  }
+
+  &__icon {
+    background: var(--ubris-primary-100);
+    color: var(--color-primary);
+  }
+
+  &__content {
+    flex: 1;
+
+    h3 {
+      font-size: var(--font-size-base);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-text-primary);
+      margin: 0 0 var(--space-1) 0;
+    }
+
+    p {
+      font-size: var(--font-size-sm);
+      color: var(--color-text-secondary);
+      margin: 0;
+      line-height: var(--line-height-normal);
+    }
+  }
+
+  &--active {
+    .next-step__number,
+    .next-step__icon {
+      background: var(--color-primary);
+      color: #ffffff;
+      border-color: var(--color-primary);
+    }
+  }
+
+  &--complete {
+    .next-step__icon {
+      background: var(--color-success);
+      color: #ffffff;
+    }
+  }
+
+  &--error {
+    .next-step__icon {
+      background: var(--color-error);
+      color: #ffffff;
+    }
+  }
+
+  @media (max-width: 640px) {
+    &__number,
+    &__icon {
+      width: 32px;
+      height: 32px;
+      font-size: var(--font-size-xs);
+    }
+
+    &__content {
+      h3 {
+        font-size: var(--font-size-sm);
+      }
+
+      p {
+        font-size: var(--font-size-xs);
+      }
+    }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 21. Checkout Summary  (.ub-order-summary)
+// ---------------------------------------------------------------------------
+.ub-order-summary {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+
+  &__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-4) 0;
+    padding: var(--space-5) var(--space-5) 0;
+
+    @media (max-width: 900px) {
+      display: none;
+    }
+  }
+}
+
+// Order item in summary
+.ub-order-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+
+  &__image {
+    width: 48px;
+    height: 48px;
+    background: var(--color-bg-tertiary);
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    flex-shrink: 0;
+  }
+
+  &__details {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-primary);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__qty {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    margin-top: 2px;
+  }
+
+  &__price {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    flex-shrink: 0;
+  }
+}
+
+// Summary sections within the aside need padding
+.summary-section {
+  padding-left: var(--space-5);
+  padding-right: var(--space-5);
+}
+
+.summary-items {
+  padding-left: var(--space-5);
+  padding-right: var(--space-5);
+}
+
+// Totals inside summary
+.ub-order-summary .ub-order-totals {
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+// Checkout summary mobile toggle
+.checkout-summary__mobile-toggle {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-4) var(--space-5);
+    cursor: pointer;
+    background: var(--color-bg-secondary);
+    border-bottom: 1px solid var(--color-border);
+  }
+}
+
+.checkout-summary__items {
+  padding: var(--space-4) var(--space-5);
+}
+
+.checkout-summary__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+}
+
+.summary-payment-status {
+  padding: var(--space-3) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+
+// ---------------------------------------------------------------------------
+// 22. Payment Status  (.ub-payment-status)
+// ---------------------------------------------------------------------------
+.ub-payment-status {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: var(--space-6);
+  margin: var(--space-6) 0;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+
+  &__icon {
+    font-size: 2rem;
+    margin-bottom: var(--space-3);
+  }
+
+  &__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    margin: 0 0 var(--space-2) 0;
+  }
+
+  &__description {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  &--authorized,
+  &--captured {
+    background: var(--color-success-light);
+    border-color: var(--ubris-success-200);
+
+    .ub-payment-status__icon { color: var(--color-success); }
+    .ub-payment-status__title { color: var(--ubris-success-700); }
+  }
+
+  &--pending,
+  &--pending_customer_action {
+    background: var(--color-warning-light);
+    border-color: #fde68a;
+
+    .ub-payment-status__icon { color: var(--color-warning); }
+    .ub-payment-status__title { color: #92400e; }
+  }
+
+  &--failed,
+  &--cancelled {
+    background: var(--color-error-light);
+    border-color: var(--ubris-error-200);
+
+    .ub-payment-status__icon { color: var(--color-error); }
+    .ub-payment-status__title { color: var(--ubris-error-700); }
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 23. Soft Login Modal  (.soft-login)
+// ---------------------------------------------------------------------------
+.soft-login {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+
+  &__card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: var(--color-bg-primary);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
+    padding: var(--space-8);
+    text-align: center;
+  }
+
+  &__icon {
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary-light);
+    border-radius: var(--radius-xl);
+    margin: 0 auto var(--space-6);
+    color: var(--color-primary);
+    font-size: 2rem;
+  }
+
+  &__title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 var(--space-3) 0;
+    letter-spacing: -0.025em;
+  }
+
+  &__message {
+    font-size: var(--font-size-base);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--space-8) 0;
+    line-height: var(--line-height-relaxed);
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// 24. Review hints & misc checkout UI
+// ---------------------------------------------------------------------------
+.review-action {
+  margin-bottom: var(--space-6);
+}
+
+.review-hint {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+}
+
+.payment-initialize {
+  margin: var(--space-6) 0;
+}
+
+
+// ---------------------------------------------------------------------------
+// 25. Utility / helper classes
+// ---------------------------------------------------------------------------
+.text-success {
+  color: var(--color-success);
+}
+
+.text-error {
+  color: var(--color-error);
+}
+
+.text-warning {
+  color: var(--color-warning);
+}
+
+.text-muted {
+  color: var(--color-text-muted);
+}
+
+.total-amount {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}

@@ -22,6 +22,12 @@ export class UbrisCartConnector {
     private readonly obs: JuliObservabilityService
   ) {}
 
+  fetchAnonymousToken(anonymousId: string): Observable<string> {
+    return this.adapter.fetchAnonymousToken(anonymousId).pipe(
+      map(response => (response.data as any).token as string)
+    );
+  }
+
   create(customerId: string): Observable<Cart> {
     return this.adapter.create(customerId).pipe(
       map(response => this.normalizer.normalize(response.data))
@@ -121,10 +127,11 @@ export class UbrisCartConnector {
   }
 
   promoteAnonymousCart(
+    anonymousCartId: string,
     anonymousToken: string,
     customerId: string
   ): Observable<ConnectorCartPromotionResult> {
-    return this.adapter.promoteAnonymousCart(anonymousToken, customerId).pipe(
+    return this.adapter.promoteAnonymousCart(anonymousCartId, anonymousToken, customerId).pipe(
       map(response => {
         const data = response.data as CartPromotionResponse | undefined;
         if (!data?.cart) {

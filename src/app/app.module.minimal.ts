@@ -53,6 +53,7 @@ import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { CmsComponentHostComponent } from './shared/cms-runtime/cms-component-host.component';
 import { StrapiCmsModule } from './spartacus/strapi-cms.module';
+import { LocaleInterceptor } from './core/i18n/locale.interceptor';
 
 @NgModule({
   declarations: [
@@ -123,6 +124,11 @@ import { StrapiCmsModule } from './spartacus/strapi-cms.module';
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LocaleInterceptor,
       multi: true
     }
   ],

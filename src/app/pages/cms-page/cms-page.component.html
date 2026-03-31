@@ -1,3 +1,7 @@
+<div *ngIf="isPreview" class="preview-bar" aria-label="Preview mode active">
+  MODO PREVIEW — rascunho ainda não publicado
+</div>
+
 <ng-container *ngIf="page$ | async as page">
   <app-not-found-page *ngIf="page.found === false; else pageContent"></app-not-found-page>
 

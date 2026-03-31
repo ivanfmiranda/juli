@@ -8,11 +8,14 @@ import { GatewayEnvelope, UbrisStorefrontList } from '../models/ubris-commerce.m
 export class UbrisSearchAdapter {
   constructor(private readonly http: HttpClient) {}
 
-  search(query: string, page: number, size: number): Observable<GatewayEnvelope<UbrisStorefrontList<Record<string, unknown>>>> {
-    const params = new HttpParams()
+  search(query: string, page: number, size: number, sort?: string): Observable<GatewayEnvelope<UbrisStorefrontList<Record<string, unknown>>>> {
+    let params = new HttpParams()
       .set('q', query)
       .set('page', String(page))
       .set('size', String(size));
+    if (sort) {
+      params = params.set('sort', sort);
+    }
 
     return this.http.get<GatewayEnvelope<UbrisStorefrontList<Record<string, unknown>>>>(
       `${environment.ubrisApiBaseUrl}/api/storefront/search`,

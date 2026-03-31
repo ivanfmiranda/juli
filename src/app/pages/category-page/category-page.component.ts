@@ -20,6 +20,7 @@ import {
   JuliProductLoadingState,
 } from '../../core/commerce';
 import { JuliCartFacade } from '../../core/commerce';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 /**
  * ViewModel para a página
@@ -55,7 +56,8 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly juliProductService: JuliProductService,
-    private readonly cartFacade: JuliCartFacade
+    private readonly cartFacade: JuliCartFacade,
+    public readonly i18n: JuliI18nService
   ) {}
 
   ngOnInit(): void {
@@ -152,13 +154,13 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
   getStockMessage(stock: { status: string; quantity?: number }): string {
     switch (stock.status) {
       case 'IN_STOCK':
-        return 'Em estoque';
+        return this.i18n.translate('category.stockInStock');
       case 'LOW_STOCK':
-        return `Apenas ${stock.quantity || 'poucos'} em estoque`;
+        return this.i18n.translate('category.stockLow', { quantity: stock.quantity || 'few' });
       case 'OUT_OF_STOCK':
-        return 'Indisponível';
+        return this.i18n.translate('category.stockOut');
       default:
-        return 'Consultar';
+        return this.i18n.translate('category.stockUnknown');
     }
   }
 

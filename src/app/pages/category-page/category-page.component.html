@@ -16,9 +16,9 @@
   <!-- Error State -->
   <div class="error-state" *ngIf="error$ | async as error">
     <div class="error-icon">⚠️</div>
-    <h3>Ops! Algo deu errado</h3>
+    <h3>{{ 'category.errorTitle' | juliTranslate }}</h3>
     <p>{{ error }}</p>
-    <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+    <button class="btn-primary" (click)="retryLoad()">{{ 'category.retry' | juliTranslate }}</button>
   </div>
 
   <!-- Content -->
@@ -28,7 +28,7 @@
       <header class="category-header">
         <!-- Breadcrumbs -->
         <nav class="breadcrumbs" *ngIf="vm.listing.breadcrumbs?.length">
-          <a routerLink="/">Início</a>
+          <a routerLink="/">{{ 'category.home' | juliTranslate }}</a>
           <span class="separator">/</span>
           <ng-container *ngFor="let crumb of vm.listing.breadcrumbs; let last = last">
             <a *ngIf="!last" [routerLink]="crumb.url">{{ crumb.name }}</a>
@@ -44,12 +44,12 @@
 
         <div class="category-meta">
           <span class="results-count">
-            {{ vm.listing.pagination.totalResults }} produto{{ vm.listing.pagination.totalResults !== 1 ? 's' : '' }}
+            {{ 'category.productsCount' | juliTranslate:{ count: vm.listing.pagination.totalResults, suffix: vm.listing.pagination.totalResults !== 1 ? 's' : '' } }}
           </span>
 
           <!-- Sort Control -->
           <div class="sort-control" *ngIf="vm.listing.sorts?.length">
-            <label for="sort-select">Ordenar por:</label>
+            <label for="sort-select">{{ 'category.sortBy' | juliTranslate }}</label>
             <select id="sort-select" 
                     [value]="getSelectedSort(vm.listing.sorts)"
                     (change)="changeSort($any($event.target).value)">
@@ -77,7 +77,7 @@
                   class="btn-page"
                   (click)="changePage(vm.listing.pagination.currentPage - 1)"
                   [disabled]="!vm.listing.pagination.hasPrevious">
-            ← Anterior
+            ← {{ 'category.previous' | juliTranslate }}
           </button>
 
           <div class="page-numbers">
@@ -94,7 +94,7 @@
                   class="btn-page"
                   (click)="changePage(vm.listing.pagination.currentPage + 1)"
                   [disabled]="!vm.listing.pagination.hasNext">
-            Próxima →
+            {{ 'category.next' | juliTranslate }} →
           </button>
         </footer>
       </section>
@@ -103,9 +103,9 @@
       <ng-template #noProducts>
         <div class="empty-state">
           <div class="empty-icon">📭</div>
-          <h3>Nenhum produto encontrado</h3>
-          <p>Não encontramos produtos nesta categoria no momento.</p>
-          <a routerLink="/" class="btn-primary">Explorar outras categorias</a>
+          <h3>{{ 'category.emptyTitle' | juliTranslate }}</h3>
+          <p>{{ 'category.emptyHint' | juliTranslate }}</p>
+          <a routerLink="/" class="btn-primary">{{ 'category.explore' | juliTranslate }}</a>
         </div>
       </ng-template>
     </ng-container>

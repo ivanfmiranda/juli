@@ -14,7 +14,7 @@ export class UbrisProductNormalizer {
     }
 
     const name = this.firstNonBlank(raw, 'name', 'productName') ?? code;
-    const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'USD';
+    const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'BRL';
     const priceValue = this.asNumber(raw.price, 0) ?? 0;
     const primary = this.mapPrimaryImage(raw.images, name);
     const stock = this.asRecord(raw.stock);
@@ -31,7 +31,7 @@ export class UbrisProductNormalizer {
       price: {
         currencyIso,
         value: priceValue,
-        formattedValue: `${currencyIso} ${priceValue.toFixed(2)}`
+        formattedValue: this.formatPrice(priceValue, currencyIso)
       },
       stock: {
         stockLevelStatus: this.normalizeStock(stockStatus),
@@ -43,8 +43,10 @@ export class UbrisProductNormalizer {
           product: primary,
           zoom: primary
         }
-      } : undefined
-    };
+      } : undefined,
+      // Preserve all raw images for gallery support in PDP
+      _galleryRaw: Array.isArray(raw.images) ? raw.images : [],
+    } as any;
   }
 
   private mapPrimaryImage(rawImages: unknown, fallbackAlt: string) {
@@ -63,9 +65,15 @@ export class UbrisProductNormalizer {
       return undefined;
     }
 
-    const hash = this.firstNonBlank(image, 'contentHash');
-    const versionQuery = hash ? `?v=${encodeURIComponent(hash)}` : '';
-    const url = `/img/pdp/${encodeURIComponent(id)}${versionQuery}`;
+    const rawUrl = this.asString(image.url);
+    let url: string;
+    if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
+      url = rawUrl;
+    } else {
+      const hash = this.firstNonBlank(image, 'contentHash');
+      const versionQuery = hash ? `?v=${encodeURIComponent(hash)}` : '';
+      url = `/img/pdp/${encodeURIComponent(id)}${versionQuery}`;
+    }
 
     return {
       altText: this.firstNonBlank(image, 'altText') ?? fallbackAlt,
@@ -76,13 +84,14 @@ export class UbrisProductNormalizer {
 
   private normalizeStock(value: string | null): string {
     if (!value) {
-      return 'unknown';
+      return 'inStock';
     }
     const upper = value.toUpperCase();
-    if (upper === 'IN_STOCK' || upper === 'LOW_STOCK') {
-      return upper;
-    }
-    return 'outOfStock';
+    if (upper === 'IN_STOCK') return 'inStock';
+    if (upper === 'LOW_STOCK') return 'lowStock';
+    if (upper === 'OUT_OF_STOCK') return 'outOfStock';
+    // UNKNOWN or other → treat as in stock (availability checked separately)
+    return 'inStock';
   }
 
   private asRecord(value: unknown): Record<string, unknown> | null {
@@ -108,6 +117,15 @@ export class UbrisProductNormalizer {
     }
     const str = String(value).trim();
     return str.length > 0 ? str : null;
+  }
+
+  private formatPrice(value: number, currency: string): string {
+    const locale = currency === 'BRL' ? 'pt-BR' : 'en-US';
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+    } catch {
+      return `${currency} ${value.toFixed(2)}`;
+    }
   }
 
   private asNumber(value: unknown, fallback: number | undefined): number | undefined {

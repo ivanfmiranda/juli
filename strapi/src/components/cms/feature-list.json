@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_cms_feature_lists",
+  "info": {
+    "displayName": "Feature List",
+    "icon": "bulletList",
+    "description": "A list of features, each with a title, icon and description"
+  },
+  "options": {},
+  "attributes": {
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "features": {
+      "type": "component",
+      "repeatable": true,
+      "component": "cms.feature-item"
+    }
+  }
+}

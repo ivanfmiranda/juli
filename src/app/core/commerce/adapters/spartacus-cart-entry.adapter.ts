@@ -24,7 +24,7 @@ export class JuliSpartacusCartEntryAdapter extends CartEntryAdapter {
     if (userId === 'anonymous') {
       const anonId = this.authService.currentAnonymousPrincipal?.anonymousId;
       if (!anonId) {
-        return throwError(() => new Error('Anonymous principal not found'));
+        return throwError(new Error('Anonymous principal not found'));
       }
       return this.connector.addEntryAnonymous(cartId, sku, quantity, anonId, options);
     }
@@ -49,7 +49,7 @@ export class JuliSpartacusCartEntryAdapter extends CartEntryAdapter {
     if (userId === 'anonymous') {
       const anonId = this.authService.currentAnonymousPrincipal?.anonymousId;
       if (!anonId) {
-        return throwError(() => new Error('Anonymous principal not found'));
+        return throwError(new Error('Anonymous principal not found'));
       }
       return this.connector.updateEntryAnonymous(cartId, entryNumber, qty, anonId);
     }
@@ -60,7 +60,7 @@ export class JuliSpartacusCartEntryAdapter extends CartEntryAdapter {
     if (userId === 'anonymous') {
       const anonId = this.authService.currentAnonymousPrincipal?.anonymousId;
       if (!anonId) {
-        return throwError(() => new Error('Anonymous principal not found'));
+        return throwError(new Error('Anonymous principal not found'));
       }
       return this.connector.removeEntryAnonymous(cartId, entryNumber, anonId);
     }

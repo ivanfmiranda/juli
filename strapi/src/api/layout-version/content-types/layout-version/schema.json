@@ -1,0 +1,17 @@
+{
+  "kind": "collectionType",
+  "collectionName": "layout_versions",
+  "info": {
+    "singularName": "layout-version",
+    "pluralName": "layout-versions",
+    "displayName": "Layout Version"
+  },
+  "options": { "draftAndPublish": false },
+  "attributes": {
+    "pageId": { "type": "integer", "required": true },
+    "version": { "type": "integer", "required": true },
+    "layout": { "type": "json", "required": true },
+    "description": { "type": "string" },
+    "createdByName": { "type": "string" }
+  }
+}

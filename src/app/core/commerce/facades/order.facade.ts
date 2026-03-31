@@ -1,49 +1,48 @@
 import { Injectable } from '@angular/core';
-import { Order, OrderHistoryList, UserOrderService } from '@spartacus/core';
-import { Observable, defer } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { Order, OrderHistoryList } from '@spartacus/core';
+import { Observable, throwError } from 'rxjs';
+import { filter, map, switchMap, take } from 'rxjs/operators';
 import { AuthService } from '../../auth/auth.service';
+import { UbrisOrderAdapter } from '../adapters/ubris/ubris-order.adapter';
 
 @Injectable({ providedIn: 'root' })
 export class JuliOrderFacade {
-  private lastUsername: string | null = null;
 
   constructor(
     private readonly authService: AuthService,
-    private readonly userOrderService: UserOrderService
-  ) {
-    this.authService.session$.subscribe(session => {
-      const username = session?.username ?? null;
-      if (username !== this.lastUsername) {
-        this.lastUsername = username;
-        this.userOrderService.clearOrderList();
-      }
-    });
-  }
+    private readonly orderAdapter: UbrisOrderAdapter
+  ) {}
 
   list(pageSize: number = 20, currentPage: number = 0, sort: string = 'byDateDesc'): Observable<OrderHistoryList> {
-    return defer(() => {
-      this.userOrderService.clearOrderList();
-      this.userOrderService.loadOrderList(pageSize, currentPage, sort);
-      return this.userOrderService.getOrderHistoryList(pageSize);
-    });
+    return this.authService.session$.pipe(
+      take(1),
+      switchMap(session => {
+        if (!session?.username) {
+          return throwError(new Error('Usuário não autenticado'));
+        }
+        return this.orderAdapter.loadHistory(session.username, pageSize, currentPage, sort);
+      })
+    );
   }
 
   get(orderCode: string): Observable<Order> {
-    return defer(() => {
-      this.userOrderService.clearOrderDetails();
-      this.userOrderService.loadOrderDetails(orderCode);
-      return this.userOrderService.getOrderDetails().pipe(
-        filter(order => !!order && order.code === orderCode)
-      );
-    });
+    return this.authService.session$.pipe(
+      take(1),
+      switchMap(session => {
+        if (!session?.username) {
+          return throwError(new Error('Usuário não autenticado'));
+        }
+        return this.orderAdapter.load(session.username, orderCode);
+      }),
+      filter(order => !!order && order.code === orderCode)
+    );
   }
 
   clear(): void {
-    this.userOrderService.clearOrderList();
+    // No-op: state is managed by JuliOrderService's BehaviorSubject
   }
 
   clearDetail(): void {
-    this.userOrderService.clearOrderDetails();
+    // No-op: state is managed by JuliOrderService's BehaviorSubject
   }
 }

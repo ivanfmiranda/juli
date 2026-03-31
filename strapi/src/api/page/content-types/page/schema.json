@@ -1,0 +1,144 @@
+{
+  "kind": "collectionType",
+  "collectionName": "pages",
+  "info": {
+    "singularName": "page",
+    "pluralName": "pages",
+    "displayName": "Site Page",
+    "description": "CMS-driven pages with slot-based content regions. Each slot is an ordered dynamic zone of blocks."
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {
+    "i18n": {
+      "localized": true
+    }
+  },
+  "attributes": {
+    "tenantKey": {
+      "type": "string",
+      "required": true
+    },
+    "title": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "slug": {
+      "type": "string",
+      "required": true,
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "layout": {
+      "type": "json"
+    },
+    "seo": {
+      "type": "component",
+      "repeatable": false,
+      "component": "shared.seo-metadata",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "content_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.hero-banner",
+        "cms.simple-banner",
+        "cms.rich-text",
+        "cms.cta-block",
+        "cms.cta-banner",
+        "cms.product-teaser",
+        "cms.category-teaser",
+        "cms.info-card",
+        "cms.contact-form",
+        "cms.section-container",
+        "cms.grid",
+        "cms.product-grid",
+        "cms.feature-list",
+        "cms.rich-section"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "header_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.simple-banner",
+        "cms.hero-banner",
+        "cms.cta-banner",
+        "cms.section-container"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "sidebar_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.info-card",
+        "cms.product-teaser",
+        "cms.product-grid",
+        "cms.rich-text",
+        "cms.cta-banner"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "below_fold_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.hero-banner",
+        "cms.simple-banner",
+        "cms.rich-text",
+        "cms.cta-block",
+        "cms.cta-banner",
+        "cms.product-teaser",
+        "cms.product-grid",
+        "cms.category-teaser",
+        "cms.grid",
+        "cms.feature-list",
+        "cms.rich-section",
+        "cms.section-container"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "footer_slots": {
+      "type": "dynamiczone",
+      "components": [
+        "cms.rich-text",
+        "cms.cta-block",
+        "cms.cta-banner",
+        "cms.info-card"
+      ],
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    }
+  }
+}

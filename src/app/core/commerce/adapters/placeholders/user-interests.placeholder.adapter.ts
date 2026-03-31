@@ -37,6 +37,6 @@ export class UserInterestsPlaceholderAdapter implements UserInterestsAdapter {
    * Adicionar interesse - não implementado
    */
   addInterest(_userId: string, _productCode: string, _notificationType: NotificationType): Observable<any> {
-    return throwError(() => new Error('UserInterestsAdapter.addInterest() not supported in JULI'));
+    return throwError(new Error('UserInterestsAdapter.addInterest() not supported in JULI'));
   }
 }

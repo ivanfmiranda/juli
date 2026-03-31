@@ -31,14 +31,14 @@ export class UserAddressPlaceholderAdapter implements UserAddressAdapter {
    * Não suportado - JULI não usa saved addresses
    */
   add(_userId: string, _address: Address): Observable<Address> {
-    return throwError(() => new Error('UserAddressAdapter.add() not supported in JULI'));
+    return throwError(new Error('UserAddressAdapter.add() not supported in JULI'));
   }
   
   /**
    * Não suportado - JULI não usa saved addresses
    */
   update(_userId: string, _addressId: string, _address: Address): Observable<Address> {
-    return throwError(() => new Error('UserAddressAdapter.update() not supported in JULI'));
+    return throwError(new Error('UserAddressAdapter.update() not supported in JULI'));
   }
   
   /**

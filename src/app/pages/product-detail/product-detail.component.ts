@@ -12,6 +12,7 @@
 
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import {
@@ -21,6 +22,7 @@ import {
   JuliProductVariantSelection,
 } from '../../core/commerce';
 import { JuliCartFacade } from '../../core/commerce';
+import { TenantHostService } from '../../core/services/tenant-host.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -42,15 +44,23 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   selectedImageIndex = 0;
   quantity = 1;
 
+  private siteName: string;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly juliProductService: JuliProductService,
-    private readonly cartFacade: JuliCartFacade
-  ) {}
+    private readonly cartFacade: JuliCartFacade,
+    private readonly titleService: Title,
+    private readonly tenantHost: TenantHostService,
+  ) {
+    const tenantId = this.tenantHost.currentTenantId();
+    this.siteName = tenantId && tenantId !== 'default'
+      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
+      : 'Juli Store';
+  }
 
   ngOnInit(): void {
-    // Carrega o produto quando o código muda
     this.route.paramMap.pipe(
       takeUntil(this.destroy$),
       map(params => params.get('code') || '')
@@ -59,6 +69,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
         this.juliProductService.loadProductDetail(productCode);
         this.selectedImageIndex = 0;
         this.quantity = 1;
+      }
+    });
+
+    this.product$.pipe(takeUntil(this.destroy$)).subscribe(product => {
+      if (product?.name) {
+        this.titleService.setTitle(`${product.name} — ${this.siteName}`);
       }
     });
   }
@@ -159,8 +175,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
 
     this.cartFacade.addEntry(productCode, this.quantity).subscribe({
       next: () => {
-        // Opcional: mostrar toast de sucesso
-        console.log('Produto adicionado ao carrinho');
+        this.router.navigate(['/cart']);
       },
       error: (err) => {
         console.error('Erro ao adicionar ao carrinho:', err);

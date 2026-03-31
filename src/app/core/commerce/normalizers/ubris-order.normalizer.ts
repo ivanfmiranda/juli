@@ -146,7 +146,7 @@ export class UbrisOrderNormalizer implements OrderNormalizer {
    */
   normalizeOrderDetail(rawData: unknown, userId?: string): JuliOrder {
     const source = OrderNormalizerUtils.asRecord(this.extractData(rawData));
-    const currency = OrderNormalizerUtils.firstNonBlank(source, 'currency') ?? 'USD';
+    const currency = OrderNormalizerUtils.firstNonBlank(source, 'currency') ?? 'BRL';
     
     // Extrair datas
     const createdAt = OrderNormalizerUtils.asDate(
@@ -227,7 +227,7 @@ export class UbrisOrderNormalizer implements OrderNormalizer {
       OrderNormalizerUtils.firstNonBlank(raw, 'placedAt', 'createdAt')
     ) ?? new Date();
     
-    const currency = OrderNormalizerUtils.firstNonBlank(raw, 'currency') ?? 'USD';
+    const currency = OrderNormalizerUtils.firstNonBlank(raw, 'currency') ?? 'BRL';
     
     return {
       code: OrderNormalizerUtils.firstNonBlank(raw, 'id', 'orderId') ?? 'UNKNOWN',
@@ -303,8 +303,8 @@ export class UbrisOrderNormalizer implements OrderNormalizer {
       return {
         currencyIso: currency,
         value,
-        formattedValue: OrderNormalizerUtils.firstNonBlank(price, 'formatted', 'formattedValue') ?? 
-                       `${currency} ${value.toFixed(2)}`,
+        formattedValue: OrderNormalizerUtils.firstNonBlank(price, 'formatted', 'formattedValue') ??
+                       this.formatCurrency(value, currency),
       };
     }
 
@@ -313,7 +313,7 @@ export class UbrisOrderNormalizer implements OrderNormalizer {
       return {
         currencyIso: fallbackCurrency,
         value: raw,
-        formattedValue: `${fallbackCurrency} ${raw.toFixed(2)}`,
+        formattedValue: this.formatCurrency(raw, fallbackCurrency),
       };
     }
 
@@ -323,11 +323,20 @@ export class UbrisOrderNormalizer implements OrderNormalizer {
       return {
         currencyIso: fallbackCurrency,
         value,
-        formattedValue: `${fallbackCurrency} ${value.toFixed(2)}`,
+        formattedValue: this.formatCurrency(value, fallbackCurrency),
       };
     }
 
     return undefined;
+  }
+
+  private formatCurrency(value: number, currency: string): string {
+    const locale = currency === 'BRL' ? 'pt-BR' : currency === 'USD' ? 'en-US' : 'pt-BR';
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+    } catch {
+      return `${currency} ${value.toFixed(2)}`;
+    }
   }
 
   private normalizeAddress(raw: unknown): { fullName: string; line1: string; city: string; postalCode: string; countryIso: string; line2?: string; region?: string; phone?: string; } | undefined {

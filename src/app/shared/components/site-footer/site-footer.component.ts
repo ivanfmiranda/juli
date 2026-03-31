@@ -4,7 +4,8 @@
  * Footer comercial premium do JULI.
  */
 
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { JuliI18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-site-footer',
@@ -14,13 +15,18 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 })
 export class SiteFooterComponent {
   readonly currentYear = new Date().getFullYear();
+
+  newsletterEmail = '';
+  newsletterSubmitting = false;
+  newsletterSuccess = false;
+  newsletterError = false;
   
   readonly footerLinks = {
     shop: [
-      { name: 'Eletrônicos', url: '/c/eletronicos' },
-      { name: 'Moda', url: '/c/moda' },
-      { name: 'Casa & Decoração', url: '/c/casa' },
-      { name: 'Promoções', url: '/c/promocoes' },
+      { name: 'categories.electronics', url: '/c/eletronicos' },
+      { name: 'categories.fashion', url: '/c/moda' },
+      { name: 'categories.home', url: '/c/casa' },
+      { name: 'header.sale', url: '/c/promocoes' },
     ],
     support: [
       { name: 'Central de Ajuda', url: '/page/ajuda' },
@@ -44,4 +50,29 @@ export class SiteFooterComponent {
     { name: 'Twitter', icon: '🐦', url: '#' },
     { name: 'YouTube', icon: '▶️', url: '#' },
   ];
+
+  constructor(
+    public readonly i18n: JuliI18nService,
+    private readonly cdr: ChangeDetectorRef
+  ) {}
+
+  subscribeNewsletter(): void {
+    const email = this.newsletterEmail.trim();
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      return;
+    }
+    this.newsletterSubmitting = true;
+    this.newsletterSuccess = false;
+    this.newsletterError = false;
+    this.cdr.markForCheck();
+
+    // Simulate async submission — replace with real API call when available
+    setTimeout(() => {
+      this.newsletterSubmitting = false;
+      this.newsletterSuccess = true;
+      this.newsletterEmail = '';
+      this.cdr.markForCheck();
+    }, 800);
+  }
 }

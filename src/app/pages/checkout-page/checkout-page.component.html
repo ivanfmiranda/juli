@@ -1,6 +1,6 @@
 <!-- Checkout Page usando Design System UBRIS -->
 <div class="ub-store" *ngIf="cart$ | async as cart; else emptyCheckout">
-  
+
   <!-- Header -->
   <header class="ub-store__header">
     <div class="brand">
@@ -12,41 +12,41 @@
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
       </svg>
-      <span>Secure Checkout</span>
+      <span>{{ 'checkout.secureCheckout' | juliTranslate }}</span>
     </div>
   </header>
 
   <!-- Stepper usando Design System -->
   <nav class="ub-stepper" aria-label="Checkout progress">
-    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('address')" 
+    <div class="ub-step" [class.ub-step--completed]="isStepCompleted('address')"
          [class.ub-step--current]="currentStepId === 'address'"
          [class.ub-step--pending]="isStepPending('address')">
       <span class="ub-step__indicator">1</span>
-      <span class="ub-step__label">Address</span>
+      <span class="ub-step__label">{{ 'checkout.stepAddress' | juliTranslate }}</span>
     </div>
     <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('address')"></div>
-    
+
     <div class="ub-step" [class.ub-step--completed]="isStepCompleted('delivery')"
          [class.ub-step--current]="currentStepId === 'delivery'"
          [class.ub-step--pending]="isStepPending('delivery')">
       <span class="ub-step__indicator">2</span>
-      <span class="ub-step__label">Delivery</span>
+      <span class="ub-step__label">{{ 'checkout.stepDelivery' | juliTranslate }}</span>
     </div>
     <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('delivery')"></div>
-    
+
     <div class="ub-step" [class.ub-step--completed]="isStepCompleted('payment')"
          [class.ub-step--current]="currentStepId === 'payment'"
          [class.ub-step--pending]="isStepPending('payment')">
       <span class="ub-step__indicator">3</span>
-      <span class="ub-step__label">Payment</span>
+      <span class="ub-step__label">{{ 'checkout.stepPayment' | juliTranslate }}</span>
     </div>
     <div class="ub-step__connector" [class.ub-step__connector--completed]="isStepCompleted('payment')"></div>
-    
+
     <div class="ub-step" [class.ub-step--completed]="isStepCompleted('review')"
          [class.ub-step--current]="currentStepId === 'review'"
          [class.ub-step--pending]="isStepPending('review')">
       <span class="ub-step__indicator">4</span>
-      <span class="ub-step__label">Review</span>
+      <span class="ub-step__label">{{ 'checkout.stepReview' | juliTranslate }}</span>
     </div>
   </nav>
 
@@ -54,146 +54,146 @@
   <main class="ub-store__main">
     <div class="ub-store__container">
       <div class="checkout-layout">
-        
+
         <!-- Left Column: Current Step -->
         <div class="checkout-main">
-          
+
           <!-- Step 1: Address -->
           <section class="ub-checkout__form" *ngIf="currentStepId === 'address'" [@fadeIn]>
             <h2 class="ub-checkout__section-title">
               <span class="ub-checkout__section-number">1</span>
-              Shipping Address
+              {{ 'checkout.shippingAddress' | juliTranslate }}
             </h2>
 
             <form [formGroup]="form">
               <div class="ub-form-row">
                 <div class="ub-form-group">
                   <label class="ub-form-label" for="fullName">
-                    Full name <span class="ub-form-label__required">*</span>
+                    {{ 'checkout.fullName' | juliTranslate }} <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
                   </label>
-                  <input 
+                  <input
                     id="fullName"
-                    formControlName="fullName" 
-                    type="text" 
-                    placeholder="John Doe"
+                    formControlName="fullName"
+                    type="text"
+                    [placeholder]="'checkout.fullNamePlaceholder' | juliTranslate"
                     class="ub-input"
                     [class.ub-input--error]="form.get('fullName')?.invalid && form.get('fullName')?.touched">
                   <span class="ub-form-error" *ngIf="form.get('fullName')?.invalid && form.get('fullName')?.touched">
-                    Full name is required
+                    {{ 'checkout.fullNameRequired' | juliTranslate }}
                   </span>
                 </div>
 
                 <div class="ub-form-group">
-                  <label class="ub-form-label" for="phone">Phone</label>
-                  <input 
+                  <label class="ub-form-label" for="phone">{{ 'checkout.phone' | juliTranslate }}</label>
+                  <input
                     id="phone"
-                    formControlName="phone" 
-                    type="tel" 
-                    placeholder="+1 (555) 000-0000"
+                    formControlName="phone"
+                    type="tel"
+                    [placeholder]="'checkout.phonePlaceholder' | juliTranslate"
                     class="ub-input">
                 </div>
               </div>
 
               <div class="ub-form-group ub-form-group--full">
                 <label class="ub-form-label" for="line1">
-                  Address line 1 <span class="ub-form-label__required">*</span>
+                  {{ 'checkout.addressLine1' | juliTranslate }} <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
                 </label>
-                <input 
+                <input
                   id="line1"
-                  formControlName="line1" 
-                  type="text" 
-                  placeholder="123 Main Street"
+                  formControlName="line1"
+                  type="text"
+                  [placeholder]="'checkout.addressLine1Placeholder' | juliTranslate"
                   class="ub-input"
                   [class.ub-input--error]="form.get('line1')?.invalid && form.get('line1')?.touched">
                 <span class="ub-form-error" *ngIf="form.get('line1')?.invalid && form.get('line1')?.touched">
-                  Address is required
+                  {{ 'checkout.addressRequired' | juliTranslate }}
                 </span>
               </div>
 
               <div class="ub-form-group ub-form-group--full">
-                <label class="ub-form-label" for="line2">Address line 2</label>
-                <input 
+                <label class="ub-form-label" for="line2">{{ 'checkout.addressLine2' | juliTranslate }}</label>
+                <input
                   id="line2"
-                  formControlName="line2" 
-                  type="text" 
-                  placeholder="Apt, suite, unit, etc. (optional)"
+                  formControlName="line2"
+                  type="text"
+                  [placeholder]="'checkout.addressLine2Placeholder' | juliTranslate"
                   class="ub-input">
               </div>
 
               <div class="ub-form-row">
                 <div class="ub-form-group">
                   <label class="ub-form-label" for="city">
-                    City <span class="ub-form-label__required">*</span>
+                    {{ 'checkout.city' | juliTranslate }} <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
                   </label>
-                  <input 
+                  <input
                     id="city"
-                    formControlName="city" 
-                    type="text" 
-                    placeholder="New York"
+                    formControlName="city"
+                    type="text"
+                    [placeholder]="'checkout.cityPlaceholder' | juliTranslate"
                     class="ub-input"
                     [class.ub-input--error]="form.get('city')?.invalid && form.get('city')?.touched">
                   <span class="ub-form-error" *ngIf="form.get('city')?.invalid && form.get('city')?.touched">
-                    City is required
+                    {{ 'checkout.cityRequired' | juliTranslate }}
                   </span>
                 </div>
 
                 <div class="ub-form-group">
-                  <label class="ub-form-label" for="region">State / Region</label>
-                  <input 
+                  <label class="ub-form-label" for="region">{{ 'checkout.region' | juliTranslate }}</label>
+                  <input
                     id="region"
-                    formControlName="region" 
-                    type="text" 
-                    placeholder="NY"
+                    formControlName="region"
+                    type="text"
+                    [placeholder]="'checkout.regionPlaceholder' | juliTranslate"
                     class="ub-input">
                 </div>
 
                 <div class="ub-form-group">
                   <label class="ub-form-label" for="postalCode">
-                    Postal code <span class="ub-form-label__required">*</span>
+                    {{ 'checkout.postalCode' | juliTranslate }} <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
                   </label>
-                  <input 
+                  <input
                     id="postalCode"
-                    formControlName="postalCode" 
-                    type="text" 
-                    placeholder="10001"
+                    formControlName="postalCode"
+                    type="text"
+                    [placeholder]="'checkout.postalCodePlaceholder' | juliTranslate"
                     class="ub-input"
                     [class.ub-input--error]="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
                   <span class="ub-form-error" *ngIf="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
-                    Postal code is required
+                    {{ 'checkout.postalCodeRequired' | juliTranslate }}
                   </span>
                 </div>
               </div>
 
               <div class="ub-form-group" style="max-width: 200px;">
-                <label class="ub-form-label" for="countryIso">Country</label>
+                <label class="ub-form-label" for="countryIso">{{ 'checkout.country' | juliTranslate }}</label>
                 <select id="countryIso" formControlName="countryIso" class="ub-input">
-                  <option value="US">United States</option>
-                  <option value="BR">Brazil</option>
-                  <option value="CA">Canada</option>
-                  <option value="GB">United Kingdom</option>
-                  <option value="DE">Germany</option>
-                  <option value="FR">France</option>
+                  <option value="BR">{{ 'checkout.countryBR' | juliTranslate }}</option>
+                  <option value="US">{{ 'checkout.countryUS' | juliTranslate }}</option>
+                  <option value="CA">{{ 'checkout.countryCA' | juliTranslate }}</option>
+                  <option value="GB">{{ 'checkout.countryGB' | juliTranslate }}</option>
+                  <option value="DE">{{ 'checkout.countryDE' | juliTranslate }}</option>
+                  <option value="FR">{{ 'checkout.countryFR' | juliTranslate }}</option>
                 </select>
               </div>
 
               <div class="ub-form-group ub-form-group--full">
-                <label class="ub-form-label" for="notes">Delivery notes</label>
-                <input 
+                <label class="ub-form-label" for="notes">{{ 'checkout.deliveryNotes' | juliTranslate }}</label>
+                <input
                   id="notes"
-                  formControlName="notes" 
-                  type="text" 
-                  placeholder="Leave at door, ring bell, etc. (optional)"
+                  formControlName="notes"
+                  type="text"
+                  [placeholder]="'checkout.deliveryNotesPlaceholder' | juliTranslate"
                   class="ub-input">
               </div>
 
               <div class="form-actions">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   class="ub-btn ub-btn--primary ub-btn--lg"
                   (click)="saveAddressAndLoadDelivery()"
                   [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
                   <span *ngIf="loadingDelivery" class="btn-spinner"></span>
-                  <span>{{ loadingDelivery ? 'Saving...' : 'Continue to Delivery' }}</span>
+                  <span>{{ loadingDelivery ? ('checkout.processing' | juliTranslate) : ('checkout.continueToDelivery' | juliTranslate) }}</span>
                   <svg *ngIf="!loadingDelivery" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
@@ -206,17 +206,17 @@
           <section class="ub-checkout__form" *ngIf="currentStepId === 'delivery'" [@fadeIn]>
             <h2 class="ub-checkout__section-title">
               <span class="ub-checkout__section-number">2</span>
-              Delivery Method
+              {{ 'checkout.deliveryMethod' | juliTranslate }}
             </h2>
 
             <div class="ub-payment-methods" *ngIf="deliveryOptions.length; else noDelivery">
-              <div 
+              <div
                 class="ub-payment-method"
                 *ngFor="let option of deliveryOptions"
                 [class.ub-payment-method--selected]="selectedDeliveryCode === option.code"
                 [class.disabled]="!option.available"
                 (click)="option.available && selectDeliveryMode(option.code)">
-                
+
                 <div class="ub-payment-method__radio"></div>
 
                 <div class="ub-payment-method__icon">
@@ -230,12 +230,12 @@
                   </div>
                   <div class="delivery-estimate">
                     <i class="fas fa-clock"></i>
-                    {{ option.estimatedDays }} business days
+                    {{ option.estimatedDays }} {{ 'checkout.businessDays' | juliTranslate }}
                   </div>
                 </div>
 
                 <div class="delivery-price" [class.free]="option.cost === 0">
-                  {{ option.cost === 0 ? 'Free' : formatMoney(option.cost, option.currency) }}
+                  {{ option.cost === 0 ? ('checkout.free' | juliTranslate) : formatMoney(option.cost, option.currency) }}
                 </div>
               </div>
             </div>
@@ -243,10 +243,10 @@
             <ng-template #noDelivery>
               <div class="ub-empty">
                 <div class="ub-empty__icon">📦</div>
-                <h3 class="ub-empty__title">No delivery options</h3>
-                <p class="ub-empty__description">Please check your address and try again.</p>
+                <h3 class="ub-empty__title">{{ 'checkout.noDeliveryTitle' | juliTranslate }}</h3>
+                <p class="ub-empty__description">{{ 'checkout.noDeliveryHint' | juliTranslate }}</p>
                 <button type="button" class="ub-btn ub-btn--secondary" (click)="currentStepId = 'address'">
-                  Go back
+                  {{ 'checkout.goBack' | juliTranslate }}
                 </button>
               </div>
             </ng-template>
@@ -256,15 +256,15 @@
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
-                Back
+                {{ 'checkout.back' | juliTranslate }}
               </button>
-              
-              <button 
-                type="button" 
+
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary"
                 (click)="currentStepId = 'payment'"
                 [disabled]="!selectedDeliveryCode">
-                Continue to Payment
+                {{ 'checkout.continueToPayment' | juliTranslate }}
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
@@ -276,17 +276,17 @@
           <section class="ub-checkout__form" *ngIf="currentStepId === 'payment'" [@fadeIn]>
             <h2 class="ub-checkout__section-title">
               <span class="ub-checkout__section-number">3</span>
-              Payment
+              {{ 'checkout.payment' | juliTranslate }}
             </h2>
 
             <!-- Payment Method Selection -->
             <div class="ub-payment-methods" *ngIf="paymentMethods.length">
-              <div 
+              <div
                 class="ub-payment-method"
                 *ngFor="let method of paymentMethods"
                 [class.ub-payment-method--selected]="selectedPaymentMethodCode === method.code"
                 (click)="form.patchValue({ paymentMethod: method.code })">
-                
+
                 <div class="ub-payment-method__radio"></div>
 
                 <div class="ub-payment-method__icon">
@@ -302,13 +302,13 @@
 
             <!-- Initialize Payment Button -->
             <div class="payment-initialize" *ngIf="!paymentInitialization">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full"
                 (click)="initializePayment()"
                 [disabled]="initializingPayment || !selectedDeliveryCode || !selectedPaymentMethodCode">
                 <span *ngIf="initializingPayment" class="btn-spinner"></span>
-                <span>{{ initializingPayment ? 'Initializing...' : 'Initialize Payment' }}</span>
+                <span>{{ initializingPayment ? ('checkout.initializing' | juliTranslate) : ('checkout.initializePayment' | juliTranslate) }}</span>
               </button>
             </div>
 
@@ -330,28 +330,28 @@
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                <span>Secure card payment powered by Stripe</span>
+                <span>{{ 'checkout.secureCard' | juliTranslate }}</span>
               </div>
-              
+
               <div class="stripe-card-wrapper">
                 <div class="stripe-card-element" #stripeCardElementHost></div>
               </div>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary ub-btn--full"
                 (click)="confirmCardPayment()"
                 [disabled]="confirmingPayment">
                 <span *ngIf="confirmingPayment" class="btn-spinner"></span>
-                <span>{{ confirmingPayment ? 'Processing...' : 'Confirm Card Payment' }}</span>
+                <span>{{ confirmingPayment ? ('checkout.processing' | juliTranslate) : ('checkout.confirmCard' | juliTranslate) }}</span>
               </button>
             </div>
 
             <!-- PIX Payment -->
             <div class="pix-container" *ngIf="showPixAction && pixActionPayload as pixAction">
               <div class="pix-header">
-                <h3>Pix Payment</h3>
-                <p>Scan the QR code or copy the code below</p>
+                <h3>{{ 'checkout.pixTitle' | juliTranslate }}</h3>
+                <p>{{ 'checkout.pixHint' | juliTranslate }}</p>
               </div>
 
               <div class="pix-qr" *ngIf="pixAction['imageUrlPng'] as imageUrlPng">
@@ -359,7 +359,7 @@
               </div>
 
               <div class="pix-code-section" *ngIf="pixAction['pixCode'] as pixCode">
-                <label>Pix Code</label>
+                <label>{{ 'checkout.pixCode' | juliTranslate }}</label>
                 <div class="pix-code-box">
                   <code>{{ pixCode }}</code>
                   <button type="button" class="btn-copy" (click)="copyPixCode(pixCode)">
@@ -369,16 +369,16 @@
               </div>
 
               <div class="pix-expires" *ngIf="pixExpiresAt">
-                <span>Expires: {{ pixExpiresAt | date: 'medium' }}</span>
+                <span>{{ 'checkout.pixExpires' | juliTranslate }}: {{ pixExpiresAt | date: 'medium' }}</span>
               </div>
 
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="ub-btn ub-btn--secondary ub-btn--full"
                 (click)="refreshPaymentStatus()"
                 [disabled]="refreshingPaymentStatus">
                 <span *ngIf="refreshingPaymentStatus" class="btn-spinner"></span>
-                <span>{{ refreshingPaymentStatus ? 'Checking...' : 'I\'ve completed the payment' }}</span>
+                <span>{{ refreshingPaymentStatus ? ('checkout.checking' | juliTranslate) : ('checkout.pixCompleted' | juliTranslate) }}</span>
               </button>
             </div>
 
@@ -387,15 +387,15 @@
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
-                Back
+                {{ 'checkout.back' | juliTranslate }}
               </button>
-              
-              <button 
-                type="button" 
+
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary"
-                (click)="currentStepId = 'review'"
+                (click)="goToReview()"
                 [disabled]="!paymentReadyForReview">
-                Continue to Review
+                {{ 'checkout.continueToReview' | juliTranslate }}
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
@@ -407,21 +407,21 @@
           <section class="ub-checkout__form" *ngIf="currentStepId === 'review'" [@fadeIn]>
             <h2 class="ub-checkout__section-title">
               <span class="ub-checkout__section-number">4</span>
-              Review Order
+              {{ 'checkout.reviewOrder' | juliTranslate }}
             </h2>
 
             <!-- Review Action -->
             <div class="review-action" *ngIf="!reviewSnapshot || reviewStale">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full"
                 (click)="review()"
                 [disabled]="reviewing || !paymentReadyForReview">
                 <span *ngIf="reviewing" class="btn-spinner"></span>
-                <span>{{ reviewing ? 'Reviewing...' : 'Review Order' }}</span>
+                <span>{{ reviewing ? ('checkout.reviewing' | juliTranslate) : ('checkout.reviewAction' | juliTranslate) }}</span>
               </button>
               <p class="review-hint" *ngIf="!paymentReadyForReview">
-                Complete payment before reviewing
+                {{ 'checkout.reviewHint' | juliTranslate }}
               </p>
             </div>
 
@@ -431,23 +431,23 @@
               <div class="validation-grid">
                 <div class="validation-item" [class.valid]="reviewSnapshot.addressValidated">
                   <i class="fas" [class.fa-check-circle]="reviewSnapshot.addressValidated" [class.fa-circle]="!reviewSnapshot.addressValidated"></i>
-                  <span>Address</span>
+                  <span>{{ 'checkout.address' | juliTranslate }}</span>
                 </div>
                 <div class="validation-item" [class.valid]="reviewSnapshot.deliveryValidated">
                   <i class="fas" [class.fa-check-circle]="reviewSnapshot.deliveryValidated" [class.fa-circle]="!reviewSnapshot.deliveryValidated"></i>
-                  <span>Delivery</span>
+                  <span>{{ 'checkout.delivery' | juliTranslate }}</span>
                 </div>
                 <div class="validation-item" [class.valid]="reviewSnapshot.paymentValidated">
                   <i class="fas" [class.fa-check-circle]="reviewSnapshot.paymentValidated" [class.fa-circle]="!reviewSnapshot.paymentValidated"></i>
-                  <span>Payment</span>
+                  <span>{{ 'checkout.payment' | juliTranslate }}</span>
                 </div>
                 <div class="validation-item" [class.valid]="reviewSnapshot.pricingValidated">
                   <i class="fas" [class.fa-check-circle]="reviewSnapshot.pricingValidated" [class.fa-circle]="!reviewSnapshot.pricingValidated"></i>
-                  <span>Pricing</span>
+                  <span>{{ 'checkout.pricing' | juliTranslate }}</span>
                 </div>
                 <div class="validation-item" [class.valid]="reviewSnapshot.stockValidated">
                   <i class="fas" [class.fa-check-circle]="reviewSnapshot.stockValidated" [class.fa-circle]="!reviewSnapshot.stockValidated"></i>
-                  <span>Stock</span>
+                  <span>{{ 'checkout.stock' | juliTranslate }}</span>
                 </div>
               </div>
 
@@ -479,8 +479,8 @@
               <div class="ready-state" *ngIf="reviewSnapshot.readyToPlace">
                 <div class="ready-icon">✓</div>
                 <div class="ready-text">
-                  <h3>Ready to place order</h3>
-                  <p>All validations passed</p>
+                  <h3>{{ 'checkout.readyTitle' | juliTranslate }}</h3>
+                  <p>{{ 'checkout.readyHint' | juliTranslate }}</p>
                 </div>
               </div>
 
@@ -488,8 +488,8 @@
               <div class="not-ready-state" *ngIf="!reviewSnapshot.readyToPlace">
                 <div class="not-ready-icon">!</div>
                 <div class="not-ready-text">
-                  <h3>Review blocked</h3>
-                  <p>Please fix the issues above</p>
+                  <h3>{{ 'checkout.blockedTitle' | juliTranslate }}</h3>
+                  <p>{{ 'checkout.blockedHint' | juliTranslate }}</p>
                 </div>
               </div>
             </div>
@@ -500,7 +500,7 @@
                 <i class="fas fa-check-circle"></i>
                 <span>{{ statusMessage }}</span>
               </div>
-              
+
               <div class="ub-alert ub-alert--error" *ngIf="errorMessage">
                 <i class="fas fa-times-circle"></i>
                 <span>{{ errorMessage }}</span>
@@ -508,28 +508,28 @@
 
               <div class="ub-alert ub-alert--warning" *ngIf="reviewStale">
                 <i class="fas fa-exclamation-triangle"></i>
-                <span>Review is stale. Please review again before placing order.</span>
+                <span>{{ 'checkout.staleReview' | juliTranslate }}</span>
               </div>
             </div>
 
             <!-- Place Order -->
             <div class="place-order-section" *ngIf="reviewSnapshot">
-              <button 
-                type="button" 
+              <button
+                type="button"
                 class="ub-btn ub-btn--primary ub-btn--lg ub-btn--full place-order-btn"
                 (click)="submit()"
                 [disabled]="placeOrderDisabled">
                 <span *ngIf="submitting" class="btn-spinner"></span>
                 <span class="btn-text">
-                  {{ submitting ? 'Placing Order...' : 'Place Order' }}
+                  {{ submitting ? ('checkout.placingOrder' | juliTranslate) : ('checkout.placeOrder' | juliTranslate) }}
                 </span>
                 <span class="btn-total" *ngIf="!submitting && reviewSnapshot?.total">
                   {{ formatMoney(reviewSnapshot.total, reviewSnapshot.currency) }}
                 </span>
               </button>
-              
+
               <p class="place-order-terms">
-                By placing your order, you agree to our Terms of Service and Privacy Policy
+                {{ 'checkout.terms' | juliTranslate }}
               </p>
             </div>
 
@@ -538,7 +538,7 @@
                 <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
-                Back to Payment
+                {{ 'checkout.backToPayment' | juliTranslate }}
               </button>
             </div>
           </section>
@@ -566,9 +566,9 @@
   <div class="checkout-empty">
     <div class="ub-empty">
       <div class="ub-empty__icon">🛒</div>
-      <h1 class="ub-empty__title">Your cart is empty</h1>
-      <p class="ub-empty__description">Add some products to start checkout</p>
-      <a routerLink="/cart" class="ub-btn ub-btn--primary ub-btn--lg">Go to Cart</a>
+      <h1 class="ub-empty__title">{{ 'checkout.emptyCartTitle' | juliTranslate }}</h1>
+      <p class="ub-empty__description">{{ 'checkout.emptyCartHint' | juliTranslate }}</p>
+      <a routerLink="/cart" class="ub-btn ub-btn--primary ub-btn--lg">{{ 'checkout.goToCart' | juliTranslate }}</a>
     </div>
   </div>
 </ng-template>
@@ -576,7 +576,7 @@
 <!-- Copy Toast -->
 <div class="copy-toast" *ngIf="showCopyToast" [@fadeInOut]>
   <i class="fas fa-check"></i>
-  <span>Copied to clipboard</span>
+  <span>{{ 'checkout.copied' | juliTranslate }}</span>
 </div>
 
 <!-- Soft Login Prompt -->

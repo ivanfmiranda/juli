@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { CmsComponent, CmsStructureModel, Page, PageContext } from '@spartacus/core';
 import {
@@ -12,12 +12,16 @@ import {
   HeroBannerData,
   InfoCardData,
   ParagraphData,
+  ProductGridData,
   ProductTeaserData,
   SeoMetadataModel
 } from '../../models/cms.model';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { JuliI18nService } from '../../i18n/i18n.service';
+import { TenantHostService } from '../../services/tenant-host.service';
+import { PreviewTokenService } from '../services/preview-token.service';
 
 type StrapiPageResponse = {
   data?: StrapiPageEntry[];
@@ -31,6 +35,7 @@ type StrapiPageEntry = {
 type StrapiPageAttributes = {
   title?: string;
   slug?: string;
+  locale?: string;
   seo?: {
     metaTitle?: string;
     metaDescription?: string;
@@ -79,7 +84,12 @@ export class StrapiCmsAdapter {
   private readonly strapiApiUrl = environment.strapiApiBaseUrl;
   private readonly componentIndex = new Map<string, CmsComponentData>();
 
-  constructor(protected http: HttpClient) {}
+  constructor(
+    protected http: HttpClient,
+    private readonly i18n: JuliI18nService,
+    private readonly tenantHost: TenantHostService,
+    private readonly previewTokenService: PreviewTokenService,
+  ) {}
 
   load(pageContext: PageContext): Observable<CmsStructureModel> {
     return this.loadCanonical(pageContext).pipe(
@@ -94,10 +104,9 @@ export class StrapiCmsAdapter {
 
   loadCanonical(pageContext: PageContext, preview: boolean = false): Observable<CmsPage> {
     const slug = this.normalizeSlug(pageContext);
-    const url = this.pageUrl(slug, preview);
     this.componentIndex.clear();
 
-    return this.http.get<StrapiPageResponse>(url).pipe(
+    return this.fetchLocalizedPage(slug, preview).pipe(
       map(response => this.mapToCanonicalPage(response, pageContext, slug)),
       catchError(error => {
         console.error('[StrapiCmsAdapter] Failed to load canonical page', { slug, pageContext, preview, error });
@@ -137,6 +146,7 @@ export class StrapiCmsAdapter {
       template: 'LandingPage2Template',
       type: String(pageContext.type ?? 'ContentPage'),
       found: !!entry,
+      locale: this.valueOrFallback(attributes.locale, this.i18n.currentLocale),
       seo: this.mapSeo(attributes.seo),
       regions: this.mapRegions(attributes)
     };
@@ -153,7 +163,8 @@ export class StrapiCmsAdapter {
       const rawComponents = this.asComponentList(attributes[path]);
       const components = rawComponents
         .map((component, index) => this.mapComponent(component, regionName, index))
-        .filter((component): component is CmsComponentData => component !== null);
+        .filter((component): component is CmsComponentData => component !== null)
+        .sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 
       regions[regionName] = {
         uid: `region-${regionName}`,
@@ -190,6 +201,8 @@ export class StrapiCmsAdapter {
         return this.mapParagraph(component, regionName, index);
       case 'product-teaser':
         return this.mapProductTeaser(component, regionName, index);
+      case 'product-grid':
+        return this.mapProductGrid(component, regionName, index);
       case 'info-card':
         return this.mapInfoCard(component, regionName, index);
       case 'contact-form':
@@ -207,12 +220,13 @@ export class StrapiCmsAdapter {
       flexType: 'JuliHeroBannerComponent',
       region: regionName,
       originalType: 'hero-banner',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       title: this.optionalString(component.title),
       subtitle: this.optionalString(component.subtitle),
       ctaLabel: this.optionalString(component.cta_label),
       ctaLink: this.optionalString(component.cta_link),
-      backgroundImageUrl: this.extractImageUrl(component.background_image)
+      backgroundImageUrl: this.extractImageUrl(component.background_image) ?? this.extractImageUrl(component.image_url)
     };
   }
 
@@ -228,10 +242,11 @@ export class StrapiCmsAdapter {
       flexType: typeCode,
       region: regionName,
       originalType: this.extractComponentType(component.__component) ?? 'banner',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       title: this.optionalString(component.title),
       description: this.optionalString(component.description) ?? this.optionalString(component.subtitle),
-      imageUrl: this.extractImageUrl(component.image) ?? this.extractImageUrl(component.background_image),
+      imageUrl: this.extractImageUrl(component.image) ?? this.extractImageUrl(component.background_image) ?? this.extractImageUrl(component.image_url),
       link: this.optionalString(component.link) ?? this.optionalString(component.button_link),
       buttonLabel: this.optionalString(component.button_label) ?? this.optionalString(component.cta_label),
       buttonLink: this.optionalString(component.button_link) ?? this.optionalString(component.link) ?? this.optionalString(component.cta_link)
@@ -246,12 +261,13 @@ export class StrapiCmsAdapter {
       flexType: 'JuliCategoryTeaserComponent',
       region: regionName,
       originalType: 'category-teaser',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       title: this.optionalString(component.title) ?? (categoryCode ? `Category ${categoryCode}` : 'Category'),
       description: this.optionalString(component.description),
-      imageUrl: this.extractImageUrl(component.teaser_image),
+      imageUrl: this.extractImageUrl(component.teaser_image) ?? this.extractImageUrl(component.image_url),
       link: categoryCode ? `/c/${categoryCode}` : undefined,
-      buttonLabel: 'Browse category',
+      buttonLabel: this.i18n.translate('commerce.browseCategory'),
       buttonLink: categoryCode ? `/c/${categoryCode}` : undefined
     };
   }
@@ -263,6 +279,7 @@ export class StrapiCmsAdapter {
       flexType: 'CMSParagraphComponent',
       region: regionName,
       originalType: 'rich-text',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       content: this.optionalString(component.content) ?? ''
     };
@@ -275,9 +292,30 @@ export class StrapiCmsAdapter {
       flexType: 'JuliProductTeaserComponent',
       region: regionName,
       originalType: 'product-teaser',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       productCode: this.optionalString(component.product_code),
       teaserText: this.optionalString(component.teaser_text)
+    };
+  }
+
+  private mapProductGrid(component: StrapiComponentPayload, regionName: CmsRegionName, index: number): ProductGridData {
+    return {
+      uid: this.buildComponentUid(regionName, component, index),
+      typeCode: 'JuliProductGridComponent',
+      flexType: 'JuliProductGridComponent',
+      region: regionName,
+      originalType: 'product-grid',
+      order: this.optionalNumber(component.order),
+      status: 'ready',
+      title: this.optionalString(component.title),
+      subtitle: this.optionalString(component.subtitle),
+      categoryCode: this.optionalString(component.category_code),
+      searchQuery: this.optionalString(component.search_query),
+      productCodes: this.asStringList(component.product_codes),
+      pageSize: this.optionalNumber(component.page_size) ?? 4,
+      ctaLabel: this.optionalString(component.cta_label),
+      ctaLink: this.optionalString(component.cta_link)
     };
   }
 
@@ -288,6 +326,7 @@ export class StrapiCmsAdapter {
       flexType: 'JuliInfoCardComponent',
       region: regionName,
       originalType: 'info-card',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       icon: this.optionalString(component.icon),
       title: this.optionalString(component.title),
@@ -303,10 +342,11 @@ export class StrapiCmsAdapter {
       flexType: 'JuliContactFormComponent',
       region: regionName,
       originalType: 'contact-form',
+      order: this.optionalNumber(component.order),
       status: 'ready',
       title: this.optionalString(component.title),
       description: this.optionalString(component.description),
-      buttonLabel: this.optionalString(component.button_label) ?? this.optionalString(component.buttonLabel) ?? 'Send Message',
+      buttonLabel: this.optionalString(component.button_label) ?? this.optionalString(component.buttonLabel) ?? this.i18n.translate('footer.newsletterButton'),
       successMessage: this.optionalString(component.success_message) ?? this.optionalString(component.successMessage) ?? 'Thank you! Your message has been sent.'
     };
   }
@@ -395,8 +435,58 @@ export class StrapiCmsAdapter {
   }
 
   private pageUrl(slug: string, preview: boolean): string {
+    return this.pageUrlForLocale(slug, this.i18n.currentLocale, preview);
+  }
+
+  private pageUrlForLocale(slug: string, locale: string, preview: boolean): string {
     const previewParams = preview ? '&publicationState=preview' : '';
-    return `${this.strapiApiUrl}${PAGE_ENDPOINT}?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=deep,5${previewParams}`;
+    const tenantFilter = this.tenantFilterQuery();
+    // populate=* only goes one level deep in Strapi v4; media inside dynamic zone
+    // components (e.g. backgroundImage on hero-banner) is not populated.
+    // Use explicit nested populate so every slot's component fields are fully resolved.
+    const populate = [
+      'populate[content_slots][populate]=*',
+      'populate[header_slots][populate]=*',
+      'populate[sidebar_slots][populate]=*',
+      'populate[below_fold_slots][populate]=*',
+      'populate[footer_slots][populate]=*',
+      'populate[seo]=*'
+    ].join('&');
+    const localeQuery = locale ? `&locale=${encodeURIComponent(locale)}` : '';
+    return `${this.strapiApiUrl}${PAGE_ENDPOINT}?filters[slug][$eq]=${encodeURIComponent(slug)}${tenantFilter}&${populate}${localeQuery}${previewParams}`;
+  }
+
+  private tenantFilterQuery(): string {
+    const tenantId = this.tenantHost.currentTenantId();
+    if (!tenantId || tenantId === 'default') {
+      return '';
+    }
+    return `&filters[tenantKey][$eq]=${encodeURIComponent(tenantId)}`;
+  }
+
+  private fetchLocalizedPage(slug: string, preview: boolean): Observable<StrapiPageResponse> {
+    const primaryLocale = this.i18n.currentLocale;
+    const fallbackLocale = this.i18n.fallback;
+    const headers = this.buildPreviewHeaders(preview);
+
+    return this.http.get<StrapiPageResponse>(this.pageUrlForLocale(slug, primaryLocale, preview), { headers }).pipe(
+      switchMap(response => {
+        if (response?.data?.length || fallbackLocale === primaryLocale) {
+          return of(response);
+        }
+        return this.http.get<StrapiPageResponse>(this.pageUrlForLocale(slug, fallbackLocale, preview), { headers });
+      })
+    );
+  }
+
+  private buildPreviewHeaders(preview: boolean): HttpHeaders {
+    if (!preview) {
+      return new HttpHeaders();
+    }
+    const token = this.previewTokenService.getToken();
+    return token
+      ? new HttpHeaders({ Authorization: `Bearer ${token}` })
+      : new HttpHeaders();
   }
 
   private normalizeSlug(pageContext: PageContext): string {
@@ -413,6 +503,11 @@ export class StrapiCmsAdapter {
   }
 
   private extractImageUrl(candidate: unknown): string | undefined {
+    // Accept plain string URLs (e.g. image_url field from the visual editor)
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim();
+      return trimmed.length > 0 ? trimmed : undefined;
+    }
     if (!candidate || typeof candidate !== 'object') {
       return undefined;
     }
@@ -440,6 +535,26 @@ export class StrapiCmsAdapter {
     }
     const trimmed = value.trim();
     return trimmed.length > 0 ? trimmed : undefined;
+  }
+
+  private optionalNumber(value: unknown): number | undefined {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return value;
+    }
+    if (typeof value === 'string' && value.trim()) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  }
+
+  private asStringList(candidate: unknown): string[] {
+    if (!Array.isArray(candidate)) {
+      return [];
+    }
+    return candidate
+      .map(item => this.optionalString(item))
+      .filter((item): item is string => !!item);
   }
 
   private valueOrFallback(value: string | undefined, fallback: string): string {

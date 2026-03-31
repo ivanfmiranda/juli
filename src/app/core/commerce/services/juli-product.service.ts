@@ -102,7 +102,7 @@ export class JuliProductService implements OnDestroy {
   ): void {
     this.setListingLoading(true);
 
-    this.categoryConnector.get(categoryCode, page, pageSize).pipe(
+    this.categoryConnector.get(categoryCode, page, pageSize, sort).pipe(
       takeUntil(this.destroy$),
       // Mapeia JuliCategoryPage para JuliProductListing
       map(categoryPage => this.mapCategoryPageToListing(categoryPage, page, pageSize)),
@@ -347,7 +347,7 @@ export class JuliProductService implements OnDestroy {
    */
   private mapSpartacusProductToDetail(product: any): JuliProductDetail {
     const summary = this.mapSpartacusProductToSummary(product);
-    const images = this.mapSpartacusImages(product.images);
+    const images = this.mapSpartacusImages(product.images, product._galleryRaw);
 
     return {
       ...summary,
@@ -375,26 +375,59 @@ export class JuliProductService implements OnDestroy {
   /**
    * Mapeia imagens do Spartacus
    */
-  private mapSpartacusImages(images: any): JuliMedia[] {
+  private mapSpartacusImages(images: any, rawGallery?: any[]): JuliMedia[] {
+    // Prefer raw gallery if available (Ubris format with all images)
+    if (Array.isArray(rawGallery) && rawGallery.length > 0) {
+      return rawGallery
+        .filter((img: any) => img && (img.url || img.id))
+        .map((img: any, index: number): JuliMedia => {
+          const id = img.id || String(index);
+          const hash = img.contentHash;
+          const versionQuery = hash ? `?v=${encodeURIComponent(hash)}` : '';
+          const url = img.url || `/img/pdp/${encodeURIComponent(id)}${versionQuery}`;
+          return {
+            id,
+            url,
+            type: 'IMAGE',
+            altText: img.altText || '',
+            thumbnailUrl: url,
+            zoomUrl: url,
+            primary: index === 0,
+            order: img.position ?? img.order ?? index,
+          };
+        });
+    }
+
     if (!images) return [];
 
+    // Handle Spartacus PRIMARY format (fallback, single image)
     const primary = images.PRIMARY;
-    if (!primary) return [];
-
-    const imageList: JuliMedia[] = [];
-
-    if (primary.product) {
-      imageList.push({
+    if (primary?.product) {
+      return [{
         id: 'primary',
         url: primary.product.url,
         type: 'IMAGE',
         altText: primary.product.altText,
         primary: true,
         order: 0,
-      });
+      }];
     }
 
-    return imageList;
+    // Handle raw images array (Ubris format)
+    if (Array.isArray(images)) {
+      return images
+        .filter((img: any) => img && (img.url || img.id))
+        .map((img: any, index: number): JuliMedia => ({
+          id: img.id || String(index),
+          url: img.url || `/img/pdp/${encodeURIComponent(img.id)}`,
+          type: 'IMAGE',
+          altText: img.altText || '',
+          primary: index === 0,
+          order: img.position ?? index,
+        }));
+    }
+
+    return [];
   }
 
   /**

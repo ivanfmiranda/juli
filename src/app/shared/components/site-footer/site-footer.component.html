@@ -4,13 +4,17 @@
     <div class="container">
       <div class="newsletter-content">
         <div class="newsletter-text">
-          <h3>📧 Fique por dentro das novidades</h3>
-          <p>Cadastre-se e receba ofertas exclusivas e novidades em primeira mão</p>
+          <h3>📧 {{ 'footer.newsletterTitle' | juliTranslate }}</h3>
+          <p>{{ 'footer.newsletterText' | juliTranslate }}</p>
         </div>
-        <form class="newsletter-form" onsubmit="return false;">
-          <input type="email" placeholder="Seu melhor e-mail" aria-label="E-mail para newsletter">
-          <button type="submit">Cadastrar</button>
+        <form class="newsletter-form" (ngSubmit)="subscribeNewsletter()">
+          <input type="email" [(ngModel)]="newsletterEmail" name="newsletterEmail"
+                 [placeholder]="'footer.newsletterPlaceholder' | juliTranslate"
+                 aria-label="newsletter" required>
+          <button type="submit" [disabled]="newsletterSubmitting">{{ 'footer.newsletterButton' | juliTranslate }}</button>
         </form>
+        <p *ngIf="newsletterSuccess" class="newsletter-feedback newsletter-feedback--success">{{ 'footer.newsletterSuccess' | juliTranslate }}</p>
+        <p *ngIf="newsletterError" class="newsletter-feedback newsletter-feedback--error">{{ 'footer.newsletterError' | juliTranslate }}</p>
       </div>
     </div>
   </section>
@@ -24,7 +28,7 @@
           <span class="logo-icon">🛍️</span>
           <span class="logo-text">JULI</span>
         </a>
-        <p class="brand-tagline">Sua loja online de confiança. Os melhores produtos com entrega rápida.</p>
+        <p class="brand-tagline">{{ 'footer.tagline' | juliTranslate }}</p>
         
         <!-- Social -->
         <div class="social-links">
@@ -37,16 +41,16 @@
       <!-- Links -->
       <div class="footer-links">
         <div class="link-column">
-          <h4>Loja</h4>
+          <h4>{{ 'footer.shop' | juliTranslate }}</h4>
           <ul>
             <li *ngFor="let link of footerLinks.shop">
-              <a [routerLink]="link.url">{{ link.name }}</a>
+              <a [routerLink]="link.url">{{ link.name | juliTranslate }}</a>
             </li>
           </ul>
         </div>
 
         <div class="link-column">
-          <h4>Ajuda</h4>
+          <h4>{{ 'footer.help' | juliTranslate }}</h4>
           <ul>
             <li *ngFor="let link of footerLinks.support">
               <a [routerLink]="link.url">{{ link.name }}</a>
@@ -55,7 +59,7 @@
         </div>
 
         <div class="link-column">
-          <h4>Empresa</h4>
+          <h4>{{ 'footer.company' | juliTranslate }}</h4>
           <ul>
             <li *ngFor="let link of footerLinks.company">
               <a [routerLink]="link.url">{{ link.name }}</a>
@@ -64,11 +68,11 @@
         </div>
 
         <div class="link-column">
-          <h4>Contato</h4>
+          <h4>{{ 'footer.contact' | juliTranslate }}</h4>
           <ul class="contact-list">
             <li>📞 0800 123 4567</li>
             <li>✉️ contato@juli.com.br</li>
-            <li>🕐 Atendimento 24h</li>
+            <li>🕐 {{ 'footer.support24h' | juliTranslate }}</li>
           </ul>
         </div>
       </div>
@@ -79,7 +83,7 @@
   <div class="bottom-bar">
     <div class="container">
       <p class="copyright">
-        © {{ currentYear }} JULI. Todos os direitos reservados.
+        © {{ currentYear }} JULI. {{ 'footer.rights' | juliTranslate }}
       </p>
       
       <div class="payment-methods">
@@ -87,11 +91,11 @@
       </div>
 
       <div class="legal-links">
-        <a routerLink="/page/privacidade">Privacidade</a>
+        <a routerLink="/page/privacidade">{{ 'footer.privacy' | juliTranslate }}</a>
         <span>•</span>
-        <a routerLink="/page/termos">Termos</a>
+        <a routerLink="/page/termos">{{ 'footer.terms' | juliTranslate }}</a>
         <span>•</span>
-        <a routerLink="/page/cookies">Cookies</a>
+        <a routerLink="/page/cookies">{{ 'footer.cookies' | juliTranslate }}</a>
       </div>
     </div>
   </div>

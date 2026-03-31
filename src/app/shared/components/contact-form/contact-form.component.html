@@ -1,0 +1,30 @@
+<ng-container *ngIf="data$ | async as data">
+  <div class="contact-form-wrapper">
+    <h2 *ngIf="data.title" class="contact-form__title">{{ data.title }}</h2>
+    <p *ngIf="data.description" class="contact-form__description">{{ data.description }}</p>
+
+    <div *ngIf="submitted; else formBlock" class="contact-form__success">
+      {{ data.successMessage || ('footer.newsletterText' | juliTranslate) }}
+    </div>
+
+    <ng-template #formBlock>
+      <form class="contact-form" (submit)="onSubmit($event)" novalidate>
+        <div class="contact-form__field">
+          <label for="cf-name">Name</label>
+          <input id="cf-name" type="text" name="name" required autocomplete="name" />
+        </div>
+        <div class="contact-form__field">
+          <label for="cf-email">Email</label>
+          <input id="cf-email" type="email" name="email" required autocomplete="email" />
+        </div>
+        <div class="contact-form__field">
+          <label for="cf-message">Message</label>
+          <textarea id="cf-message" name="message" rows="5" required></textarea>
+        </div>
+        <button type="submit" class="contact-form__submit">
+          {{ data.buttonLabel || ('footer.newsletterButton' | juliTranslate) }}
+        </button>
+      </form>
+    </ng-template>
+  </div>
+</ng-container>

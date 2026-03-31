@@ -3,6 +3,7 @@ import { ActivatedRoute } from '@angular/router';
 import { Observable, combineLatest, of, timer } from 'rxjs';
 import { catchError, filter, map, shareReplay, switchMap, takeWhile, tap } from 'rxjs/operators';
 import { JuliCartFacade, JuliCheckoutFacade, JuliCheckoutResult } from '../../core/commerce';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 type CheckoutConfirmationPhase = 'processing' | 'confirmed' | 'failed' | 'notFound' | 'unknown';
 
@@ -53,7 +54,8 @@ export class CheckoutConfirmationPageComponent {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly checkoutFacade: JuliCheckoutFacade,
-    private readonly cartFacade: JuliCartFacade
+    private readonly cartFacade: JuliCartFacade,
+    private readonly i18n: JuliI18nService
   ) {}
 
   private toViewModel(checkoutId: string, result: JuliCheckoutResult): CheckoutConfirmationViewModel {
@@ -81,8 +83,8 @@ export class CheckoutConfirmationPageComponent {
       status: notFound ? 'NOT_FOUND' : 'UNKNOWN',
       approvalRequired: false,
       detail: notFound
-        ? 'Checkout confirmation was not found for this checkout id.'
-        : (error?.error?.message || error?.message || 'Unable to load checkout confirmation right now.'),
+        ? this.i18n.translate('confirmation.detailNotFound')
+        : (error?.error?.message || error?.message || this.i18n.translate('confirmation.detailUnknown')),
       terminal: true
     };
   }
@@ -99,14 +101,14 @@ export class CheckoutConfirmationPageComponent {
 
   private defaultDetail(phase: CheckoutConfirmationPhase, status: string, approvalRequired?: boolean): string {
     if (phase === 'confirmed') {
-      return 'Order confirmed successfully.';
+      return this.i18n.translate('confirmation.detailConfirmed');
     }
     if (phase === 'failed') {
-      return 'Checkout failed during processing.';
+      return this.i18n.translate('confirmation.detailFailed');
     }
     if (approvalRequired || status === 'WAITING_APPROVAL') {
-      return 'Checkout submitted and waiting for approval before order completion.';
+      return this.i18n.translate('confirmation.detailApproval');
     }
-    return 'Checkout submitted and still being processed.';
+    return this.i18n.translate('confirmation.detailProcessing');
   }
 }

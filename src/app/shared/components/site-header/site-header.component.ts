@@ -10,6 +10,7 @@ import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
 import { JuliCartFacade } from '../../../core/commerce';
+import { JuliI18nService, JuliLocaleConfig } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-site-header',
@@ -23,13 +24,15 @@ export class SiteHeaderComponent {
   );
   
   readonly cartTotal$: Observable<number> = this.cartFacade.itemCount$;
+  readonly activeLocale$: Observable<JuliLocaleConfig> = this.i18n.activeLocale$;
+  readonly locales = this.i18n.locales;
 
   readonly categories = [
-    { code: 'eletronicos', name: 'Eletrônicos', icon: '📱' },
-    { code: 'moda', name: 'Moda', icon: '👕' },
-    { code: 'casa', name: 'Casa & Decoração', icon: '🏠' },
-    { code: 'esportes', name: 'Esportes', icon: '⚽' },
-    { code: 'beleza', name: 'Beleza', icon: '💄' },
+    { code: 'eletronicos', translationKey: 'categories.electronics', icon: '📱' },
+    { code: 'moda', translationKey: 'categories.fashion', icon: '👕' },
+    { code: 'casa', translationKey: 'categories.home', icon: '🏠' },
+    { code: 'esportes', translationKey: 'categories.sports', icon: '⚽' },
+    { code: 'beleza', translationKey: 'categories.beauty', icon: '💄' },
   ];
 
   searchQuery = '';
@@ -38,7 +41,8 @@ export class SiteHeaderComponent {
   constructor(
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly i18n: JuliI18nService
   ) {}
 
   onSearch(): void {
@@ -49,7 +53,16 @@ export class SiteHeaderComponent {
     }
   }
 
+  logout(): void {
+    this.authService.logout();
+    void this.router.navigate(['/']);
+  }
+
   toggleMobileMenu(): void {
     this.mobileMenuOpen = !this.mobileMenuOpen;
+  }
+
+  changeLocale(locale: string): void {
+    this.i18n.setLocale(locale);
   }
 }

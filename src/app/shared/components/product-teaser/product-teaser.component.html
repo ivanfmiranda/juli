@@ -9,8 +9,8 @@
       <p class="card-text text-muted">{{ cmsData.teaserText || product.summary }}</p>
       <p class="price">{{ product.price?.formattedValue }}</p>
       <div class="actions">
-        <a [routerLink]="product.url || ['/product', product.code]" class="btn btn-outline-primary">View product</a>
-        <button type="button" class="btn btn-primary" (click)="addToCart(product.code)">Add to cart</button>
+        <a [routerLink]="product.url || ['/product', product.code]" class="btn btn-outline-primary">{{ 'commerce.viewProduct' | juliTranslate }}</a>
+        <button type="button" class="btn btn-primary" (click)="addToCart(product.code)">{{ 'commerce.addToCart' | juliTranslate }}</button>
       </div>
     </div>
     <ng-template #loading>

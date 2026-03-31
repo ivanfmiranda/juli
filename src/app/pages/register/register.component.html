@@ -1,0 +1,38 @@
+<section class="register-page">
+  <div class="register-card">
+    <h1>Juli</h1>
+    <p>{{ 'register.subtitle' | juliTranslate }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <label>
+        {{ 'register.email' | juliTranslate }}
+        <input type="email" formControlName="username" autocomplete="email"
+               [placeholder]="'register.emailPlaceholder' | juliTranslate">
+      </label>
+
+      <label>
+        {{ 'register.password' | juliTranslate }}
+        <input type="password" formControlName="password" autocomplete="new-password"
+               [placeholder]="'register.passwordPlaceholder' | juliTranslate">
+      </label>
+
+      <label>
+        {{ 'register.confirmPassword' | juliTranslate }}
+        <input type="password" formControlName="confirmPassword" autocomplete="new-password"
+               [placeholder]="'register.confirmPasswordPlaceholder' | juliTranslate">
+      </label>
+
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="success" *ngIf="successMessage">{{ successMessage }}</p>
+
+      <button type="submit" [disabled]="submitting">
+        {{ submitting ? ('register.creating' | juliTranslate) : ('register.createAccount' | juliTranslate) }}
+      </button>
+    </form>
+
+    <p class="login-link">
+      {{ 'register.hasAccount' | juliTranslate }}
+      <a routerLink="/login">{{ 'register.signIn' | juliTranslate }}</a>
+    </p>
+  </div>
+</section>

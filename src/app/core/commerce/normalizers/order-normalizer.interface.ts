@@ -69,7 +69,7 @@ export abstract class OrderNormalizerUtils {
   /**
    * Extrai valor de moeda fallback
    */
-  protected static readonly DEFAULT_CURRENCY = 'USD';
+  protected static readonly DEFAULT_CURRENCY = 'BRL';
 
   /**
    * Tenta extrair um valor string de múltiplas chaves possíveis

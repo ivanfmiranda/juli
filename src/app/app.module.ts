@@ -1,5 +1,5 @@
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { NgModule } from '@angular/core';
+import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -10,10 +10,13 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
 import { ObservabilityInterceptor } from './core/services/observability.interceptor';
+import { CatalogVersionInterceptor } from './core/commerce/catalog-version.interceptor';
 import { CommerceModule } from './core/commerce';
 import { MinimalUserModule } from './core/user'; // Solução minimalista
 import { CmsPageComponent } from './pages/cms-page/cms-page.component';
+import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
 import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
 import { CategoryPageComponent } from './pages/category-page/category-page.component';
 import { SearchPageComponent } from './pages/search-page/search-page.component';
@@ -30,21 +33,35 @@ import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { CmsComponentHostComponent } from './shared/cms-runtime/cms-component-host.component';
 import { StrapiCmsModule } from './spartacus/strapi-cms.module';
+import { PageRendererModule } from './pages/page-renderer/page-renderer.module';
 
 import { JuliFeatureService } from './core/services/juli-feature.service';
 import { JuliBrandingService } from './core/services/juli-branding.service';
-import { tap } from 'rxjs/operators';
+import { tap, catchError } from 'rxjs/operators';
+import { of } from 'rxjs';
+import { JuliI18nService } from './core/i18n/i18n.service';
+import { LocaleInterceptor } from './core/i18n/locale.interceptor';
+import { JuliI18nModule } from './core/i18n/i18n.module';
 
 function initializeSaaSContext(featureService: JuliFeatureService, brandingService: JuliBrandingService): () => any {
   return () => featureService.init().pipe(
-    tap(ctx => brandingService.applyBranding(ctx.branding))
+    tap(ctx => ctx?.branding && brandingService.applyBranding(ctx.branding)),
+    catchError(err => {
+      console.warn('[Juli] Tenant init failed, continuing:', err?.message ?? err);
+      return of(null);
+    })
   ).toPromise();
+}
+
+function initializeLocale(i18n: JuliI18nService): () => void {
+  return () => i18n.initialize();
 }
 
 @NgModule({
   declarations: [
     AppComponent,
     LoginComponent,
+    RegisterComponent,
     CmsPageComponent,
     ProductDetailComponent,
     CategoryPageComponent,
@@ -55,6 +72,7 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
     OrdersPageComponent,
     OrderDetailPageComponent,
     CmsComponentHostComponent,
+    PreviewEntryComponent,
     CheckoutStepperComponent,
     CheckoutSummaryComponent,
     SiteHeaderComponent,
@@ -68,6 +86,7 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
     HttpClientModule,
     FormsModule,
     ReactiveFormsModule,
+    JuliI18nModule,
     StoreModule.forRoot({}),
     EffectsModule.forRoot([]),
     AppRoutingModule,
@@ -75,7 +94,7 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
       context: {
         baseSite: ['electronics'],
         currency: ['USD'],
-        language: ['en']
+        language: ['pt', 'en']
       }
     }),
     SiteContextModule.forRoot(),
@@ -83,7 +102,8 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
     // UserTransitional_4_2_Module.forRoot(), // REMOVIDO - causa NullInjectorError
     MinimalUserModule.forRootMinimal(), // NOVO - configuração minimalista
     CommerceModule.forRoot(),
-    StrapiCmsModule
+    StrapiCmsModule,
+    PageRendererModule
   ],
   providers: [
     {
@@ -93,13 +113,29 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
     },
     {
       provide: HTTP_INTERCEPTORS,
+      useClass: LocaleInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
       useClass: ObservabilityInterceptor,
+      multi: true
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: CatalogVersionInterceptor,
       multi: true
     },
     {
       provide: APP_INITIALIZER,
       useFactory: initializeSaaSContext,
       deps: [JuliFeatureService, JuliBrandingService],
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeLocale,
+      deps: [JuliI18nService],
       multi: true
     }
   ],

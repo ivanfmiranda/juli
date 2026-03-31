@@ -31,7 +31,7 @@ export class UserConsentPlaceholderAdapter implements UserConsentAdapter {
    * Não suportado - JULI não usa consent management do Spartacus
    */
   giveConsent(_userId: string, _consentTemplateId: string, _consentTemplateVersion: number): Observable<ConsentTemplate> {
-    return throwError(() => new Error('UserConsentAdapter.giveConsent() not supported in JULI'));
+    return throwError(new Error('UserConsentAdapter.giveConsent() not supported in JULI'));
   }
   
   /**

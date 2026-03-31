@@ -3,7 +3,7 @@
   "info": {
     "displayName": "Contact Form",
     "icon": "mail",
-    "description": "A contact form component for customers to send messages."
+    "description": "A contact form component for customers to send messages"
   },
   "options": {},
   "attributes": {
@@ -20,6 +20,10 @@
     "successMessage": {
       "type": "string",
       "default": "Thank you! Your message has been sent."
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
     }
   }
 }

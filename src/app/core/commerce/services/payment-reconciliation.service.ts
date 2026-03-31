@@ -66,7 +66,7 @@ export class UbrisPaymentReconciliationService {
         if (state === 'ORDER_PLACED') {
           return this.connector.status(checkoutId);
         }
-        return throwError(() => new Error(`Cannot recover order in state: ${state}`));
+        return throwError(new Error(`Cannot recover order in state: ${state}`));
       })
     );
   }

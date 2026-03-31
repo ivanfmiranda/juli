@@ -1,0 +1,25 @@
+{
+  "collectionName": "components_cms_grids",
+  "info": {
+    "displayName": "Grid",
+    "icon": "apps",
+    "description": "A multi-column grid of cards or items"
+  },
+  "options": {},
+  "attributes": {
+    "columns": {
+      "type": "enumeration",
+      "enum": ["2", "3", "4"],
+      "default": "3"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    },
+    "items": {
+      "type": "component",
+      "repeatable": true,
+      "component": "cms.grid-item"
+    }
+  }
+}

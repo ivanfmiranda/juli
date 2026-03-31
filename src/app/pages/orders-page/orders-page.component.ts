@@ -24,6 +24,7 @@ import {
   JuliOrderHistoryList, 
   JuliOrderLoadingState 
 } from '../../core/commerce';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 /**
  * ViewModel para a página
@@ -44,13 +45,6 @@ interface OrdersPageViewModel {
 export class OrdersPageComponent implements OnInit, OnDestroy {
   private readonly destroy$ = new Subject<void>();
   readonly pageSize = 10;
-  
-  readonly sortOptions = [
-    { code: 'byDateDesc', label: 'Mais recentes primeiro' },
-    { code: 'byDateAsc', label: 'Mais antigos primeiro' },
-    { code: 'byTotalDesc', label: 'Maior valor' },
-    { code: 'byTotalAsc', label: 'Menor valor' }
-  ];
 
   readonly vm$: Observable<OrdersPageViewModel> = this.juliOrderService.list$.pipe(
     map(orders => ({
@@ -69,8 +63,18 @@ export class OrdersPageComponent implements OnInit, OnDestroy {
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
-    private readonly juliOrderService: JuliOrderService
+    private readonly juliOrderService: JuliOrderService,
+    public readonly i18n: JuliI18nService
   ) {}
+
+  get sortOptions(): Array<{ code: string; label: string }> {
+    return [
+      { code: 'byDateDesc', label: this.i18n.translate('orders.sortRecent') },
+      { code: 'byDateAsc', label: this.i18n.translate('orders.sortOldest') },
+      { code: 'byTotalDesc', label: this.i18n.translate('orders.sortHighest') },
+      { code: 'byTotalAsc', label: this.i18n.translate('orders.sortLowest') }
+    ];
+  }
 
   ngOnInit(): void {
     // Observa query params e carrega pedidos
@@ -118,17 +122,17 @@ export class OrdersPageComponent implements OnInit, OnDestroy {
    */
   getStatusLabel(status: string): string {
     const labels: Record<string, string> = {
-      'PENDING': 'Aguardando',
-      'PROCESSING': 'Em processamento',
-      'READY': 'Pronto para envio',
-      'SHIPPED': 'Enviado',
-      'DELIVERED': 'Entregue',
-      'CANCELLED': 'Cancelado',
-      'RETURNED': 'Devolvido',
-      'REFUNDED': 'Reembolsado',
-      'ON_HOLD': 'Em espera',
-      'COMPLETED': 'Concluído',
-      'UNKNOWN': 'Status desconhecido'
+      'PENDING': this.i18n.translate('orders.statusPending'),
+      'PROCESSING': this.i18n.translate('orders.statusProcessing'),
+      'READY': this.i18n.translate('orders.statusReady'),
+      'SHIPPED': this.i18n.translate('orders.statusShipped'),
+      'DELIVERED': this.i18n.translate('orders.statusDelivered'),
+      'CANCELLED': this.i18n.translate('orders.statusCancelled'),
+      'RETURNED': this.i18n.translate('orders.statusReturned'),
+      'REFUNDED': this.i18n.translate('orders.statusRefunded'),
+      'ON_HOLD': this.i18n.translate('orders.statusOnHold'),
+      'COMPLETED': this.i18n.translate('orders.statusCompleted'),
+      'UNKNOWN': this.i18n.translate('orders.statusUnknown')
     };
     return labels[status] || status;
   }

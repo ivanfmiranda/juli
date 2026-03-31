@@ -1,6 +1,7 @@
 import {
   AfterViewChecked,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   Component,
   ElementRef,
   OnDestroy,
@@ -11,8 +12,9 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, of, Subject, Subscription, timer } from 'rxjs';
 import { finalize, switchMap, takeUntil } from 'rxjs/operators';
-import { loadStripe, Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
+import type { Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 import { SoftLoginPromptComponent } from '../../shared/components/soft-login-prompt/soft-login-prompt.component';
 import {
   JuliCartFacade,
@@ -101,10 +103,10 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   showSoftLoginPrompt = false;
 
   readonly checkoutSteps: CheckoutStep[] = [
-    { id: 'address', label: 'Address', completed: false, active: true },
-    { id: 'delivery', label: 'Delivery', completed: false, active: false },
-    { id: 'payment', label: 'Payment', completed: false, active: false },
-    { id: 'review', label: 'Review', completed: false, active: false }
+    { id: 'address', label: '', completed: false, active: true },
+    { id: 'delivery', label: '', completed: false, active: false },
+    { id: 'payment', label: '', completed: false, active: false },
+    { id: 'review', label: '', completed: false, active: false }
   ];
 
   constructor(
@@ -112,7 +114,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
     private readonly checkoutFacade: JuliCheckoutFacade,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly i18n: JuliI18nService
   ) {
     this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.resetPaymentState();
@@ -144,7 +148,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
     this.loadingDelivery = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Saving address and loading checkout options...';
+    this.statusMessage = this.i18n.translate('checkout.savingAddress');
 
     const request: JuliCheckoutAddressUpsertRequest = {
       checkoutId: this.checkoutId,
@@ -168,6 +172,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     this.checkoutFacade.saveAddress(request).pipe(
       finalize(() => {
         this.loadingDelivery = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: savedAddress => {
@@ -181,10 +186,12 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.loadCheckoutOptions(savedAddress.checkoutId);
         this.currentStepId = 'delivery';
         this.updateSteps();
+        this.cdr.markForCheck();
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Saving checkout address failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.savingAddressFailed');
         this.statusMessage = undefined;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -197,7 +204,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
     this.initializingPayment = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Applying delivery mode and initializing payment...';
+    this.statusMessage = this.i18n.translate('checkout.applyingPayment');
 
     this.checkoutFacade.setDeliveryMode(this.checkoutId, this.selectedDeliveryCode).pipe(
       switchMap(() => this.checkoutFacade.initializePayment(this.checkoutId!, this.selectedPaymentMethodCode!)),
@@ -207,6 +214,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       }),
       finalize(() => {
         this.initializingPayment = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: paymentStatus => {
@@ -217,21 +225,25 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.updateSteps();
         if (this.showStripeCardForm) {
           this.pendingStripeMount = true;
-          this.statusMessage = 'Secure card session initialized. Enter card details and confirm payment before reviewing the checkout.';
+          this.statusMessage = this.i18n.translate('checkout.stripeHint');
+          this.cdr.markForCheck();
           return;
         }
         if (this.showPixAction) {
           this.startPaymentStatusPolling();
-          this.statusMessage = 'Pix payment initialized. Complete the QR/copy-and-paste action and wait for payment confirmation before reviewing.';
+          this.statusMessage = this.i18n.translate('checkout.pixPaymentHint');
+          this.cdr.markForCheck();
           return;
         }
         this.statusMessage = this.paymentReadyForReview
-          ? 'Payment is ready. You can refresh the checkout review now.'
-          : (paymentStatus.detail || 'Payment initialized. Refresh the payment status before reviewing.');
+          ? this.i18n.translate('checkout.paymentReady')
+          : (paymentStatus.detail || this.i18n.translate('checkout.paymentInitialized'));
+        this.cdr.markForCheck();
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Initializing payment failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.paymentInitFailed');
         this.statusMessage = undefined;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -244,14 +256,14 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     const publishableKey = this.asString(this.paymentInitialization.clientPayload['publishableKey']);
     const clientSecret = this.asString(this.paymentInitialization.clientPayload['clientSecret']);
     if (!publishableKey || !clientSecret) {
-      this.errorMessage = 'Stripe card client payload is incomplete.';
+      this.errorMessage = this.i18n.translate('checkout.stripePayloadIncomplete');
       return;
     }
 
     try {
       this.confirmingPayment = true;
       this.errorMessage = undefined;
-      this.statusMessage = 'Confirming card payment with Stripe...';
+      this.statusMessage = this.i18n.translate('checkout.confirmingCard');
       const stripe = await this.ensureStripe(publishableKey);
       const result = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
@@ -272,14 +284,14 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       });
 
       if (result.error) {
-        this.errorMessage = result.error.message || 'Card payment confirmation failed.';
+        this.errorMessage = result.error.message || this.i18n.translate('checkout.cardConfirmFailed');
         this.statusMessage = undefined;
         return;
       }
 
-      await this.refreshPaymentStatusOnce('Card payment confirmed. Refreshing payment status...');
+      await this.refreshPaymentStatusOnce(this.i18n.translate('checkout.cardConfirmed'));
     } catch (error: any) {
-      this.errorMessage = error?.message || 'Card payment confirmation failed.';
+      this.errorMessage = error?.message || this.i18n.translate('checkout.cardConfirmFailed');
       this.statusMessage = undefined;
     } finally {
       this.confirmingPayment = false;
@@ -287,7 +299,16 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   }
 
   async refreshPaymentStatus(): Promise<void> {
-    await this.refreshPaymentStatusOnce('Refreshing payment status...');
+    await this.refreshPaymentStatusOnce(this.i18n.translate('checkout.refreshingPayment'));
+  }
+
+  goToReview(): void {
+    this.currentStepId = 'review';
+    this.updateSteps();
+    this.cdr.markForCheck();
+    if (!this.reviewSnapshot || this.reviewStale) {
+      this.review();
+    }
   }
 
   review(): void {
@@ -297,7 +318,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
     this.reviewing = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Refreshing payment state and checkout review...';
+    this.statusMessage = this.i18n.translate('checkout.reviewRefreshing');
 
     this.checkoutFacade.paymentStatus(this.checkoutId).pipe(
       switchMap(paymentStatus => {
@@ -306,6 +327,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       }),
       finalize(() => {
         this.reviewing = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: review => {
@@ -313,13 +335,15 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.reviewStale = false;
         this.selectedDeliveryCode = review.deliveryMode?.code || this.selectedDeliveryCode;
         this.errorMessage = review.errors[0];
-        this.statusMessage = review.messages[0] || (review.readyToPlace ? 'Checkout review is ready.' : 'Checkout review requires fixes.');
+        this.statusMessage = review.messages[0] || (review.readyToPlace ? this.i18n.translate('checkout.reviewReady') : this.i18n.translate('checkout.reviewFixes'));
         this.currentStepId = 'review';
         this.updateSteps();
+        this.cdr.markForCheck();
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Refreshing checkout review failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.reviewFailed');
         this.statusMessage = undefined;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -332,23 +356,27 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
     this.submitting = true;
     this.errorMessage = undefined;
-    this.statusMessage = 'Submitting checkout...';
+    this.statusMessage = this.i18n.translate('checkout.submitting');
 
     this.checkoutFacade.submitById(this.checkoutId).pipe(
       finalize(() => {
         this.submitting = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: result => {
         if (result.checkoutId) {
+          this.cartFacade.clear();
           void this.router.navigate(['/checkout/confirmation', result.checkoutId]);
           return;
         }
-        this.errorMessage = result.lastError || 'Checkout failed';
+        this.errorMessage = result.lastError || this.i18n.translate('checkout.submitFailed');
+        this.cdr.markForCheck();
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Checkout failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.submitFailed');
         this.statusMessage = undefined;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -357,7 +385,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     this.selectedDeliveryCode = code;
     this.resetPaymentState();
     if (this.reviewSnapshot && this.reviewSnapshot.deliveryMode?.code !== code) {
-      this.invalidateReview('Delivery mode changed. Re-apply payment before place-order.');
+      this.invalidateReview(this.i18n.translate('checkout.deliveryChanged'));
     }
   }
 
@@ -379,13 +407,13 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       
       // Update descriptions based on state
       if (step.id === 'address' && this.savedAddress) {
-        step.description = 'Completed';
+        step.description = this.i18n.translate('checkout.stepCompleted');
       } else if (step.id === 'delivery' && this.selectedDeliveryCode) {
-        step.description = this.selectedDelivery?.name || 'Selected';
+        step.description = this.selectedDelivery?.name || this.i18n.translate('checkout.stepSelected');
       } else if (step.id === 'payment' && this.paymentStatus) {
-        step.description = this.paymentStatus.status || 'In progress';
+        step.description = this.paymentStatus.status || this.i18n.translate('checkout.stepInProgress');
       } else if (step.id === 'review' && this.reviewSnapshot?.readyToPlace) {
-        step.description = 'Ready';
+        step.description = this.i18n.translate('checkout.stepReady');
       } else {
         step.description = undefined;
       }
@@ -475,11 +503,12 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     return this.asString(this.pixActionPayload?.['expiresAt']);
   }
 
-  formatMoney(value?: number, currency = 'USD'): string {
+  formatMoney(value?: number, currency = this.i18n.currentCurrency): string {
     if (value === null || value === undefined || Number.isNaN(value)) {
       return '-';
     }
-    return new Intl.NumberFormat('en-US', {
+    const locale = this.i18n.currentLocale;
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency
     }).format(value);
@@ -501,6 +530,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       })),
       finalize(() => {
         this.loadingPaymentMethods = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: result => {
@@ -517,19 +547,23 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         }
         if (this.deliveryOptions.length === 0) {
           this.statusMessage = undefined;
-          this.errorMessage = 'No delivery modes are currently available for this checkout.';
+          this.errorMessage = this.i18n.translate('checkout.noDeliveryModes');
+          this.cdr.markForCheck();
           return;
         }
         if (this.paymentMethods.length === 0) {
           this.statusMessage = undefined;
-          this.errorMessage = 'No payment methods are currently available for this checkout.';
+          this.errorMessage = this.i18n.translate('checkout.noPaymentMethods');
+          this.cdr.markForCheck();
           return;
         }
-        this.statusMessage = 'Delivery and payment options loaded. Apply payment after choosing delivery and payment method.';
+        this.statusMessage = this.i18n.translate('checkout.optionsLoaded');
+        this.cdr.markForCheck();
       },
       error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Loading checkout options failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.loadingOptionsFailed');
         this.statusMessage = undefined;
+        this.cdr.markForCheck();
       }
     });
   }
@@ -545,19 +579,20 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       this.updateSteps();
       if (this.paymentReadyForReview) {
         this.stopPaymentStatusPolling();
-        this.statusMessage = 'Payment is ready. Refresh the checkout review now.';
+        this.statusMessage = this.i18n.translate('checkout.paymentConfirmed');
       } else if (this.showPixAction) {
         this.startPaymentStatusPolling();
-        this.statusMessage = this.paymentStatus?.detail || 'Pix payment is still pending customer confirmation.';
+        this.statusMessage = this.paymentStatus?.detail || this.i18n.translate('checkout.pixPending');
       } else {
-        this.statusMessage = this.paymentStatus?.detail || 'Payment status refreshed.';
+        this.statusMessage = this.paymentStatus?.detail || this.i18n.translate('checkout.paymentRefreshed');
       }
       this.invalidateReview(undefined);
     } catch (error: any) {
-      this.errorMessage = error?.error?.message || error?.message || 'Refreshing payment status failed';
+      this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.refreshPaymentFailed');
       this.statusMessage = undefined;
     } finally {
       this.refreshingPaymentStatus = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -575,13 +610,15 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         if (this.isPaymentTerminal(status.status)) {
           this.stopPaymentStatusPolling();
           this.statusMessage = this.paymentReadyForReview
-            ? 'Payment confirmed. Refresh the checkout review now.'
-            : (status.detail || 'Payment reached a terminal state.');
+            ? this.i18n.translate('checkout.paymentConfirmed')
+            : (status.detail || this.i18n.translate('checkout.paymentTerminal'));
         }
+        this.cdr.markForCheck();
       },
       error: error => {
         this.stopPaymentStatusPolling();
-        this.errorMessage = error?.error?.message || error?.message || 'Polling payment status failed';
+        this.errorMessage = error?.error?.message || error?.message || this.i18n.translate('checkout.pollPaymentFailed');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -616,6 +653,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
   private async ensureStripe(publishableKey: string): Promise<Stripe> {
     if (!this.stripe) {
+      const { loadStripe } = await import('@stripe/stripe-js');
       this.stripe = await loadStripe(publishableKey);
     }
     if (!this.stripe) {

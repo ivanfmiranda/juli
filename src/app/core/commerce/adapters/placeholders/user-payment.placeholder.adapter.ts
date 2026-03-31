@@ -32,21 +32,21 @@ export class UserPaymentPlaceholderAdapter implements UserPaymentAdapter {
    * Não suportado - JULI não usa saved payment methods
    */
   add(_userId: string, _paymentDetails: PaymentDetails): Observable<PaymentDetails> {
-    return throwError(() => new Error('UserPaymentAdapter.add() not supported in JULI'));
+    return throwError(new Error('UserPaymentAdapter.add() not supported in JULI'));
   }
   
   /**
    * Não suportado - JULI não usa saved payment methods
    */
   update(_userId: string, _paymentDetailsId: string, _paymentDetails: PaymentDetails): Observable<PaymentDetails> {
-    return throwError(() => new Error('UserPaymentAdapter.update() not supported in JULI'));
+    return throwError(new Error('UserPaymentAdapter.update() not supported in JULI'));
   }
   
   /**
    * Não suportado - JULI não usa saved payment methods
    */
   setDefault(_userId: string, _paymentDetailsId: string): Observable<PaymentDetails> {
-    return throwError(() => new Error('UserPaymentAdapter.setDefault() not supported in JULI'));
+    return throwError(new Error('UserPaymentAdapter.setDefault() not supported in JULI'));
   }
   
   /**

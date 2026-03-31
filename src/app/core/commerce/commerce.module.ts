@@ -55,11 +55,8 @@ import { JuliSpartacusOrderAdapter } from './adapters/spartacus-order.adapter';
 import { 
 CheckoutAdapter, 
 CheckoutDeliveryAdapter, 
-CheckoutPaymentAdapter,
-UserAddressAdapter,
-UserConsentAdapter,
-UserPaymentAdapter
-} from '@spartacus/core';
+CheckoutPaymentAdapter
+} from '@spartacus/checkout/core';
 // Placeholder Adapters (Capabilities Futuras)
 import { 
   // B2B Features

@@ -16,13 +16,17 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../../../environments/environment';
 import { GatewayEnvelope } from '../../models/ubris-commerce.models';
 import { UbrisOrderNormalizer } from '../../normalizers/order.normalizer';
+import { TenantHostService } from '../../../services/tenant-host.service';
 
 @Injectable({ providedIn: 'root' })
-export class UbrisOrderAdapter implements UserOrderAdapter {
+export class UbrisOrderAdapter extends UserOrderAdapter {
   constructor(
     private readonly http: HttpClient,
-    private readonly normalizer: UbrisOrderNormalizer
-  ) {}
+    private readonly normalizer: UbrisOrderNormalizer,
+    private readonly tenantHost: TenantHostService
+  ) {
+    super();
+  }
 
   load(userId: string, orderCode: string): Observable<Order> {
     return this.http.get<GatewayEnvelope<Record<string, unknown>>>(
@@ -38,8 +42,9 @@ export class UbrisOrderAdapter implements UserOrderAdapter {
     currentPage: number = 0,
     sort: string = 'byDateDesc'
   ): Observable<OrderHistoryList> {
+    const tenantContext = this.tenantHost.current();
     const params = new HttpParams()
-      .set('tenantId', 'default')
+      .set('tenantId', tenantContext.tenantId)
       .set('customerId', userId)
       .set('currentPage', String(currentPage))
       .set('pageSize', String(pageSize))
@@ -86,13 +91,30 @@ export class UbrisOrderAdapter implements UserOrderAdapter {
   }
 
   getConsignmentTracking(_orderCode: string, _consignmentCode: string, _userId?: string): Observable<ConsignmentTracking> {
+    return throwError(new Error('Consignment tracking not supported in ubris yet.'));
+  }
 
+  loadReturnRequestDetail(
+    _userId: string,
+    _returnRequestCode: string
+  ): Observable<ReturnRequest> {
+    return throwError(new Error('Return request detail not supported in ubris yet.'));
+  }
+
+  loadReturnRequestList(
+    _userId: string,
+    _pageSize?: number,
+    _currentPage?: number,
+    _sort?: string
+  ): Observable<ReturnRequestList> {
+    return throwError(new Error('Return request list not supported in ubris yet.'));
+  }
 
   cancelReturnRequest(
     _userId: string,
     _returnRequestCode: string,
     _returnRequestModification: ReturnRequestModification
   ): Observable<{}> {
-    return throwError(() => new Error('Return request cancellation is not supported in juli yet.'));
+    return throwError(new Error('Return request cancellation is not supported in juli yet.'));
   }
 }

@@ -18,6 +18,7 @@ export interface AuthSession {
   accessToken: string;
   tokenType: string;
   expiresIn: number;
+  expiresAt?: number;
   username: string;
   userType?: string;
   roles: string[];
@@ -60,6 +61,23 @@ export class AuthService {
     );
   }
 
+  register(username: string, password: string): Observable<AuthSession> {
+    return this.http.post<LoginEnvelope>(`${environment.ubrisApiBaseUrl}/api/bff/auth/register`, {
+      username,
+      password
+    }).pipe(
+      map(response => {
+        if (!response?.data?.accessToken) {
+          throw new Error(response?.message || 'Registration failed');
+        }
+        return response.data;
+      }),
+      tap(session => {
+        this.persistSession(session);
+      })
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(this.storageKey);
     this.sessionSubject.next(null);
@@ -69,6 +87,10 @@ export class AuthService {
   get token(): string | null {
     const session = this.sessionSubject.value;
     if (!session?.accessToken) {
+      return null;
+    }
+    if (session.expiresAt && Date.now() >= session.expiresAt) {
+      this.logout();
       return null;
     }
     const tokenType = session.tokenType || 'Bearer';
@@ -179,6 +201,9 @@ export class AuthService {
   }
 
   private persistSession(session: AuthSession): void {
+    if (!session.expiresAt && session.expiresIn) {
+      session.expiresAt = Date.now() + session.expiresIn * 1000;
+    }
     localStorage.setItem(this.storageKey, JSON.stringify(session));
     this.sessionSubject.next(session);
   }

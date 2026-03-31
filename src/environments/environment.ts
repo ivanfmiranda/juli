@@ -6,7 +6,13 @@ export const environment = {
   production: false,
   strapiApiBaseUrl: '/strapi-api',
   ubrisApiBaseUrl: '/ubris-api',
-  defaultCmsSlug: 'home'
+  defaultCmsSlug: 'home',
+  defaultLocale: 'pt-BR',
+  fallbackLocale: 'en-US',
+  supportedLocales: [
+    { code: 'pt-BR', language: 'pt', label: 'Português (Brasil)', currency: 'BRL' },
+    { code: 'en-US', language: 'en', label: 'English (US)', currency: 'USD' }
+  ]
 };
 
 /*

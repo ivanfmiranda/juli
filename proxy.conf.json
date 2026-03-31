@@ -17,6 +17,21 @@
       "^/strapi-api": "/api"
     }
   },
+  "/cms": {
+    "target": "http://localhost:1337",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug",
+    "pathRewrite": {
+      "^/cms": ""
+    }
+  },
+  "/admin": {
+    "target": "http://localhost:1337",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  },
   "/img": {
     "target": "http://localhost:8088",
     "secure": false,

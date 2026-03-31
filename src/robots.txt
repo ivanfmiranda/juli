@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+
+Disallow: /checkout
+Disallow: /account
+Disallow: /login
+Disallow: /register
+Disallow: /ubris-api/
+Disallow: /strapi-api/
+Disallow: /cms/
+Disallow: /admin/
+
+Sitemap: https://www.ubris.com.br/sitemap.xml

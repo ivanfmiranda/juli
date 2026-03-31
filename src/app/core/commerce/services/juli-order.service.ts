@@ -20,7 +20,7 @@
 
 import { Injectable, OnDestroy } from '@angular/core';
 import { BehaviorSubject, Observable, of, Subject, throwError } from 'rxjs';
-import { catchError, distinctUntilChanged, map, switchMap, takeUntil, tap } from 'rxjs/operators';
+import { catchError, distinctUntilChanged, filter, map, switchMap, takeUntil, tap } from 'rxjs/operators';
 import { JuliOrder, JuliOrderHistoryList, JuliOrderLoadingState, JuliOrderSummary } from '../models/juli-order.model';
 import { JuliOrderFacade } from '../facades/order.facade';
 
@@ -95,6 +95,7 @@ export class JuliOrderService implements OnDestroy {
     
     this.facade.list(pageSize, currentPage, sort).pipe(
       takeUntil(this.destroy$),
+      filter(spartacusList => spartacusList != null),
       map(spartacusList => this.convertSpartacusHistoryList(spartacusList)),
       tap(list => {
         this.patchState({
@@ -214,7 +215,7 @@ export class JuliOrderService implements OnDestroy {
       updatedAt: order.created ? new Date(order.created) : undefined,
       total: {
         value: order.total?.value || 0,
-        currencyIso: order.total?.currencyIso || 'USD',
+        currencyIso: order.total?.currencyIso || 'BRL',
         formattedValue: order.total?.formattedValue || '-'
       },
       totalItems: order.totalItems || 0,
@@ -245,7 +246,7 @@ export class JuliOrderService implements OnDestroy {
    * diretamente JuliOrder, eliminando esta conversão.
    */
   private convertSpartacusOrder(spartacusOrder: any): JuliOrder {
-    const currency = spartacusOrder.totalPrice?.currencyIso || 'USD';
+    const currency = spartacusOrder.totalPrice?.currencyIso || 'BRL';
     
     return {
       code: spartacusOrder.code || 'UNKNOWN',

@@ -1,15 +1,19 @@
 import { Injectable } from '@angular/core';
 import {
   Address,
+  DeliveryMode,
+  Order,
+  PaymentDetails,
+  CardType
+} from '@spartacus/core';
+import {
   CheckoutAdapter,
   CheckoutDeliveryAdapter,
   CheckoutPaymentAdapter,
-  DeliveryMode,
-  Order,
-  PaymentDetails
-} from '@spartacus/core';
+} from '@spartacus/checkout/core';
+import { CheckoutDetails } from '@spartacus/checkout/core';
 import { Observable, throwError, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map } from 'rxjs/operators';
 import { UbrisCheckoutConnector } from '../connectors/checkout.connector';
 import { JuliCheckoutSubmission } from '../models/ubris-commerce.models';
 
@@ -38,59 +42,55 @@ export class JuliSpartacusCheckoutAdapter implements CheckoutAdapter, CheckoutDe
     }).pipe(map(() => address)); // Return original address as confirmation
   }
 
-  setAddress(userId: string, cartId: string, addressId: string): Observable<any> {
-    // Ubris saves address directly, so setAddress might be redundant or just a re-save
-    // For now, we assume createAddress handles it.
+  setAddress(_userId: string, _cartId: string, _addressId: string): Observable<any> {
     return of({});
   }
 
-  clearCheckoutDeliveryAddress(userId: string, cartId: string): Observable<any> {
-    return of({});
+  setMode(userId: string, cartId: string, deliveryModeId: string): Observable<any> {
+    return this.connector.setDeliveryMode(cartId, deliveryModeId);
   }
 
-  getSupportedDeliveryModes(userId: string, cartId: string): Observable<DeliveryMode[]> {
-    // Start checkout session/get options
-    // Assuming cartId is used as checkoutId or we have a way to map
+  getMode(_userId: string, _cartId: string): Observable<DeliveryMode> {
+    return of({ code: 'standard' } as DeliveryMode);
+  }
+
+  getSupportedModes(userId: string, cartId: string): Observable<DeliveryMode[]> {
     return this.connector.deliveryOptions(cartId).pipe(
       map(state => state.options.map(opt => ({
         code: opt.code,
         name: opt.name,
         description: opt.description,
         deliveryCost: {
-          currencyIso: opt.currency ?? 'USD',
+          currencyIso: opt.currency ?? 'BRL',
           value: opt.cost ?? 0,
-          formattedValue: `${opt.currency ?? '$'}${opt.cost}`
+          formattedValue: `${opt.currency ?? 'R$'}${opt.cost}`
         }
       })))
     );
   }
 
-  setDeliveryMode(userId: string, cartId: string, deliveryModeId: string): Observable<any> {
-    return this.connector.setDeliveryMode(cartId, deliveryModeId);
-  }
-
-  clearCheckoutDeliveryMode(userId: string, cartId: string): Observable<any> {
-    return of({});
-  }
-
   // === CheckoutPaymentAdapter ===
 
   create(userId: string, cartId: string, paymentDetails: PaymentDetails): Observable<PaymentDetails> {
-    // In Ubris, payment creation initializes the intent.
-    // paymentDetails.code could carry the method (e.g., 'stripe_credit_card')
-    const method = paymentDetails.code ?? 'credit_card';
+    const method = paymentDetails.id ?? 'credit_card';
     return this.connector.initializePayment(cartId, method).pipe(
       map(state => ({
-        code: state.paymentSessionId, // Use session ID as payment detail code
-        accountHolderName: 'Stripe', // Placeholder
+        id: state.paymentSessionId,
+        accountHolderName: 'Stripe',
         cardType: { code: state.method, name: state.provider }
       }))
     );
   }
 
-  set(userId: string, cartId: string, paymentDetailsId: string): Observable<any> {
-    // Payment is set during create/initialize
+  set(_userId: string, _cartId: string, _paymentDetailsId: string): Observable<any> {
     return of({});
+  }
+
+  loadCardTypes(): Observable<CardType[]> {
+    return of([
+      { code: 'visa', name: 'Visa' },
+      { code: 'master', name: 'MasterCard' }
+    ]);
   }
 
   // === CheckoutAdapter (Place Order) ===
@@ -100,15 +100,14 @@ export class JuliSpartacusCheckoutAdapter implements CheckoutAdapter, CheckoutDe
       cartId,
       customerId: userId,
       userType: userId === 'anonymous' ? 'ANONYMOUS' : 'REGISTERED',
-      addressLine: 'default', // Placeholder, backend uses saved address
-      paymentMethod: 'credit_card' // Placeholder, backend uses initialized payment
+      addressLine: 'default',
+      paymentMethod: 'credit_card'
     };
 
     return this.connector.submit(submission).pipe(
       map(result => ({
         code: result.orderId ?? 'unknown',
         guid: result.checkoutId,
-        // Basic order structure to satisfy Spartacus
         entries: [], 
         paymentInfo: { accountHolderName: 'Paid' },
         totalPrice: { value: 0 },
@@ -117,17 +116,43 @@ export class JuliSpartacusCheckoutAdapter implements CheckoutAdapter, CheckoutDe
     );
   }
 
-  loadCheckoutDetails(userId: string, cartId: string): Observable<any> {
-    return this.connector.status(cartId).pipe(
-      map(status => ({
-        deliveryAddress: {}, // Would need to fetch from review/status
-        deliveryMode: { code: 'standard' },
-        paymentInfo: { code: 'credit_card' }
-      }))
+  loadCheckoutDetails(userId: string, cartId: string): Observable<CheckoutDetails> {
+    return this.connector.review(cartId).pipe(
+      map(snapshot => ({
+        deliveryAddress: snapshot.address ? {
+          firstName: snapshot.address.fullName?.split(' ')[0] ?? '',
+          lastName: snapshot.address.fullName?.split(' ').slice(1).join(' ') ?? '',
+          line1: snapshot.address.line1,
+          line2: snapshot.address.line2,
+          town: snapshot.address.city,
+          region: { isocode: snapshot.address.region },
+          postalCode: snapshot.address.postalCode,
+          country: { isocode: snapshot.address.countryIso },
+          phone: snapshot.address.phone
+        } : {},
+        deliveryMode: snapshot.deliveryMode ? {
+          code: snapshot.deliveryMode.code,
+          name: snapshot.deliveryMode.name,
+          description: snapshot.deliveryMode.description,
+          deliveryCost: {
+            value: snapshot.deliveryMode.cost,
+            currencyIso: snapshot.deliveryMode.currency ?? 'BRL'
+          }
+        } : {},
+        paymentInfo: snapshot.payment ? {
+          id: snapshot.payment.paymentSessionId,
+          accountHolderName: 'Stripe',
+          cardType: { code: snapshot.payment.method }
+        } : {}
+      } as CheckoutDetails))
     );
   }
 
-  clearCheckoutData(userId: string, cartId: string): Observable<any> {
+  clearCheckoutDeliveryAddress(_userId: string, _cartId: string): Observable<any> {
+    return of({});
+  }
+
+  clearCheckoutDeliveryMode(_userId: string, _cartId: string): Observable<any> {
     return of({});
   }
 }

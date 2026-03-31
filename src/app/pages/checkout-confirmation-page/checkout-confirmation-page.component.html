@@ -2,32 +2,32 @@
 <ng-container *ngIf="vm$ | async as vm">
   <main class="ub-store__main confirmation-page" [class]="'confirmation-page--' + vm.phase">
     <div class="ub-store__container">
-      
+
       <!-- Success Header -->
       <header class="confirmation-header" *ngIf="vm.phase === 'confirmed'">
         <div class="confirmation-header__icon confirmation-header__icon--success">
           <i class="fas fa-check"></i>
         </div>
-        <h1 class="confirmation-header__title">Order Confirmed!</h1>
-        <p class="confirmation-header__subtitle">Thank you for your purchase</p>
+        <h1 class="confirmation-header__title">{{ 'confirmation.confirmedTitle' | juliTranslate }}</h1>
+        <p class="confirmation-header__subtitle">{{ 'confirmation.confirmedSubtitle' | juliTranslate }}</p>
       </header>
-      
+
       <!-- Processing Header -->
       <header class="confirmation-header" *ngIf="vm.phase === 'processing'">
         <div class="confirmation-header__icon confirmation-header__icon--processing">
           <i class="fas fa-sync-alt fa-spin"></i>
         </div>
-        <h1 class="confirmation-header__title">Processing Order</h1>
-        <p class="confirmation-header__subtitle">Please wait while we complete your order</p>
+        <h1 class="confirmation-header__title">{{ 'confirmation.processingTitle' | juliTranslate }}</h1>
+        <p class="confirmation-header__subtitle">{{ 'confirmation.processingSubtitle' | juliTranslate }}</p>
       </header>
-      
+
       <!-- Error Header -->
       <header class="confirmation-header" *ngIf="vm.phase === 'failed' || vm.phase === 'notFound'">
         <div class="confirmation-header__icon confirmation-header__icon--error">
           <i class="fas fa-times"></i>
         </div>
         <h1 class="confirmation-header__title">
-          {{ vm.phase === 'notFound' ? 'Order Not Found' : 'Order Failed' }}
+          {{ vm.phase === 'notFound' ? ('confirmation.notFoundTitle' | juliTranslate) : ('confirmation.failedTitle' | juliTranslate) }}
         </h1>
         <p class="confirmation-header__subtitle">{{ vm.detail }}</p>
       </header>
@@ -36,45 +36,45 @@
         <!-- Order Status Card -->
         <article class="ub-card">
           <div class="ub-card__header">
-            <h2 class="ub-card__title">Order Status</h2>
+            <h2 class="ub-card__title">{{ 'confirmation.orderStatus' | juliTranslate }}</h2>
             <span class="ub-badge" [class]="'ub-badge--' + (vm.phase === 'confirmed' ? 'success' : vm.phase === 'processing' ? 'warning' : 'error')">
               {{ vm.status }}
             </span>
           </div>
-          
+
           <div class="ub-card__body">
             <div class="info-list">
               <div class="info-item">
-                <span class="info-item__label">Checkout ID</span>
+                <span class="info-item__label">{{ 'confirmation.checkoutId' | juliTranslate }}</span>
                 <code class="info-item__value info-item__value--code">{{ vm.checkoutId }}</code>
               </div>
-              
+
               <div class="info-item" *ngIf="vm.orderId">
-                <span class="info-item__label">Order ID</span>
+                <span class="info-item__label">{{ 'confirmation.orderId' | juliTranslate }}</span>
                 <span class="info-item__value info-item__value--highlight">{{ vm.orderId }}</span>
               </div>
-              
+
               <div class="info-item">
-                <span class="info-item__label">Approval Required</span>
+                <span class="info-item__label">{{ 'confirmation.approvalRequired' | juliTranslate }}</span>
                 <span class="info-item__value">
                   <i class="fas" [class.fa-check]="vm.approvalRequired" [class.fa-times]="!vm.approvalRequired"
                      [style.color]="vm.approvalRequired ? 'var(--color-success)' : 'var(--color-text-muted)'"></i>
-                  {{ vm.approvalRequired ? 'Yes' : 'No' }}
+                  {{ vm.approvalRequired ? ('confirmation.yes' | juliTranslate) : ('confirmation.no' | juliTranslate) }}
                 </span>
               </div>
-              
+
               <div class="info-item" *ngIf="vm.createdAt">
-                <span class="info-item__label">Created</span>
+                <span class="info-item__label">{{ 'confirmation.created' | juliTranslate }}</span>
                 <span class="info-item__value">{{ vm.createdAt | date: 'medium' }}</span>
               </div>
-              
+
               <div class="info-item" *ngIf="vm.updatedAt && vm.updatedAt !== vm.createdAt">
-                <span class="info-item__label">Last Update</span>
+                <span class="info-item__label">{{ 'confirmation.updated' | juliTranslate }}</span>
                 <span class="info-item__value">{{ vm.updatedAt | date: 'medium' }}</span>
               </div>
-              
+
               <div class="info-item" *ngIf="vm.retries !== undefined">
-                <span class="info-item__label">Retry Attempts</span>
+                <span class="info-item__label">{{ 'confirmation.retries' | juliTranslate }}</span>
                 <span class="info-item__value">{{ vm.retries }}</span>
               </div>
             </div>
@@ -84,9 +84,9 @@
         <!-- Next Steps Card -->
         <article class="ub-card">
           <div class="ub-card__header">
-            <h2 class="ub-card__title">What happens next?</h2>
+            <h2 class="ub-card__title">{{ 'confirmation.nextTitle' | juliTranslate }}</h2>
           </div>
-          
+
           <div class="ub-card__body">
             <div class="next-steps" [ngSwitch]="vm.phase">
               <!-- Processing -->
@@ -94,26 +94,26 @@
                 <div class="next-step next-step--active">
                   <div class="next-step__number">1</div>
                   <div class="next-step__content">
-                    <h3>Processing your order</h3>
-                    <p>We're securely processing your payment and inventory allocation. This usually takes a few moments.</p>
+                    <h3>{{ 'confirmation.processingStep1Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.processingStep1Desc' | juliTranslate }}</p>
                   </div>
                 </div>
                 <div class="next-step">
                   <div class="next-step__number">2</div>
                   <div class="next-step__content">
-                    <h3>Order confirmation</h3>
-                    <p>You'll receive a confirmation email with your order details.</p>
+                    <h3>{{ 'confirmation.processingStep2Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.processingStep2Desc' | juliTranslate }}</p>
                   </div>
                 </div>
                 <div class="next-step">
                   <div class="next-step__number">3</div>
                   <div class="next-step__content">
-                    <h3>Shipping</h3>
-                    <p>Your order will be prepared and shipped to your address.</p>
+                    <h3>{{ 'confirmation.processingStep3Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.processingStep3Desc' | juliTranslate }}</p>
                   </div>
                 </div>
               </ng-container>
-              
+
               <!-- Confirmed -->
               <ng-container *ngSwitchCase="'confirmed'">
                 <div class="next-step next-step--complete">
@@ -121,8 +121,8 @@
                     <i class="fas fa-check"></i>
                   </div>
                   <div class="next-step__content">
-                    <h3>Order confirmed</h3>
-                    <p>Your order has been successfully processed and confirmed.</p>
+                    <h3>{{ 'confirmation.confirmedStep1Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.confirmedStep1Desc' | juliTranslate }}</p>
                   </div>
                 </div>
                 <div class="next-step next-step--complete">
@@ -130,19 +130,19 @@
                     <i class="fas fa-envelope"></i>
                   </div>
                   <div class="next-step__content">
-                    <h3>Confirmation email</h3>
-                    <p>We've sent a confirmation email with your order details and tracking information.</p>
+                    <h3>{{ 'confirmation.confirmedStep2Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.confirmedStep2Desc' | juliTranslate }}</p>
                   </div>
                 </div>
                 <div class="next-step">
                   <div class="next-step__number">3</div>
                   <div class="next-step__content">
-                    <h3>Track your order</h3>
-                    <p>You can track your order status anytime from your account.</p>
+                    <h3>{{ 'confirmation.confirmedStep3Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.confirmedStep3Desc' | juliTranslate }}</p>
                   </div>
                 </div>
               </ng-container>
-              
+
               <!-- Failed -->
               <ng-container *ngSwitchCase="'failed'">
                 <div class="next-step next-step--error">
@@ -150,19 +150,19 @@
                     <i class="fas fa-exclamation-triangle"></i>
                   </div>
                   <div class="next-step__content">
-                    <h3>Order could not be completed</h3>
-                    <p>We encountered an issue processing your order. Your payment has not been charged.</p>
+                    <h3>{{ 'confirmation.failedStep1Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.failedStep1Desc' | juliTranslate }}</p>
                   </div>
                 </div>
                 <div class="next-step">
                   <div class="next-step__number">2</div>
                   <div class="next-step__content">
-                    <h3>Review and try again</h3>
-                    <p>Please review your cart and payment information, then try again.</p>
+                    <h3>{{ 'confirmation.failedStep2Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.failedStep2Desc' | juliTranslate }}</p>
                   </div>
                 </div>
               </ng-container>
-              
+
               <!-- Not Found -->
               <ng-container *ngSwitchCase="'notFound'">
                 <div class="next-step next-step--error">
@@ -170,12 +170,12 @@
                     <i class="fas fa-search"></i>
                   </div>
                   <div class="next-step__content">
-                    <h3>Order not found</h3>
-                    <p>We couldn't find an order with the provided ID. Please check your order number.</p>
+                    <h3>{{ 'confirmation.notFoundStep1Title' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.notFoundStep1Desc' | juliTranslate }}</p>
                   </div>
                 </div>
               </ng-container>
-              
+
               <!-- Default -->
               <ng-container *ngSwitchDefault>
                 <div class="next-step next-step--active">
@@ -183,8 +183,8 @@
                     <i class="fas fa-sync-alt fa-spin"></i>
                   </div>
                   <div class="next-step__content">
-                    <h3>Checking status</h3>
-                    <p>We're retrieving your order information. Please wait...</p>
+                    <h3>{{ 'confirmation.checkingTitle' | juliTranslate }}</h3>
+                    <p>{{ 'confirmation.checkingDesc' | juliTranslate }}</p>
                   </div>
                 </div>
               </ng-container>
@@ -197,19 +197,19 @@
       <div class="confirmation-actions">
         <a *ngIf="vm.orderId" [routerLink]="['/account/orders', vm.orderId]" class="ub-btn ub-btn--primary ub-btn--lg">
           <i class="fas fa-file-invoice"></i>
-          View Order Details
+          {{ 'confirmation.viewOrderDetails' | juliTranslate }}
         </a>
         <a routerLink="/account/orders" class="ub-btn ub-btn--secondary">
           <i class="fas fa-history"></i>
-          Order History
+          {{ 'confirmation.orderHistory' | juliTranslate }}
         </a>
         <a routerLink="/cart" *ngIf="vm.phase === 'failed'" class="ub-btn ub-btn--secondary">
           <i class="fas fa-shopping-cart"></i>
-          Return to Cart
+          {{ 'confirmation.returnToCart' | juliTranslate }}
         </a>
         <a routerLink="/search" class="ub-btn ub-btn--ghost">
           <i class="fas fa-store"></i>
-          Continue Shopping
+          {{ 'confirmation.continueShopping' | juliTranslate }}
         </a>
       </div>
     </div>

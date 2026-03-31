@@ -2,17 +2,17 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading$ | async">
     <div class="spinner"></div>
-    <p>Carregando detalhes do pedido...</p>
+    <p>{{ 'orderDetail.loading' | juliTranslate }}</p>
   </div>
 
   <!-- Error State -->
   <div class="error-state" *ngIf="error$ | async as error">
     <div class="error-icon">⚠️</div>
-    <h3>Erro ao carregar pedido</h3>
+    <h3>{{ 'orderDetail.errorTitle' | juliTranslate }}</h3>
     <p>{{ error }}</p>
     <div class="error-actions">
-      <button class="btn-secondary" (click)="goBack()">← Voltar para pedidos</button>
-      <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+      <button class="btn-secondary" (click)="goBack()">← {{ 'orderDetail.back' | juliTranslate }}</button>
+      <button class="btn-primary" (click)="retryLoad()">{{ 'orderDetail.retry' | juliTranslate }}</button>
     </div>
   </div>
 
@@ -21,16 +21,16 @@
     <!-- Back Navigation -->
     <nav class="back-nav">
       <button class="btn-back" (click)="goBack()">
-        <span>←</span> Voltar para pedidos
+        <span>←</span> {{ 'orderDetail.back' | juliTranslate }}
       </button>
     </nav>
 
     <!-- Header -->
     <header class="order-header">
       <div class="header-main">
-        <p class="eyebrow">Detalhes do Pedido</p>
-        <h1>Pedido #{{ order.code }}</h1>
-        <p class="order-date">Realizado em {{ order.createdAt | date: 'dd \'de\' MMMM \'de\' yyyy' }}</p>
+        <p class="eyebrow">{{ 'orderDetail.eyebrow' | juliTranslate }}</p>
+        <h1>{{ 'orderDetail.orderTitle' | juliTranslate }}{{ order.code }}</h1>
+        <p class="order-date">{{ 'orderDetail.orderPlaced' | juliTranslate:{ date: ((order.createdAt | date: 'dd/MM/yyyy') || '') } }}</p>
       </div>
       
       <div class="status-section">
@@ -45,11 +45,11 @@
             <div class="progress-fill" [style.width.%]="getOrderProgress(order.status)"></div>
           </div>
           <div class="progress-steps">
-            <span class="step" [class.active]="getOrderProgress(order.status) >= 10">Pedido</span>
-            <span class="step" [class.active]="getOrderProgress(order.status) >= 30">Processamento</span>
-            <span class="step" [class.active]="getOrderProgress(order.status) >= 50">Preparação</span>
-            <span class="step" [class.active]="getOrderProgress(order.status) >= 75">Envio</span>
-            <span class="step" [class.active]="getOrderProgress(order.status) >= 100">Entrega</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 10">{{ 'orderDetail.stepOrder' | juliTranslate }}</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 30">{{ 'orderDetail.stepProcessing' | juliTranslate }}</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 50">{{ 'orderDetail.stepPreparation' | juliTranslate }}</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 75">{{ 'orderDetail.stepShipping' | juliTranslate }}</span>
+            <span class="step" [class.active]="getOrderProgress(order.status) >= 100">{{ 'orderDetail.stepDelivery' | juliTranslate }}</span>
           </div>
         </div>
       </div>
@@ -59,7 +59,7 @@
     <div class="detail-grid">
       <!-- Left Column: Items -->
       <section class="items-section">
-        <h2>Itens do pedido ({{ order.totalItems }})</h2>
+        <h2>{{ 'orderDetail.itemsTitle' | juliTranslate:{ count: order.totalItems } }}</h2>
         
         <div class="items-list" *ngIf="order.entries?.length; else noItems">
           <article class="item-card" *ngFor="let entry of order.entries">
@@ -74,11 +74,11 @@
             
             <div class="item-details">
               <h3 class="item-name">{{ entry.product?.name }}</h3>
-              <p class="item-code">SKU: {{ entry.product?.code }}</p>
+              <p class="item-code">{{ 'orderDetail.sku' | juliTranslate }}: {{ entry.product?.code }}</p>
               <div class="item-meta">
-                <span class="item-quantity">Qtd: {{ entry.quantity }}</span>
+                <span class="item-quantity">{{ 'orderDetail.quantity' | juliTranslate }}: {{ entry.quantity }}</span>
                 <span class="item-unit-price" *ngIf="entry.basePrice">
-                  {{ entry.basePrice.formattedValue }} un
+                  {{ entry.basePrice.formattedValue }} {{ 'orderDetail.unit' | juliTranslate }}
                 </span>
               </div>
             </div>
@@ -93,7 +93,7 @@
         
         <ng-template #noItems>
           <div class="empty-items">
-            <p>Nenhum item encontrado para este pedido.</p>
+            <p>{{ 'orderDetail.noItems' | juliTranslate }}</p>
           </div>
         </ng-template>
       </section>
@@ -102,39 +102,39 @@
       <aside class="summary-section">
         <!-- Order Summary -->
         <div class="summary-card">
-          <h2>Resumo do pedido</h2>
+          <h2>{{ 'orderDetail.summary' | juliTranslate }}</h2>
           
           <div class="summary-rows">
             <div class="summary-row">
-              <span>Subtotal</span>
+              <span>{{ 'orderDetail.subtotal' | juliTranslate }}</span>
               <span>{{ order.subTotal?.formattedValue || '-' }}</span>
             </div>
             
             <div class="summary-row" *ngIf="order.deliveryCost">
-              <span>Frete</span>
+              <span>{{ 'orderDetail.shipping' | juliTranslate }}</span>
               <span>{{ order.deliveryCost.formattedValue }}</span>
             </div>
             
             <div class="summary-row" *ngIf="order.totalTax">
-              <span>Taxas</span>
+              <span>{{ 'orderDetail.taxes' | juliTranslate }}</span>
               <span>{{ order.totalTax.formattedValue }}</span>
             </div>
             
             <div class="summary-row savings" *ngIf="calculateSavings(order) > 0">
-              <span>Economia</span>
+              <span>{{ 'orderDetail.savings' | juliTranslate }}</span>
               <span class="savings-value">-{{ calculateSavings(order) | currency:order.totalWithTax?.currencyIso }}</span>
             </div>
           </div>
           
           <div class="summary-total">
-            <span>Total</span>
+            <span>{{ 'orderDetail.total' | juliTranslate }}</span>
             <span class="total-value">{{ order.totalWithTax?.formattedValue || order.total?.formattedValue || '-' }}</span>
           </div>
         </div>
 
         <!-- Delivery Address -->
         <div class="address-card" *ngIf="order.deliveryAddress">
-          <h2>Endereço de entrega</h2>
+          <h2>{{ 'orderDetail.address' | juliTranslate }}</h2>
           <address>
             <p class="address-name">{{ order.deliveryAddress.fullName }}</p>
             <p class="address-line">{{ order.deliveryAddress.line1 }}</p>
@@ -143,7 +143,7 @@
               {{ order.deliveryAddress.city }}
               <span *ngIf="order.deliveryAddress.region">, {{ order.deliveryAddress.region }}</span>
             </p>
-            <p class="address-postal">CEP: {{ order.deliveryAddress.postalCode }}</p>
+            <p class="address-postal">{{ 'orderDetail.postalCode' | juliTranslate }}: {{ order.deliveryAddress.postalCode }}</p>
             <p class="address-country">{{ order.deliveryAddress.countryName || order.deliveryAddress.countryIso }}</p>
             <p class="address-phone" *ngIf="order.deliveryAddress.phone">
               📞 {{ order.deliveryAddress.phone }}
@@ -153,16 +153,16 @@
 
         <!-- Delivery Info -->
         <div class="delivery-card" *ngIf="order.deliveryInfo">
-          <h2>Informações de entrega</h2>
+          <h2>{{ 'orderDetail.deliveryInfo' | juliTranslate }}</h2>
           <div class="delivery-details">
             <p *ngIf="order.deliveryInfo.modeName">
-              <strong>Modo:</strong> {{ order.deliveryInfo.modeName }}
+              <strong>{{ 'orderDetail.mode' | juliTranslate }}:</strong> {{ order.deliveryInfo.modeName }}
             </p>
             <p *ngIf="order.deliveryInfo.estimatedDate">
-              <strong>Entrega estimada:</strong> {{ order.deliveryInfo.estimatedDate | date:'dd/MM/yyyy' }}
+              <strong>{{ 'orderDetail.estimatedDelivery' | juliTranslate }}:</strong> {{ order.deliveryInfo.estimatedDate | date:'dd/MM/yyyy' }}
             </p>
             <p *ngIf="order.deliveryInfo.trackingCode">
-              <strong>Código de rastreio:</strong>
+              <strong>{{ 'orderDetail.trackingCode' | juliTranslate }}:</strong>
               <a 
                 *ngIf="order.deliveryInfo.trackingUrl; else noLink"
                 [href]="order.deliveryInfo.trackingUrl" 

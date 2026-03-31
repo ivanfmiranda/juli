@@ -1,0 +1,40 @@
+{
+  "collectionName": "components_cms_category_teasers",
+  "info": {
+    "displayName": "Category Teaser",
+    "icon": "folder",
+    "description": "A category preview card linking into the product catalogue"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "description": {
+      "type": "text",
+      "pluginOptions": {
+        "i18n": {
+          "localized": true
+        }
+      }
+    },
+    "category_code": {
+      "type": "string"
+    },
+    "teaser_image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

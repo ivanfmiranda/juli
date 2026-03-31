@@ -1,0 +1,20 @@
+{
+  "collectionName": "components_cms_feature_items",
+  "info": {
+    "displayName": "Feature Item",
+    "icon": "star",
+    "description": "A single feature entry within a Feature List"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    }
+  }
+}

@@ -47,7 +47,7 @@ export class UbrisOrderNormalizer {
     const source = raw ?? {};
     const placedValue = this.firstNonBlank(source, 'placedAt', 'updatedAt', 'createdAt');
     const totalItems = this.asNumber(source.totalItems, this.sumQuantities(source.entries) ?? 0);
-    const currency = this.firstNonBlank(source, 'currency') ?? 'USD';
+    const currency = this.firstNonBlank(source, 'currency') ?? 'BRL';
     const rawStatus = this.firstNonBlank(source, 'status') ?? 'CREATED';
 
     return {
@@ -67,7 +67,7 @@ export class UbrisOrderNormalizer {
 
   private normalizeOrderHistory(raw: Record<string, unknown>) {
     const placedValue = this.firstNonBlank(raw, 'placedAt', 'updatedAt', 'createdAt');
-    const currency = this.firstNonBlank(raw, 'currency') ?? 'USD';
+    const currency = this.firstNonBlank(raw, 'currency') ?? 'BRL';
     const rawStatus = this.firstNonBlank(raw, 'status') ?? 'CREATED';
 
     return {
@@ -103,7 +103,7 @@ export class UbrisOrderNormalizer {
     return mapping[(status || '').toUpperCase()] ?? status;
   }
 
-  private normalizePrice(raw: unknown, fallbackCurrency: string = 'USD'): Price | undefined {
+  private normalizePrice(raw: unknown, fallbackCurrency: string = 'BRL'): Price | undefined {
     if (raw && typeof raw === 'object') {
       const price = raw as Record<string, unknown>;
       const currencyIso = this.firstNonBlank(price, 'currency') ?? fallbackCurrency;
@@ -111,7 +111,7 @@ export class UbrisOrderNormalizer {
       return {
         currencyIso,
         value: amount,
-        formattedValue: this.firstNonBlank(price, 'formatted') ?? `${currencyIso} ${amount.toFixed(2)}`
+        formattedValue: this.firstNonBlank(price, 'formatted') ?? this.formatCurrency(amount, currencyIso)
       };
     }
     if (typeof raw === 'number' || typeof raw === 'string') {
@@ -119,10 +119,19 @@ export class UbrisOrderNormalizer {
       return {
         currencyIso: fallbackCurrency,
         value: amount,
-        formattedValue: `${fallbackCurrency} ${amount.toFixed(2)}`
+        formattedValue: this.formatCurrency(amount, fallbackCurrency)
       };
     }
     return undefined;
+  }
+
+  private formatCurrency(value: number, currency: string): string {
+    const locale = currency === 'BRL' ? 'pt-BR' : currency === 'USD' ? 'en-US' : 'pt-BR';
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+    } catch {
+      return `${currency} ${value.toFixed(2)}`;
+    }
   }
 
   private normalizeEntries(rawEntries: unknown): OrderEntry[] | undefined {
@@ -135,7 +144,7 @@ export class UbrisOrderNormalizer {
       .map((entry, index) => {
         const productCode = this.firstNonBlank(entry, 'sku', 'productCode') ?? this.firstNonBlank(this.asRecord(entry.product), 'code', 'sku');
         const productName = this.firstNonBlank(entry, 'name') ?? this.firstNonBlank(this.asRecord(entry.product), 'name');
-        const currency = this.firstNonBlank(entry, 'currency') ?? 'USD';
+        const currency = this.firstNonBlank(entry, 'currency') ?? 'BRL';
         const quantity = this.asNumber(entry.quantity, 0);
         return {
           entryNumber: this.asNumber(entry.entryNumber, index),
@@ -155,10 +164,11 @@ export class UbrisOrderNormalizer {
 
   normalizeReturnRequest(raw: Record<string, unknown> | undefined): ReturnRequest {
     const source = raw ?? {};
+    const orderCode = this.firstNonBlank(source, 'orderCode');
     return {
-      orderCode: this.firstNonBlank(source, 'orderCode') ?? undefined,
+      order: orderCode ? { code: orderCode } : undefined,
       code: this.firstNonBlank(source, 'code', 'returnId') ?? undefined,
-      status: this.firstNonBlank(source, 'status') ?? 'RECEIVED',
+      status: (this.firstNonBlank(source, 'status') as any) ?? 'RECEIVED',
       returnEntries: this.normalizeReturnEntries(source.entries ?? source.returnEntries),
       cancellable: this.asBoolean(source.cancellable)
     };

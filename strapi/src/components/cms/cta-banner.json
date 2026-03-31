@@ -1,0 +1,28 @@
+{
+  "collectionName": "components_cms_cta_banners",
+  "info": {
+    "displayName": "CTA Banner",
+    "icon": "cursor",
+    "description": "Full-width call-to-action banner with title, subtitle and a button"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "buttonText": {
+      "type": "string"
+    },
+    "buttonLink": {
+      "type": "string"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

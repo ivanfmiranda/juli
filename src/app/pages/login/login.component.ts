@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { of } from 'rxjs';
-import { catchError, finalize, switchMap } from 'rxjs/operators';
+import { catchError, finalize, switchMap, timeout } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { JuliCartFacade } from '../../core/commerce';
 
@@ -26,7 +26,8 @@ export class LoginComponent {
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
-    private readonly router: Router
+    private readonly router: Router,
+    private readonly cdr: ChangeDetectorRef
   ) {}
 
   submit(): void {
@@ -44,28 +45,32 @@ export class LoginComponent {
     this.warningMessage = undefined;
 
     this.authService.login(username, password).pipe(
+      timeout(15000),
       switchMap(() => {
         if (!this.authService.hasAnonymousCart()) {
           return of(null);
         }
 
         return this.cartFacade.promoteAnonymousCart().pipe(
-          catchError(error => {
+          catchError(() => {
             this.cartFacade.discardAnonymousCart();
             this.warningMessage = 'Login concluído, mas o carrinho anterior expirou e não pôde ser recuperado.';
+            this.cdr.markForCheck();
             return of(null);
           })
         );
       }),
       finalize(() => {
         this.submitting = false;
+        this.cdr.markForCheck();
       })
     ).subscribe({
       next: () => {
         void this.router.navigateByUrl(redirect);
       },
-      error: error => {
-        this.errorMessage = error?.error?.message || error?.message || 'Login failed';
+      error: () => {
+        this.errorMessage = 'Usuário ou senha inválidos.';
+        this.cdr.markForCheck();
       }
     });
   }

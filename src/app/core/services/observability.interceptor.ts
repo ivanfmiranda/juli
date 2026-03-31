@@ -11,7 +11,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { JuliObservabilityService } from '../services/observability.service';
 import { JuliErrorCategory } from '../models/observability.models';
-import { environment } from '../../../../environments/environment';
+import { environment } from '../../../environments/environment';
 
 @Injectable()
 export class ObservabilityInterceptor implements HttpInterceptor {
@@ -69,7 +69,7 @@ export class ObservabilityInterceptor implements HttpInterceptor {
           retriable: this.isRetriable(error)
         });
 
-        return throwError(() => error);
+        return throwError(error);
       })
     );
   }

@@ -1,0 +1,29 @@
+{
+  "collectionName": "components_cms_section_containers",
+  "info": {
+    "displayName": "Section Container",
+    "icon": "layer",
+    "description": "Visual section wrapper — sets a title, subtitle and background colour for a page section"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "backgroundColor": {
+      "type": "string",
+      "default": "#ffffff"
+    },
+    "anchor": {
+      "type": "string",
+      "description": "Optional scroll-to anchor id"
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

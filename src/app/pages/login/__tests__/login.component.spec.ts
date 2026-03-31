@@ -64,7 +64,7 @@ describe('LoginComponent', () => {
   it('falls back gracefully when anonymous cart promotion fails', () => {
     authService.hasAnonymousCart.and.returnValue(true);
     cartFacade.promoteAnonymousCart.and.returnValue(
-      throwError(() => new Error('promotion failed'))
+      throwError(new Error('promotion failed'))
     );
     component.form.setValue({ username: 'demo', password: 'secret' });
 

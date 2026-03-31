@@ -4,6 +4,7 @@ import { Product, ProductSearchPage } from '@spartacus/core';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { JuliCartFacade, UbrisProductSearchConnector } from '../../core/commerce';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-search-page',
@@ -42,7 +43,8 @@ export class SearchPageComponent {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly searchConnector: UbrisProductSearchConnector,
-    private readonly cartFacade: JuliCartFacade
+    private readonly cartFacade: JuliCartFacade,
+    public readonly i18n: JuliI18nService
   ) {}
 
   addToCart(productCode?: string): void {
@@ -71,6 +73,6 @@ export class SearchPageComponent {
 
   imageAlt(product: Product): string {
     const primary = (product.images as any)?.PRIMARY;
-    return primary?.product?.altText || primary?.thumbnail?.altText || product.name || 'Product';
+    return primary?.product?.altText || primary?.thumbnail?.altText || product.name || this.i18n.translate('commerce.viewProduct');
   }
 }

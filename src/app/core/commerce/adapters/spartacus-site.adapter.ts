@@ -1,32 +1,32 @@
 import { Injectable } from '@angular/core';
 import { BaseSite, Country, CountryType, Currency, Language, Region, SiteAdapter } from '@spartacus/core';
 import { Observable, of } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 @Injectable()
 export class JuliSpartacusSiteAdapter extends SiteAdapter {
-  private readonly languages: Language[] = [
-    {
-      active: true,
-      isocode: 'en',
-      name: 'English',
-      nativeName: 'English'
-    }
-  ];
+  private readonly languages: Language[] = environment.supportedLocales.map(locale => ({
+    active: locale.code === environment.defaultLocale,
+    isocode: locale.language,
+    name: locale.label,
+    nativeName: locale.label
+  }));
 
-  private readonly currencies: Currency[] = [
-    {
-      active: true,
-      isocode: 'USD',
-      name: 'US Dollar',
-      symbol: '$'
-    }
-  ];
+  private readonly currencies: Currency[] = environment.supportedLocales
+    .map(locale => locale.currency)
+    .filter((currency, index, all) => all.indexOf(currency) === index)
+    .map(currency => ({
+      active: currency === environment.supportedLocales[0].currency,
+      isocode: currency,
+      name: currency,
+      symbol: currency === 'BRL' ? 'R$' : '$'
+    }));
 
   private readonly baseSites: BaseSite[] = [
     {
       uid: 'electronics',
       name: 'Ubris Electronics',
-      locale: 'en-US',
+      locale: environment.defaultLocale,
       channel: 'B2C',
       defaultLanguage: this.languages[0],
       stores: [

@@ -1,6 +1,10 @@
 'use strict';
 
 module.exports = ({ env }) => ({
+  'ubris-page-builder': {
+    enabled: true,
+    resolve: './src/plugins/ubris-page-builder',
+  },
   email: {
     config: {
       provider: 'nodemailer',

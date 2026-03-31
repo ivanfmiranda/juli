@@ -1,5 +1,5 @@
 /**
- * Juli CMS canonical UI contract.
+ * Ubris CMS — canonical UI contract.
  *
  * These types are intentionally independent from Strapi payload details.
  * The adapter is responsible for translating external content into this model
@@ -15,6 +15,7 @@ export interface CmsPage {
   template: string;
   type?: string;
   found?: boolean;
+  locale?: string;
   regions: Record<string, CmsRegion>;
   seo?: SeoMetadataModel;
 }
@@ -31,9 +32,13 @@ export interface CmsComponentData {
   flexType: string;
   region?: string;
   originalType?: string;
+  /** Explicit sort order from CMS. Lower numbers render first. */
+  order?: number;
   status?: 'ready' | 'unknown' | 'invalid';
   name?: string;
 }
+
+// ── Existing component data types ────────────────────────────────────────────
 
 export interface HeroBannerData extends CmsComponentData {
   title?: string;
@@ -46,6 +51,17 @@ export interface HeroBannerData extends CmsComponentData {
 export interface ProductTeaserData extends CmsComponentData {
   productCode?: string;
   teaserText?: string;
+}
+
+export interface ProductGridData extends CmsComponentData {
+  title?: string;
+  subtitle?: string;
+  categoryCode?: string;
+  searchQuery?: string;
+  productCodes: string[];
+  pageSize: number;
+  ctaLabel?: string;
+  ctaLink?: string;
 }
 
 export interface ParagraphData extends CmsComponentData {
@@ -81,6 +97,55 @@ export interface FallbackComponentData extends CmsComponentData {
   rawPayload?: unknown;
 }
 
+// ── New Ubris CMS component data types ───────────────────────────────────────
+
+export interface SectionContainerData extends CmsComponentData {
+  title?: string;
+  subtitle?: string;
+  backgroundColor?: string;
+  anchor?: string;
+}
+
+export interface GridItemData {
+  title?: string;
+  description?: string;
+  icon?: string;
+  imageUrl?: string;
+  link?: string;
+  buttonLabel?: string;
+}
+
+export interface GridData extends CmsComponentData {
+  columns: 2 | 3 | 4;
+  items: GridItemData[];
+}
+
+export interface CtaBannerData extends CmsComponentData {
+  title?: string;
+  subtitle?: string;
+  buttonText?: string;
+  buttonLink?: string;
+}
+
+export interface FeatureItemData {
+  title?: string;
+  icon?: string;
+  description?: string;
+}
+
+export interface FeatureListData extends CmsComponentData {
+  features: FeatureItemData[];
+}
+
+export interface RichSectionData extends CmsComponentData {
+  title?: string;
+  content?: string;
+  imageUrl?: string;
+  alignment: 'left' | 'right' | 'center';
+}
+
+// ── SEO ───────────────────────────────────────────────────────────────────────
+
 export interface SeoMetadataModel {
   title?: string;
   description?: string;
@@ -88,7 +153,7 @@ export interface SeoMetadataModel {
   ogImage?: string;
 }
 
-// Backward-compatible aliases for existing component imports.
+// ── Backward-compatible aliases for existing component imports ────────────────
 export type CmsSlot = CmsRegion;
 export type CmsComponent = CmsComponentData;
 export type HeroBannerComponentModel = HeroBannerData;
@@ -96,6 +161,7 @@ export type SimpleBannerComponentModel = BannerData;
 export type RichTextComponentModel = ParagraphData;
 export type CtaBlockComponentModel = BannerData;
 export type ProductTeaserComponentModel = ProductTeaserData;
+export type ProductGridComponentModel = ProductGridData;
 export type CategoryTeaserComponentModel = BannerData;
 export type InfoCardComponentModel = InfoCardData;
 export type ContactFormComponentModel = ContactFormData;

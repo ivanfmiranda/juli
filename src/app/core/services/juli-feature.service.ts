@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, combineLatest } from 'rxjs';
-import { map, take, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, combineLatest, of } from 'rxjs';
+import { catchError, map, take, tap } from 'rxjs/operators';
 import { 
   FeatureEntitlement, 
   FeatureStatus, 
@@ -34,13 +34,18 @@ export class JuliFeatureService {
     return this.connector.getContext().pipe(
       tap(ctx => {
         this.tenantContext$.next(ctx);
-        this.obs.emitEvent(JuliEvent.TENANT_SWITCHED, { tenantId: ctx.tenantId, plan: ctx.subscription.planCode });
-        
-        if (ctx.subscription.status === SubscriptionStatus.CANCELLED || ctx.subscription.status === SubscriptionStatus.SUSPENDED) {
-          this.obs.emitEvent(JuliEvent.SUBSCRIPTION_EXPIRED, { status: ctx.subscription.status });
+        if (ctx?.subscription) {
+          this.obs.emitEvent(JuliEvent.TENANT_SWITCHED, { tenantId: ctx.tenantId, plan: ctx.subscription.planCode });
+          if (ctx.subscription.status === SubscriptionStatus.CANCELLED || ctx.subscription.status === SubscriptionStatus.SUSPENDED) {
+            this.obs.emitEvent(JuliEvent.SUBSCRIPTION_EXPIRED, { status: ctx.subscription.status });
+          }
         }
       }),
-      tap(() => this.refreshUsage().subscribe())
+      tap(ctx => {
+        if (ctx?.subscription) {
+          this.refreshUsage().subscribe();
+        }
+      })
     );
   }
 
@@ -97,7 +102,8 @@ export class JuliFeatureService {
 
   private refreshUsage(): Observable<UsageLimitSummary[]> {
     return this.connector.getUsage().pipe(
-      tap(usage => this.usage$.next(usage))
+      tap(usage => this.usage$.next(usage)),
+      catchError(() => of([]))
     );
   }
 }

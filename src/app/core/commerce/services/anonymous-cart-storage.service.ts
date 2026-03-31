@@ -68,12 +68,14 @@ export class AnonymousCartStorageService {
   }
 
   /**
-   * Writes anonymous cart data to storage.
-   * Generates a signed token for the anonymousId.
+   * Writes anonymous cart data to storage with a server-issued signed token.
+   * @param anonymousId the anonymous principal ID
+   * @param cartId the cart ID from the server
+   * @param serverToken the HMAC-signed token issued by the server (required)
    */
-  write(anonymousId: string, cartId: string): void {
+  write(anonymousId: string, cartId: string, serverToken?: string): void {
     try {
-      const token = this.generateToken(anonymousId);
+      const token = serverToken ?? this.generateToken(anonymousId);
       const now = new Date();
       const expiresAt = new Date(now.getTime() + this.TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
       

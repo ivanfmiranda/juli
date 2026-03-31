@@ -1,8 +1,11 @@
+@import 'ubris-design-system';
+
+// ── Global resets ────────────────────────────────────────────────────────────
 html, body {
   min-height: 100%;
   margin: 0;
-  font-family: Inter, 'Segoe UI', sans-serif;
-  background: #f6f8fb;
+  font-family: var(--font-family);
+  background: var(--color-bg-secondary);
 }
 
 * {
@@ -10,7 +13,7 @@ html, body {
 }
 
 body {
-  color: #0f172a;
+  color: var(--color-text-primary);
 }
 
 img {

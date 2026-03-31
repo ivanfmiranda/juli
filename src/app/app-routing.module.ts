@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth/auth.guard';
 import { LoginComponent } from './pages/login/login.component';
+import { RegisterComponent } from './pages/register/register.component';
 import { CmsPageComponent } from './pages/cms-page/cms-page.component';
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
 import { CategoryPageComponent } from './pages/category-page/category-page.component';
@@ -12,25 +13,39 @@ import { CheckoutConfirmationPageComponent } from './pages/checkout-confirmation
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { NotFoundPageComponent } from './core/cms/fallback';
+import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
+import { PageRendererComponent } from './pages/page-renderer/page-renderer.component';
 
 const routes: Routes = [
-  {
-    path: 'login',
-    component: LoginComponent
-  },
-  { path: '', pathMatch: 'full', redirectTo: 'page/home' },
-  { path: 'page/preview/:slug', component: CmsPageComponent, data: { preview: true } },
-  { path: 'page/:slug', component: CmsPageComponent },
-  { path: 'terms', redirectTo: 'page/terms', pathMatch: 'full' },
-  { path: 'privacy', redirectTo: 'page/privacy', pathMatch: 'full' },
+  // Auth
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+
+  // Homepage (PageRenderer with slug='home')
+  { path: '', pathMatch: 'full', component: PageRendererComponent },
+
+  // Commerce
   { path: 'product/:code', component: ProductDetailComponent },
   { path: 'c/:code', component: CategoryPageComponent },
   { path: 'search', component: SearchPageComponent },
-  { path: 'cart', component: CartPageComponent, canActivate: [AuthGuard] },
+  { path: 'cart', component: CartPageComponent },
   { path: 'checkout', component: CheckoutPageComponent, canActivate: [AuthGuard] },
   { path: 'checkout/confirmation/:checkoutId', component: CheckoutConfirmationPageComponent, canActivate: [AuthGuard] },
+
+  // Account
   { path: 'account/orders/:code', component: OrderDetailPageComponent, canActivate: [AuthGuard] },
   { path: 'account/orders', component: OrdersPageComponent, canActivate: [AuthGuard] },
+
+  // CMS Preview
+  { path: 'preview', component: PreviewEntryComponent },
+  { path: 'page/preview/:slug', component: CmsPageComponent, data: { preview: true } },
+
+  // Legacy CMS routes (backwards compat)
+  { path: 'page/:slug', component: CmsPageComponent },
+  { path: 'pages/:slug', component: PageRendererComponent },
+
+  // Clean CMS pages (catch-all — must be last before **)
+  { path: ':slug', component: PageRendererComponent },
   { path: '**', component: NotFoundPageComponent }
 ];
 

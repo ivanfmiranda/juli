@@ -7,7 +7,7 @@ export class UbrisCartNormalizer {
     const entries = Array.isArray(raw?.entries)
       ? raw!.entries.map((entry, index) => this.normalizeEntry(entry as Record<string, unknown>, index))
       : [];
-    const currencyIso = this.firstNonBlank(raw ?? {}, 'currency') ?? 'USD';
+    const currencyIso = this.firstNonBlank(raw ?? {}, 'currency') ?? 'BRL';
 
     return {
       code: this.firstNonBlank(raw ?? {}, 'id') ?? undefined,
@@ -35,7 +35,7 @@ export class UbrisCartNormalizer {
   }
 
   private normalizeEntry(raw: Record<string, unknown>, index: number) {
-    const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'USD';
+    const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'BRL';
     const productCode = this.firstNonBlank(raw, 'productCode', 'sku', 'code') ?? `entry-${index}`;
     return {
       entryNumber: this.asNumber(raw.entryNumber, index),
@@ -56,8 +56,17 @@ export class UbrisCartNormalizer {
     return {
       currencyIso,
       value: amount,
-      formattedValue: `${currencyIso} ${amount.toFixed(2)}`
+      formattedValue: this.formatCurrency(amount, currencyIso)
     };
+  }
+
+  private formatCurrency(value: number, currency: string): string {
+    const locale = currency === 'BRL' ? 'pt-BR' : currency === 'USD' ? 'en-US' : 'pt-BR';
+    try {
+      return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(value);
+    } catch {
+      return `${currency} ${value.toFixed(2)}`;
+    }
   }
 
   private firstNonBlank(source: Record<string, unknown>, ...keys: string[]): string | null {

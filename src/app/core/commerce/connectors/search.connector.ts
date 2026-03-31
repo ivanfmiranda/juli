@@ -15,7 +15,8 @@ export class UbrisProductSearchConnector {
   search(query: string, searchConfig?: SearchConfig): Observable<ProductSearchPage> {
     const page = searchConfig?.currentPage ?? 0;
     const size = searchConfig?.pageSize ?? 12;
-    return this.adapter.search(query, page, size).pipe(
+    const sort = (searchConfig as any)?.sort;
+    return this.adapter.search(query, page, size, sort).pipe(
       map(response => this.normalizer.normalize(response.data, query, searchConfig))
     );
   }

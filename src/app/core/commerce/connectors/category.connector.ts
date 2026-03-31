@@ -12,8 +12,8 @@ export class UbrisCategoryConnector {
     private readonly normalizer: UbrisCategoryNormalizer
   ) {}
 
-  get(code: string, page: number = 0, size: number = 12): Observable<JuliCategoryPage> {
-    return this.adapter.get(code, page, size).pipe(
+  get(code: string, page: number = 0, size: number = 12, sort?: string): Observable<JuliCategoryPage> {
+    return this.adapter.get(code, page, size, sort).pipe(
       map(response => this.normalizer.normalize(code, response.data))
     );
   }

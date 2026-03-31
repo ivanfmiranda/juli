@@ -1,10 +1,10 @@
 <ng-container *ngIf="vm$ | async as vm">
   <section class="listing-page">
     <header class="listing-page__header">
-      <p class="eyebrow">Search</p>
-      <h1 *ngIf="vm.query; else emptySearch">Results for "{{ vm.query }}"</h1>
-      <ng-template #emptySearch><h1>Search catalog</h1></ng-template>
-      <p>{{ vm.total }} products</p>
+      <p class="eyebrow">{{ 'search.eyebrow' | juliTranslate }}</p>
+      <h1 *ngIf="vm.query; else emptySearch">{{ 'search.resultsFor' | juliTranslate:{ query: vm.query } }}</h1>
+      <ng-template #emptySearch><h1>{{ 'search.searchCatalog' | juliTranslate }}</h1></ng-template>
+      <p>{{ 'search.productsCount' | juliTranslate:{ count: vm.total } }}</p>
     </header>
 
     <div class="listing-grid" *ngIf="vm.products.length; else noResults">
@@ -14,14 +14,14 @@
           <h2>{{ product.name }}</h2>
           <p>{{ product.price?.formattedValue }}</p>
         </a>
-        <button type="button" class="btn-add" (click)="addToCart(product.code)">Add to cart</button>
+        <button type="button" class="btn-add" (click)="addToCart(product.code)">{{ 'commerce.addToCart' | juliTranslate }}</button>
       </article>
     </div>
 
     <ng-template #noResults>
       <section class="listing-empty">
-        <h2>No products found</h2>
-        <p>Try a different query or browse the catalog from a CMS page.</p>
+        <h2>{{ 'search.noProducts' | juliTranslate }}</h2>
+        <p>{{ 'search.noProductsHint' | juliTranslate }}</p>
       </section>
     </ng-template>
 
@@ -31,15 +31,15 @@
         (click)="changePage(vm.query, (pagination.currentPage || 0) - 1)"
         [disabled]="(pagination.currentPage || 0) <= 0"
       >
-        Previous
+        {{ 'search.previous' | juliTranslate }}
       </button>
-      <span>Page {{ (pagination.currentPage || 0) + 1 }} of {{ pagination.totalPages || 1 }}</span>
+      <span>{{ 'search.pageOf' | juliTranslate:{ page: (pagination.currentPage || 0) + 1, total: pagination.totalPages || 1 } }}</span>
       <button
         type="button"
         (click)="changePage(vm.query, (pagination.currentPage || 0) + 1)"
         [disabled]="(pagination.currentPage || 0) + 1 >= (pagination.totalPages || 1)"
       >
-        Next
+        {{ 'search.next' | juliTranslate }}
       </button>
     </footer>
   </section>

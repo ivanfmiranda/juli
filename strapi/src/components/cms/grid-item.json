@@ -1,0 +1,32 @@
+{
+  "collectionName": "components_cms_grid_items",
+  "info": {
+    "displayName": "Grid Item",
+    "icon": "apps",
+    "description": "A single cell within a Grid component"
+  },
+  "options": {},
+  "attributes": {
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "icon": {
+      "type": "string"
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "link": {
+      "type": "string"
+    },
+    "buttonLabel": {
+      "type": "string"
+    }
+  }
+}

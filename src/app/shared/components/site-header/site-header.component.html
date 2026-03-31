@@ -2,7 +2,7 @@
   <!-- Top Bar -->
   <div class="top-bar">
     <div class="container">
-      <p class="promo-text">🚚 Frete grátis em compras acima de R$ 199 | 🎁 10% OFF na primeira compra</p>
+      <p class="promo-text">{{ 'header.promo' | juliTranslate }}</p>
     </div>
   </div>
 
@@ -10,7 +10,7 @@
   <div class="main-header">
     <div class="container">
       <!-- Mobile Menu Button -->
-      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" aria-label="Menu">
+      <button class="mobile-menu-btn" (click)="toggleMobileMenu()" [attr.aria-label]="'header.menu' | juliTranslate">
         <span></span>
         <span></span>
         <span></span>
@@ -24,29 +24,54 @@
 
       <!-- Search -->
       <div class="search-bar">
-        <input 
-          type="text" 
-          [(ngModel)]="searchQuery" 
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
           (keyup.enter)="onSearch()"
-          placeholder="O que você está procurando?"
-          aria-label="Buscar produtos">
-        <button (click)="onSearch()" aria-label="Buscar">
+          [placeholder]="'header.searchPlaceholder' | juliTranslate"
+          [attr.aria-label]="'header.searchAria' | juliTranslate">
+        <button (click)="onSearch()" [attr.aria-label]="'header.searchAria' | juliTranslate">
           🔍
+        </button>
+      </div>
+
+      <div class="header-locale-switcher">
+        <button *ngFor="let locale of locales"
+                class="locale-flag"
+                [class.active]="(activeLocale$ | async)?.code === locale.code"
+                (click)="changeLocale(locale.code)"
+                [attr.title]="locale.label"
+                [attr.aria-label]="locale.label">
+          <span class="flag">{{ locale.code === 'pt-BR' ? '🇧🇷' : '🇺🇸' }}</span>
         </button>
       </div>
 
       <!-- Actions -->
       <div class="header-actions">
-        <a routerLink="/account/orders" class="action-btn" title="Minha Conta">
+        <a routerLink="/account/orders" class="action-btn" [attr.title]="'header.account' | juliTranslate">
           <span class="icon">👤</span>
-          <span class="label" *ngIf="isLoggedIn$ | async">Minha Conta</span>
-          <span class="label" *ngIf="!(isLoggedIn$ | async)">Entrar</span>
+          <span class="label desktop-only" *ngIf="isLoggedIn$ | async">{{ 'header.account' | juliTranslate }}</span>
+          <span class="label desktop-only" *ngIf="!(isLoggedIn$ | async)">{{ 'header.signIn' | juliTranslate }}</span>
         </a>
 
-        <a routerLink="/cart" class="action-btn cart-btn" title="Carrinho">
+        <a *ngIf="!(isLoggedIn$ | async)" routerLink="/register" class="action-btn register-btn" [attr.title]="'header.register' | juliTranslate">
+          <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          <span class="label desktop-only">{{ 'header.register' | juliTranslate }}</span>
+        </a>
+
+        <button
+          *ngIf="isLoggedIn$ | async"
+          class="action-btn logout-btn"
+          [attr.title]="'header.logout' | juliTranslate"
+          (click)="logout()">
+          <span class="icon">🚪</span>
+          <span class="label desktop-only">{{ 'header.logout' | juliTranslate }}</span>
+        </button>
+
+        <a routerLink="/cart" class="action-btn cart-btn" [attr.title]="'header.cart' | juliTranslate">
           <span class="icon">🛒</span>
           <span class="badge" *ngIf="cartTotal$ | async as total">{{ total }}</span>
-          <span class="label">Carrinho</span>
+          <span class="label desktop-only">{{ 'header.cart' | juliTranslate }}</span>
         </a>
       </div>
     </div>
@@ -59,13 +84,13 @@
         <li *ngFor="let cat of categories">
           <a [routerLink]="['/c', cat.code]" class="nav-link">
             <span class="nav-icon">{{ cat.icon }}</span>
-            <span>{{ cat.name }}</span>
+            <span>{{ cat.translationKey | juliTranslate }}</span>
           </a>
         </li>
         <li class="nav-highlight">
           <a routerLink="/c/promocoes" class="nav-link sale">
             <span class="nav-icon">🏷️</span>
-            <span>Promoções</span>
+            <span>{{ 'header.sale' | juliTranslate }}</span>
           </a>
         </li>
       </ul>
