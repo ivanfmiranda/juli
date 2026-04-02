@@ -48,15 +48,10 @@
 
       <!-- Actions -->
       <div class="header-actions">
-        <a routerLink="/account/orders" class="action-btn" [attr.title]="'header.account' | juliTranslate">
+        <a [routerLink]="(isLoggedIn$ | async) ? '/account/orders' : '/login'" class="action-btn" [attr.title]="(isLoggedIn$ | async) ? ('header.account' | juliTranslate) : ('header.signIn' | juliTranslate)">
           <span class="icon">👤</span>
           <span class="label desktop-only" *ngIf="isLoggedIn$ | async">{{ 'header.account' | juliTranslate }}</span>
           <span class="label desktop-only" *ngIf="!(isLoggedIn$ | async)">{{ 'header.signIn' | juliTranslate }}</span>
-        </a>
-
-        <a *ngIf="!(isLoggedIn$ | async)" routerLink="/register" class="action-btn register-btn" [attr.title]="'header.register' | juliTranslate">
-          <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-          <span class="label desktop-only">{{ 'header.register' | juliTranslate }}</span>
         </a>
 
         <button
