@@ -123,22 +123,8 @@ export class JuliCartFacade {
         return;
       }
 
-      // Authenticated: check if there's an anonymous cart to promote
-      const anonymousToken = this.anonymousCartStorage.getAnonymousToken();
-      if (anonymousToken) {
-        this.promoteAnonymousCart().subscribe({
-          next: () => {
-            // Cart promoted successfully — cartIdSubject already set inside promoteAnonymousCart
-          },
-          error: () => {
-            // Promotion failed — fall back to loading/creating authenticated cart
-            this.loadOrCreateAuthenticatedCart(session.username);
-          }
-        });
-        return;
-      }
-
-      // No anonymous cart to promote — load existing authenticated cart
+      // Authenticated: load existing cart.
+      // Cart promotion is handled exclusively by LoginComponent to avoid race conditions.
       this.loadOrCreateAuthenticatedCart(session.username);
     });
 

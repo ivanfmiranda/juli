@@ -1,8 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
-import { of } from 'rxjs';
-import { catchError, finalize, switchMap, timeout } from 'rxjs/operators';
+import { of, timer } from 'rxjs';
+import { catchError, finalize, retryWhen, switchMap, take, timeout } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { JuliCartFacade } from '../../core/commerce';
 
@@ -52,9 +52,12 @@ export class LoginComponent {
         }
 
         return this.cartFacade.promoteAnonymousCart().pipe(
+          retryWhen(errors => errors.pipe(
+            switchMap((err, attempt) => attempt < 2 ? timer(500 * (attempt + 1)) : of(err)),
+            take(3)
+          )),
           catchError(() => {
-            this.cartFacade.discardAnonymousCart();
-            this.warningMessage = 'Login concluído, mas o carrinho anterior expirou e não pôde ser recuperado.';
+            this.warningMessage = 'Login concluído, mas o carrinho anterior não pôde ser recuperado.';
             this.cdr.markForCheck();
             return of(null);
           })
