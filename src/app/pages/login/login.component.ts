@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { of, timer } from 'rxjs';
 import { catchError, finalize, retryWhen, switchMap, take, timeout } from 'rxjs/operators';
@@ -27,6 +27,7 @@ export class LoginComponent {
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
     private readonly router: Router,
+    private readonly route: ActivatedRoute,
     private readonly cdr: ChangeDetectorRef
   ) {}
 
@@ -38,7 +39,7 @@ export class LoginComponent {
 
     const username = this.form.value.username ?? '';
     const password = this.form.value.password ?? '';
-    const redirect = this.router.parseUrl(this.router.url).queryParams['redirect'] || '/';
+    const redirect = this.route.snapshot.queryParams['redirect'] || '/';
 
     this.submitting = true;
     this.errorMessage = undefined;
