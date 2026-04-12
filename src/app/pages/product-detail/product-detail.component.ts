@@ -10,7 +10,7 @@
  * - Produtos relacionados
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { Observable, Subject } from 'rxjs';
@@ -23,6 +23,10 @@ import {
 } from '../../core/commerce';
 import { JuliCartFacade } from '../../core/commerce';
 import { TenantHostService } from '../../core/services/tenant-host.service';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
+import { ReviewService } from '../../core/commerce/services/review.service';
+import { WishlistService } from '../../core/commerce/services/wishlist.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -40,9 +44,28 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   readonly error$ = this.juliProductService.detailError$;
   readonly variantSelection$ = this.juliProductService.variantSelection$;
 
+  // Observables de reviews e wishlist
+  readonly reviewSummary$ = this.reviewService.summary$;
+  readonly myReview$ = this.reviewService.myReview$;
+  readonly reviewLoading$ = this.reviewService.loading$;
+  readonly reviewSubmitError$ = this.reviewService.submitError$;
+
   // Estado local
   selectedImageIndex = 0;
   quantity = 1;
+  addingToCart = false;
+  addToCartError?: string;
+
+  // Estado de wishlist para o produto atual
+  isSaved$: Observable<boolean> | null = null;
+
+  // Estado do form de review
+  reviewFormVisible = false;
+  reviewRating = 5;
+  reviewTitle = '';
+  reviewBody = '';
+  reviewSubmitting = false;
+  reviewSuccess = false;
 
   private siteName: string;
 
@@ -53,6 +76,11 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private readonly cartFacade: JuliCartFacade,
     private readonly titleService: Title,
     private readonly tenantHost: TenantHostService,
+    private readonly cdr: ChangeDetectorRef,
+    private readonly i18n: JuliI18nService,
+    readonly reviewService: ReviewService,
+    readonly wishlistService: WishlistService,
+    readonly auth: AuthService,
   ) {
     const tenantId = this.tenantHost.currentTenantId();
     this.siteName = tenantId && tenantId !== 'default'
@@ -76,6 +104,14 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       if (product?.name) {
         this.titleService.setTitle(`${product.name} — ${this.siteName}`);
       }
+      if (product?.code) {
+        this.reviewService.loadReviews(product.code);
+        this.isSaved$ = this.wishlistService.isSaved$(product.code);
+        if (this.auth.isAuthenticated) {
+          this.reviewService.loadMyReview(product.code);
+          this.wishlistService.checkSku(product.code);
+        }
+      }
     });
   }
 
@@ -83,6 +119,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.juliProductService.clearDetail();
+    this.reviewService.clear();
   }
 
   // ==================== GALERIA ====================
@@ -171,14 +208,22 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    * Adiciona ao carrinho
    */
   addToCart(product: JuliProductDetail, selection: JuliProductVariantSelection): void {
+    if (this.addingToCart) return;
+
     const productCode = selection.variantCode || product.code;
+    this.addingToCart = true;
+    this.addToCartError = undefined;
 
     this.cartFacade.addEntry(productCode, this.quantity).subscribe({
       next: () => {
+        this.addingToCart = false;
+        this.cdr.markForCheck();
         this.router.navigate(['/cart']);
       },
       error: (err) => {
-        console.error('Erro ao adicionar ao carrinho:', err);
+        this.addingToCart = false;
+        this.addToCartError = err?.error?.message || err?.message || this.i18n.translate('pdp.addToCartError');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -202,13 +247,13 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   getStockMessage(product: JuliProductDetail): string {
     switch (product.stock.status) {
       case 'IN_STOCK':
-        return '✓ Em estoque';
+        return this.i18n.translate('pdp.stockInStock');
       case 'LOW_STOCK':
-        return `⚠️ Apenas ${product.stock.quantity} em estoque`;
+        return this.i18n.translate('pdp.stockLow', { quantity: product.stock.quantity });
       case 'OUT_OF_STOCK':
-        return '✗ Indisponível';
+        return this.i18n.translate('pdp.stockOut');
       default:
-        return 'Consultar disponibilidade';
+        return this.i18n.translate('pdp.stockUnknown');
     }
   }
 
@@ -234,5 +279,65 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
    */
   goBack(): void {
     this.router.navigate(['/']);
+  }
+
+  // ==================== WISHLIST ====================
+
+  toggleWishlist(product: JuliProductDetail): void {
+    if (!this.auth.isAuthenticated) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.wishlistService.toggle(product.code, product.code).subscribe({
+      error: () => {}
+    });
+  }
+
+  // ==================== REVIEWS ====================
+
+  openReviewForm(): void {
+    if (!this.auth.isAuthenticated) {
+      this.router.navigate(['/login']);
+      return;
+    }
+    this.reviewFormVisible = true;
+    this.reviewSuccess = false;
+    this.cdr.markForCheck();
+  }
+
+  setReviewRating(rating: number): void {
+    this.reviewRating = rating;
+    this.cdr.markForCheck();
+  }
+
+  submitReview(sku: string): void {
+    if (this.reviewSubmitting) return;
+    this.reviewSubmitting = true;
+    this.reviewSuccess = false;
+    this.cdr.markForCheck();
+
+    this.reviewService.submitReview({
+      sku,
+      rating: this.reviewRating,
+      title: this.reviewTitle,
+      body: this.reviewBody,
+    }).subscribe({
+      next: () => {
+        this.reviewSubmitting = false;
+        this.reviewSuccess = true;
+        this.reviewFormVisible = false;
+        this.reviewTitle = '';
+        this.reviewBody = '';
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.reviewSubmitting = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  getStars(rating: number): boolean[] {
+    return [1, 2, 3, 4, 5].map(i => i <= Math.floor(rating));
   }
 }

@@ -1,10 +1,11 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { FormControl } from '@angular/forms';
 import { AuthService } from './core/auth/auth.service';
 import { JuliCartFacade } from './core/commerce';
-import { TenantHostService } from './core/services/tenant-host.service';
+import { TenantBrandingApiService } from './core/services/tenant-branding-api.service';
+import { JuliBrandingService } from './core/services/juli-branding.service';
 
 @Component({
   selector: 'app-root',
@@ -12,7 +13,7 @@ import { TenantHostService } from './core/services/tenant-host.service';
   styleUrls: ['./app.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   readonly searchControl = new FormControl('');
   readonly session$ = this.authService.session$;
   readonly cartCount$ = this.cartFacade.itemCount$;
@@ -22,14 +23,17 @@ export class AppComponent {
     private readonly cartFacade: JuliCartFacade,
     private readonly router: Router,
     private readonly titleService: Title,
-    private readonly tenantHost: TenantHostService,
-  ) {
-    const tenantId = this.tenantHost.currentTenantId();
-    const name = tenantId && tenantId !== 'default'
-      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
-      : 'Juli Store';
-    this.titleService.setTitle(name);
+    private readonly brandingApi: TenantBrandingApiService,
+    private readonly branding: JuliBrandingService,
+  ) {}
 
+  ngOnInit(): void {
+    this.brandingApi.load().subscribe(config => {
+      this.titleService.setTitle(
+        config.brandName !== 'JULI' ? config.brandName : 'Juli Store'
+      );
+      this.branding.applyTenantTheme(config);
+    });
   }
 
   search(): void {

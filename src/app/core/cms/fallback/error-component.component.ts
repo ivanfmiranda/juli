@@ -10,9 +10,10 @@
 
 import { ChangeDetectionStrategy, Component, Input, Optional } from '@angular/core';
 import { CmsComponentData } from '@spartacus/storefront';
-import { Observable, of } from 'rxjs';
+import { Observable, defer, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FallbackComponentData } from '../../models/cms.model';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-error-component',
@@ -21,19 +22,18 @@ import { FallbackComponentData } from '../../models/cms.model';
       <div class="juli-fallback-content">
         <div class="juli-fallback-icon">⚠️</div>
         <div class="juli-fallback-text">
-          <strong>Erro ao Carregar Conteúdo</strong>
+          <strong>{{ 'fallback.errorTitle' | juliTranslate }}</strong>
           <code class="juli-type-code" *ngIf="(data.originalType || data.typeCode) !== 'N/A'">{{ data.originalType || data.typeCode }}</code>
           <p class="juli-error-message" *ngIf="data.errorMessage || errorMessage">{{ data.errorMessage || errorMessage }}</p>
           <p class="juli-fallback-hint">
-            Não foi possível carregar este conteúdo. 
-            Tente atualizar a página ou volte mais tarde.
+            {{ 'fallback.errorHint' | juliTranslate }}
           </p>
           <button 
             *ngIf="showRetry"
             class="juli-retry-btn"
             (click)="onRetry()"
           >
-            🔄 Tentar Novamente
+            {{ 'fallback.retry' | juliTranslate }}
           </button>
         </div>
       </div>
@@ -131,16 +131,19 @@ export class ErrorComponent {
   constructor(@Optional() protected componentData?: CmsComponentData<FallbackComponentData>) {
     this.data$ = this.componentData?.data$.pipe(
       map(data => data ?? this.defaultData())
-    ) ?? of(this.defaultData());
+    ) ?? defer(() => of(this.defaultData()));
   }
 
   onRetry(): void {
     if (this.retryHandler) {
       this.retryHandler();
     } else {
-      // Default: reload page
-      window.location.reload();
+      this.reloadPage();
     }
+  }
+
+  reloadPage(): void {
+    window.location.reload();
   }
 
   private defaultData(): FallbackComponentData {

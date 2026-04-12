@@ -1,6 +1,6 @@
 <section class="register-page">
   <div class="register-card">
-    <h1>Juli</h1>
+    <h1>{{ brandName }}</h1>
     <p>{{ 'register.subtitle' | juliTranslate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
@@ -8,18 +8,33 @@
         {{ 'register.email' | juliTranslate }}
         <input type="email" formControlName="username" autocomplete="email"
                [placeholder]="'register.emailPlaceholder' | juliTranslate">
+        <span class="field-error" *ngIf="form.get('username')?.touched && form.get('username')?.hasError('required')">
+          {{ 'register.emailRequired' | juliTranslate }}
+        </span>
+        <span class="field-error" *ngIf="form.get('username')?.touched && form.get('username')?.hasError('email')">
+          {{ 'register.emailInvalid' | juliTranslate }}
+        </span>
       </label>
 
       <label>
         {{ 'register.password' | juliTranslate }}
         <input type="password" formControlName="password" autocomplete="new-password"
                [placeholder]="'register.passwordPlaceholder' | juliTranslate">
+        <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('required')">
+          {{ 'register.passwordRequired' | juliTranslate }}
+        </span>
+        <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('minlength')">
+          {{ 'register.passwordMinLength' | juliTranslate }}
+        </span>
       </label>
 
       <label>
         {{ 'register.confirmPassword' | juliTranslate }}
         <input type="password" formControlName="confirmPassword" autocomplete="new-password"
                [placeholder]="'register.confirmPasswordPlaceholder' | juliTranslate">
+        <span class="field-error" *ngIf="form.get('confirmPassword')?.touched && form.get('confirmPassword')?.value && form.get('confirmPassword')?.value !== form.get('password')?.value">
+          {{ 'register.passwordMismatch' | juliTranslate }}
+        </span>
       </label>
 
       <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>

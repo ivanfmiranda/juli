@@ -1,10 +1,12 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { Product, ProductSearchPage } from '@spartacus/core';
 import { Observable, combineLatest, of } from 'rxjs';
-import { map, switchMap } from 'rxjs/operators';
+import { map, switchMap, tap } from 'rxjs/operators';
 import { JuliCartFacade, UbrisProductSearchConnector } from '../../core/commerce';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
+import { TenantHostService } from '../../core/services/tenant-host.service';
 
 @Component({
   selector: 'app-search-page',
@@ -34,18 +36,30 @@ export class SearchPageComponent {
           page: result,
           products: result.products ?? [],
           total: result.pagination?.totalResults ?? (result.products?.length ?? 0)
-        }))
+        })),
+        tap(result => this.titleService.setTitle(
+          result.query ? `Busca: ${result.query} — ${this.siteName}` : `Busca — ${this.siteName}`
+        ))
       );
     })
   );
+
+  private readonly siteName: string;
 
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly searchConnector: UbrisProductSearchConnector,
     private readonly cartFacade: JuliCartFacade,
-    public readonly i18n: JuliI18nService
-  ) {}
+    public readonly i18n: JuliI18nService,
+    private readonly titleService: Title,
+    tenantHost: TenantHostService
+  ) {
+    const tenantId = tenantHost.currentTenantId();
+    this.siteName = tenantId && tenantId !== 'default'
+      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
+      : 'Juli Store';
+  }
 
   addToCart(productCode?: string): void {
     if (!productCode) {

@@ -2,17 +2,17 @@
   <!-- Loading State -->
   <div class="loading-state" *ngIf="loading$ | async">
     <div class="spinner"></div>
-    <p>Carregando produto...</p>
+    <p>{{ 'pdp.loading' | juliTranslate }}</p>
   </div>
 
   <!-- Error State -->
   <div class="error-state" *ngIf="error$ | async as error">
     <div class="error-icon">⚠️</div>
-    <h3>Erro ao carregar produto</h3>
+    <h3>{{ 'pdp.errorTitle' | juliTranslate }}</h3>
     <p>{{ error }}</p>
     <div class="error-actions">
-      <button class="btn-secondary" (click)="goBack()">← Voltar</button>
-      <button class="btn-primary" (click)="retryLoad()">Tentar novamente</button>
+      <button class="btn-secondary" (click)="goBack()">{{ 'pdp.goBack' | juliTranslate }}</button>
+      <button class="btn-primary" (click)="retryLoad()">{{ 'pdp.retry' | juliTranslate }}</button>
     </div>
   </div>
 
@@ -21,7 +21,7 @@
     <ng-container *ngIf="(variantSelection$ | async) as selection">
       <!-- Breadcrumbs -->
       <nav class="breadcrumbs">
-        <a routerLink="/">Home</a>
+        <a routerLink="/">{{ 'pdp.home' | juliTranslate }}</a>
         <span class="separator">/</span>
         <ng-container *ngIf="product.categories?.length; else productOnly">
           <ng-container *ngFor="let category of product.categories; let last = last">
@@ -54,7 +54,7 @@
 
             <!-- Zoom hint -->
             <div class="zoom-hint" *ngIf="product.gallery?.[selectedImageIndex]?.zoomUrl">
-              🔍 Passe o mouse para zoom
+              {{ 'pdp.zoomHint' | juliTranslate }}
             </div>
           </div>
 
@@ -83,7 +83,7 @@
           <div class="product-rating" *ngIf="product.rating">
             <span class="stars">{{ '⭐'.repeat(Math.floor(product.rating)) }}</span>
             <span class="rating-value">{{ product.rating | number:'1.1-1' }}</span>
-            <span class="reviews">({{ product.reviewCount }} avaliações)</span>
+            <span class="reviews">{{ 'pdp.reviews' | juliTranslate:{ count: product.reviewCount } }}</span>
           </div>
 
           <!-- Price -->
@@ -132,7 +132,7 @@
 
           <!-- Quantity -->
           <div class="product-quantity">
-            <label>Quantidade:</label>
+            <label>{{ 'pdp.quantity' | juliTranslate }}</label>
             <div class="quantity-control">
               <button (click)="decreaseQuantity()" [disabled]="quantity <= 1">−</button>
               <input type="number" [(ngModel)]="quantity" min="1" [max]="product.stock.quantity ?? 99">
@@ -143,16 +143,26 @@
           <!-- Add to Cart -->
           <div class="product-actions">
             <button class="btn-add-cart"
-                    [class.loading]="loading$ | async"
-                    [disabled]="!canAddToCart(product, selection)"
+                    [class.loading]="addingToCart"
+                    [disabled]="!canAddToCart(product, selection) || addingToCart"
                     (click)="addToCart(product, selection)">
-              <span *ngIf="canAddToCart(product, selection)">🛒 Adicionar ao Carrinho</span>
-              <span *ngIf="!canAddToCart(product, selection)">Indisponível</span>
+              <span *ngIf="addingToCart">{{ 'pdp.adding' | juliTranslate }}</span>
+              <span *ngIf="!addingToCart && canAddToCart(product, selection)">{{ 'pdp.addToCart' | juliTranslate }}</span>
+              <span *ngIf="!addingToCart && !canAddToCart(product, selection)">{{ 'pdp.unavailable' | juliTranslate }}</span>
             </button>
 
-            <button class="btn-wishlist" title="Adicionar à lista de desejos">
-              ♡
+            <button class="btn-wishlist"
+                    [class.saved]="isSaved$ | async"
+                    (click)="toggleWishlist(product)"
+                    [title]="(isSaved$ | async) ? ('wishlist.remove' | juliTranslate) : ('wishlist.add' | juliTranslate)">
+              {{ (isSaved$ | async) ? '❤️' : '🤍' }}
             </button>
+          </div>
+
+          <!-- Add to Cart Feedback -->
+          <div class="cart-feedback cart-error" *ngIf="addToCartError">
+            {{ addToCartError }}
+            <button class="btn-link" (click)="addToCartError = undefined">&times;</button>
           </div>
 
           <!-- Delivery Info -->
@@ -163,7 +173,7 @@
             </div>
             <div class="delivery-item" *ngIf="product.deliveryInfo.freeShipping">
               <span class="icon">✓</span>
-              <span>Frete grátis disponível</span>
+              <span>{{ 'pdp.freeShipping' | juliTranslate }}</span>
             </div>
           </div>
 
@@ -179,9 +189,9 @@
       <div class="product-details">
         <!-- Tabs -->
         <div class="tabs">
-          <button class="tab-btn active">Descrição</button>
-          <button class="tab-btn" *ngIf="product.attributes?.length">Especificações</button>
-          <button class="tab-btn">Avaliações</button>
+          <button class="tab-btn active">{{ 'pdp.tabDescription' | juliTranslate }}</button>
+          <button class="tab-btn" *ngIf="product.attributes?.length">{{ 'pdp.tabSpecifications' | juliTranslate }}</button>
+          <button class="tab-btn">{{ 'pdp.tabReviews' | juliTranslate }}</button>
         </div>
 
         <!-- Description -->
@@ -200,9 +210,93 @@
         </div>
       </div>
 
+      <!-- Reviews Section -->
+      <section class="product-reviews">
+        <ng-container *ngIf="reviewSummary$ | async as summary">
+          <div class="reviews-header">
+            <h2>{{ 'reviews.title' | juliTranslate }}</h2>
+            <div class="reviews-aggregate" *ngIf="summary.count > 0">
+              <span class="avg-rating">{{ summary.averageRating | number:'1.1-1' }}</span>
+              <span class="stars">
+                <span *ngFor="let filled of getStars(summary.averageRating)"
+                      class="star" [class.filled]="filled">★</span>
+              </span>
+              <span class="review-count">{{ 'pdp.reviews' | juliTranslate:{ count: summary.count } }}</span>
+            </div>
+          </div>
+
+          <!-- Write Review Button -->
+          <div class="review-cta" *ngIf="!reviewFormVisible">
+            <ng-container *ngIf="auth.isAuthenticated; else loginToReview">
+              <ng-container *ngIf="(myReview$ | async) as myStatus">
+                <button class="btn-secondary" (click)="openReviewForm()">
+                  {{ myStatus.exists ? ('reviews.editReview' | juliTranslate) : ('reviews.writeReview' | juliTranslate) }}
+                </button>
+              </ng-container>
+            </ng-container>
+            <ng-template #loginToReview>
+              <p class="review-login-hint">{{ 'reviews.loginToReview' | juliTranslate }}</p>
+            </ng-template>
+          </div>
+
+          <!-- Review Success -->
+          <div class="review-success" *ngIf="reviewSuccess">
+            {{ 'reviews.successMessage' | juliTranslate }}
+          </div>
+
+          <!-- Review Form -->
+          <div class="review-form" *ngIf="reviewFormVisible">
+            <h3>{{ 'reviews.writeReview' | juliTranslate }}</h3>
+            <div class="rating-picker">
+              <label>{{ 'reviews.yourRating' | juliTranslate }}</label>
+              <span *ngFor="let i of [1,2,3,4,5]"
+                    class="star-pick" [class.active]="i <= reviewRating"
+                    (click)="setReviewRating(i)">★</span>
+            </div>
+            <div class="form-field">
+              <label>{{ 'reviews.titleLabel' | juliTranslate }}</label>
+              <input type="text" [(ngModel)]="reviewTitle"
+                     [placeholder]="'reviews.titlePlaceholder' | juliTranslate">
+            </div>
+            <div class="form-field">
+              <label>{{ 'reviews.bodyLabel' | juliTranslate }}</label>
+              <textarea rows="4" [(ngModel)]="reviewBody"
+                        [placeholder]="'reviews.bodyPlaceholder' | juliTranslate"></textarea>
+            </div>
+            <div class="form-actions">
+              <button class="btn-primary" [disabled]="reviewSubmitting"
+                      (click)="submitReview(product.code)">
+                {{ reviewSubmitting ? ('reviews.submitting' | juliTranslate) : ('reviews.submit' | juliTranslate) }}
+              </button>
+              <button class="btn-link" (click)="reviewFormVisible = false">{{ 'pdp.goBack' | juliTranslate }}</button>
+            </div>
+            <div class="review-error" *ngIf="reviewSubmitError$ | async as err">
+              {{ 'reviews.errorMessage' | juliTranslate }}
+            </div>
+          </div>
+
+          <!-- Review List -->
+          <div class="review-list" *ngIf="summary.reviews.length; else noReviews">
+            <div class="review-item" *ngFor="let review of summary.reviews">
+              <div class="review-stars">
+                <span *ngFor="let filled of getStars(review.rating)"
+                      class="star" [class.filled]="filled">★</span>
+              </div>
+              <p class="review-title" *ngIf="review.title"><strong>{{ review.title }}</strong></p>
+              <p class="review-body" *ngIf="review.body">{{ review.body }}</p>
+              <span class="review-date">{{ review.createdAt | date:'mediumDate' }}</span>
+            </div>
+          </div>
+          <ng-template #noReviews>
+            <p class="no-reviews">{{ 'reviews.noReviews' | juliTranslate }}</p>
+            <p class="be-first">{{ 'reviews.beFirst' | juliTranslate }}</p>
+          </ng-template>
+        </ng-container>
+      </section>
+
       <!-- Related Products -->
       <section class="related-products" *ngIf="product.relatedProducts?.length">
-        <h2>Produtos Relacionados</h2>
+        <h2>{{ 'pdp.relatedProducts' | juliTranslate }}</h2>
         <div class="related-grid">
           <article class="related-card" *ngFor="let related of product.relatedProducts">
             <a [routerLink]="related.url">

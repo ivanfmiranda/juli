@@ -35,7 +35,8 @@
               "src/styles.scss",
               "src/design-system/tokens.css",
               "src/design-system/components.css",
-              "src/design-system/store.css"
+              "src/design-system/store.css",
+              "src/app/shared/cms-runtime/smartedit-overlay.styles.css"
             ],
             "scripts": []
           },

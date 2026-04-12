@@ -11,7 +11,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin, of, Subject, Subscription, timer } from 'rxjs';
-import { finalize, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap, takeUntil } from 'rxjs/operators';
 import type { Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
@@ -140,8 +140,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     }
 
     const session = this.authService.currentSession;
-    const cartId = this.cartFacade.currentCartId;
-    if (!session || !cartId || this.form.invalid || this.loadingDelivery || this.reviewing || this.submitting) {
+    if (!session || this.form.invalid || this.loadingDelivery || this.reviewing || this.submitting) {
       this.form.markAllAsTouched();
       return;
     }
@@ -150,26 +149,33 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     this.errorMessage = undefined;
     this.statusMessage = this.i18n.translate('checkout.savingAddress');
 
-    const request: JuliCheckoutAddressUpsertRequest = {
-      checkoutId: this.checkoutId,
-      cartId,
-      customerId: session.username,
-      userType: session.userType || 'B2C',
-      paymentMethod: this.form.value.paymentMethod || 'CARD',
-      address: {
-        fullName: this.form.value.fullName || '',
-        line1: this.form.value.line1 || '',
-        line2: this.form.value.line2 || undefined,
-        city: this.form.value.city || '',
-        region: this.form.value.region || undefined,
-        postalCode: this.form.value.postalCode || '',
-        countryIso: this.form.value.countryIso || 'BR',
-        phone: this.form.value.phone || undefined,
-        notes: this.form.value.notes || undefined
-      }
-    };
+    // Ensure a cart exists before proceeding (handles cases where promotion failed)
+    const cartReady$ = this.cartFacade.currentCartId
+      ? of(this.cartFacade.currentCartId)
+      : this.cartFacade.ensureCart().pipe(map(cart => cart.code!));
 
-    this.checkoutFacade.saveAddress(request).pipe(
+    cartReady$.pipe(
+      switchMap(cartId => {
+        const request: JuliCheckoutAddressUpsertRequest = {
+          checkoutId: this.checkoutId,
+          cartId,
+          customerId: session.username,
+          userType: session.userType || 'B2C',
+          paymentMethod: this.form.value.paymentMethod || 'CARD',
+          address: {
+            fullName: this.form.value.fullName || '',
+            line1: this.form.value.line1 || '',
+            line2: this.form.value.line2 || undefined,
+            city: this.form.value.city || '',
+            region: this.form.value.region || undefined,
+            postalCode: this.form.value.postalCode || '',
+            countryIso: this.form.value.countryIso || 'BR',
+            phone: this.form.value.phone || undefined,
+            notes: this.form.value.notes || undefined
+          }
+        };
+        return this.checkoutFacade.saveAddress(request);
+      }),
       finalize(() => {
         this.loadingDelivery = false;
         this.cdr.markForCheck();
@@ -526,7 +532,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     this.checkoutFacade.deliveryOptions(checkoutId).pipe(
       switchMap(optionsState => forkJoin({
         delivery: of(optionsState),
-        payment: this.checkoutFacade.paymentMethods(checkoutId)
+        payment: this.checkoutFacade.paymentMethods(checkoutId).pipe(
+          catchError(() => of({ checkoutId, availableMethods: [] as any[] }))
+        )
       })),
       finalize(() => {
         this.loadingPaymentMethods = false;

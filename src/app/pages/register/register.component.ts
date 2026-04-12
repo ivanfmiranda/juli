@@ -1,8 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder, Validators } from '@angular/forms';
 import { finalize, timeout } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
+import { TenantBrandingApiService } from '../../core/services/tenant-branding-api.service';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-register-page',
@@ -10,13 +12,14 @@ import { AuthService } from '../../core/auth/auth.service';
   styleUrls: ['./register.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   readonly form = this.fb.group({
     username: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     confirmPassword: ['', Validators.required]
   });
 
+  brandName = 'Juli';
   submitting = false;
   errorMessage?: string;
   successMessage?: string;
@@ -25,8 +28,14 @@ export class RegisterComponent {
     private readonly fb: FormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly brandingApi: TenantBrandingApiService,
+    private readonly i18n: JuliI18nService,
   ) {}
+
+  ngOnInit(): void {
+    this.brandName = this.brandingApi.snapshot.brandName;
+  }
 
   submit(): void {
     if (this.form.invalid || this.submitting) {
@@ -39,7 +48,7 @@ export class RegisterComponent {
     const confirmPassword = this.form.value.confirmPassword ?? '';
 
     if (password !== confirmPassword) {
-      this.errorMessage = 'As senhas não conferem.';
+      this.errorMessage = this.i18n.translate('register.passwordMismatch');
       this.cdr.markForCheck();
       return;
     }
@@ -61,9 +70,9 @@ export class RegisterComponent {
       error: (err) => {
         const msg = err?.error?.message || err?.message || '';
         if (msg.toLowerCase().includes('conflict') || msg.toLowerCase().includes('already')) {
-          this.errorMessage = 'Este e-mail já está cadastrado.';
+          this.errorMessage = this.i18n.translate('register.emailConflict');
         } else {
-          this.errorMessage = 'Não foi possível criar a conta. Tente novamente.';
+          this.errorMessage = this.i18n.translate('register.genericError');
         }
         this.cdr.markForCheck();
       }

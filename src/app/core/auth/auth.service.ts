@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
+import { TenantHostService } from '../services/tenant-host.service';
 
 export interface AnonymousPrincipal {
   anonymousId: string;
@@ -34,20 +35,33 @@ type LoginEnvelope = {
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly storageKey = 'juli.session';
-  private readonly anonStorageKey = 'juli.anon.principal';
-  private readonly sessionSubject = new BehaviorSubject<AuthSession | null>(this.restoreSession());
-  private readonly anonymousPrincipalSubject = new BehaviorSubject<AnonymousPrincipal | null>(this.restoreAnonymousPrincipal());
+  private readonly sessionSubject: BehaviorSubject<AuthSession | null>;
+  private readonly anonymousPrincipalSubject: BehaviorSubject<AnonymousPrincipal | null>;
 
-  readonly session$ = this.sessionSubject.asObservable();
-  readonly anonymousPrincipal$ = this.anonymousPrincipalSubject.asObservable();
+  readonly session$: Observable<AuthSession | null>;
+  readonly anonymousPrincipal$: Observable<AnonymousPrincipal | null>;
 
-  constructor(private readonly http: HttpClient, private readonly router: Router) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly router: Router,
+    private readonly tenantHost: TenantHostService
+  ) {
+    this.sessionSubject = new BehaviorSubject<AuthSession | null>(this.restoreSession());
+    this.anonymousPrincipalSubject = new BehaviorSubject<AnonymousPrincipal | null>(this.restoreAnonymousPrincipal());
+    this.session$ = this.sessionSubject.asObservable();
+    this.anonymousPrincipal$ = this.anonymousPrincipalSubject.asObservable();
+  }
+
+  private storageKey(base: string): string {
+    const tenant = this.tenantHost.currentTenantId();
+    return `${base}.${tenant}`;
+  }
 
   login(username: string, password: string): Observable<AuthSession> {
     return this.http.post<LoginEnvelope>(`${environment.ubrisApiBaseUrl}/api/bff/auth/login`, {
       username,
-      password
+      password,
+      tenantId: this.tenantHost.currentTenantId()
     }).pipe(
       map(response => {
         if (!response?.data?.accessToken) {
@@ -64,7 +78,8 @@ export class AuthService {
   register(username: string, password: string): Observable<AuthSession> {
     return this.http.post<LoginEnvelope>(`${environment.ubrisApiBaseUrl}/api/bff/auth/register`, {
       username,
-      password
+      password,
+      tenantId: this.tenantHost.currentTenantId()
     }).pipe(
       map(response => {
         if (!response?.data?.accessToken) {
@@ -79,7 +94,7 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(this.storageKey);
+    localStorage.removeItem(this.storageKey('juli.session'));
     this.sessionSubject.next(null);
     void this.router.navigate(['/login']);
   }
@@ -90,11 +105,16 @@ export class AuthService {
       return null;
     }
     if (session.expiresAt && Date.now() >= session.expiresAt) {
-      this.logout();
+      this.clearSession();
       return null;
     }
     const tokenType = session.tokenType || 'Bearer';
     return `${tokenType} ${session.accessToken}`;
+  }
+
+  clearSession(): void {
+    localStorage.removeItem(this.storageKey('juli.session'));
+    this.sessionSubject.next(null);
   }
 
   get isAuthenticated(): boolean {
@@ -142,7 +162,7 @@ export class AuthService {
     }
     // Also check localStorage directly for cross-tab scenarios
     if (typeof localStorage !== 'undefined') {
-      const cartData = localStorage.getItem('juli.anon.cart');
+      const cartData = localStorage.getItem(this.storageKey('juli.anon.cart'));
       if (cartData) {
         try {
           const parsed = JSON.parse(cartData);
@@ -159,7 +179,7 @@ export class AuthService {
   }
 
   clearAnonymousPrincipal(): void {
-    localStorage.removeItem(this.anonStorageKey);
+    localStorage.removeItem(this.storageKey('juli.anon.principal'));
     this.anonymousPrincipalSubject.next(null);
   }
 
@@ -178,12 +198,13 @@ export class AuthService {
   }
 
   private persistAnonymousPrincipal(anonymousPrincipal: AnonymousPrincipal): void {
-    localStorage.setItem(this.anonStorageKey, JSON.stringify(anonymousPrincipal));
+    localStorage.setItem(this.storageKey('juli.anon.principal'), JSON.stringify(anonymousPrincipal));
     this.anonymousPrincipalSubject.next(anonymousPrincipal);
   }
 
   private restoreAnonymousPrincipal(): AnonymousPrincipal | null {
-    const raw = localStorage.getItem(this.anonStorageKey);
+    const key = this.storageKey('juli.anon.principal');
+    const raw = localStorage.getItem(key);
     if (!raw) {
       return null;
     }
@@ -195,7 +216,7 @@ export class AuthService {
         createdAt: new Date(parsed.createdAt)
       } as AnonymousPrincipal;
     } catch {
-      localStorage.removeItem(this.anonStorageKey);
+      localStorage.removeItem(key);
       return null;
     }
   }
@@ -204,12 +225,13 @@ export class AuthService {
     if (!session.expiresAt && session.expiresIn) {
       session.expiresAt = Date.now() + session.expiresIn * 1000;
     }
-    localStorage.setItem(this.storageKey, JSON.stringify(session));
+    localStorage.setItem(this.storageKey('juli.session'), JSON.stringify(session));
     this.sessionSubject.next(session);
   }
 
   private restoreSession(): AuthSession | null {
-    const raw = localStorage.getItem(this.storageKey);
+    const key = this.storageKey('juli.session');
+    const raw = localStorage.getItem(key);
     if (!raw) {
       return null;
     }
@@ -217,7 +239,7 @@ export class AuthService {
     try {
       return JSON.parse(raw) as AuthSession;
     } catch {
-      localStorage.removeItem(this.storageKey);
+      localStorage.removeItem(key);
       return null;
     }
   }

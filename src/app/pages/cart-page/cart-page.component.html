@@ -1,4 +1,19 @@
 <!-- Cart Page usando Design System UBRIS -->
+<ng-container *ngIf="reloading; else cartReady">
+  <main class="ub-store__main">
+    <div class="ub-store__container">
+      <div class="cart-empty">
+        <div class="ub-empty">
+          <div class="ub-empty__icon">
+            <div class="ub-loading-spinner"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</ng-container>
+
+<ng-template #cartReady>
 <ng-container *ngIf="cart$ | async as cart; else emptyState">
   <main class="ub-store__main" *ngIf="cart; else emptyState">
     <div class="ub-store__container">
@@ -121,6 +136,9 @@
     </div>
   </main>
 </ng-container>
+
+<!-- Close cartReady wrapper -->
+</ng-template>
 
 <!-- Empty State -->
 <ng-template #emptyState>

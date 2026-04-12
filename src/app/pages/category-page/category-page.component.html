@@ -50,10 +50,11 @@
           <!-- Sort Control -->
           <div class="sort-control" *ngIf="vm.listing.sorts?.length">
             <label for="sort-select">{{ 'category.sortBy' | juliTranslate }}</label>
-            <select id="sort-select" 
-                    [value]="getSelectedSort(vm.listing.sorts)"
+            <select id="sort-select"
                     (change)="changeSort($any($event.target).value)">
-              <option *ngFor="let sort of vm.listing.sorts" [value]="sort.code">
+              <option *ngFor="let sort of vm.listing.sorts"
+                      [value]="sort.code"
+                      [selected]="sort.code === getSelectedSort(vm.listing.sorts)">
                 {{ sort.name }}
               </option>
             </select>

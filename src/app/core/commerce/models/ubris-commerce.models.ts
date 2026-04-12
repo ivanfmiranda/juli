@@ -13,6 +13,14 @@ export interface UbrisStorefrontList<T> {
   size?: number;
   query?: string;
   category?: Record<string, unknown>;
+  sort?: string;
+  sorts?: UbrisSortOption[];
+}
+
+export interface UbrisSortOption {
+  code?: string;
+  name?: string;
+  selected?: boolean;
 }
 
 export interface JuliCategoryPage {
@@ -22,6 +30,8 @@ export interface JuliCategoryPage {
   total: number;
   page: number;
   pageSize: number;
+  sort?: string;
+  sorts?: Array<{ code: string; name: string; selected: boolean }>;
 }
 
 export interface JuliCartState {

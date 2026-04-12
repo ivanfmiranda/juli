@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { JuliI18nModule } from '../../core/i18n/i18n.module';
 import { PageRendererComponent } from './page-renderer.component';
 import { BannerBlockComponent } from './blocks/banner-block.component';
 import { TextBlockComponent } from './blocks/text-block.component';
@@ -28,7 +29,7 @@ import { ProductCarouselBlockComponent } from './blocks/product-carousel-block.c
     MapBlockComponent,
     ProductCarouselBlockComponent,
   ],
-  imports: [CommonModule, HttpClientModule, FormsModule],
+  imports: [CommonModule, HttpClientModule, FormsModule, JuliI18nModule],
   exports: [PageRendererComponent],
 })
 export class PageRendererModule {}

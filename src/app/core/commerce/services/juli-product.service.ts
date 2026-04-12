@@ -23,6 +23,7 @@ import {
 } from '../models/juli-product.model';
 import { UbrisProductConnector } from '../connectors/product.connector';
 import { UbrisCategoryConnector } from '../connectors/category.connector';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 /**
  * Estado completo do módulo de produtos
@@ -80,7 +81,8 @@ export class JuliProductService implements OnDestroy {
 
   constructor(
     private readonly productConnector: UbrisProductConnector,
-    private readonly categoryConnector: UbrisCategoryConnector
+    private readonly categoryConnector: UbrisCategoryConnector,
+    private readonly i18n: JuliI18nService,
   ) {}
 
   ngOnDestroy(): void {
@@ -105,7 +107,7 @@ export class JuliProductService implements OnDestroy {
     this.categoryConnector.get(categoryCode, page, pageSize, sort).pipe(
       takeUntil(this.destroy$),
       // Mapeia JuliCategoryPage para JuliProductListing
-      map(categoryPage => this.mapCategoryPageToListing(categoryPage, page, pageSize)),
+      map(categoryPage => this.mapCategoryPageToListing(categoryPage, page, pageSize, sort)),
       tap(listing => {
         this.patchState({
           listing,
@@ -192,7 +194,7 @@ export class JuliProductService implements OnDestroy {
     if (!variant) return;
 
     const valid = variant.available;
-    const errorMessage = valid ? undefined : 'Variante indisponível';
+    const errorMessage = valid ? undefined : this.i18n.translate('productService.variantUnavailable');
 
     this.patchState({
       variantSelection: {
@@ -240,7 +242,7 @@ export class JuliProductService implements OnDestroy {
           variantSelection: {
             attributes: newAttributes,
             valid: false,
-            errorMessage: 'Combinação não disponível',
+            errorMessage: this.i18n.translate('productService.combinationUnavailable'),
           },
         });
       }
@@ -274,7 +276,7 @@ export class JuliProductService implements OnDestroy {
     if (error && typeof error === 'object' && 'message' in error) {
       return String((error as Record<string, unknown>).message);
     }
-    return 'Erro desconhecido';
+    return this.i18n.translate('productService.unknownError');
   }
 
   /**
@@ -283,34 +285,90 @@ export class JuliProductService implements OnDestroy {
   private mapCategoryPageToListing(
     categoryPage: any,
     page: number,
-    pageSize: number
+    pageSize: number,
+    requestedSort?: string
   ): JuliProductListing {
     const products: JuliProductSummary[] = (categoryPage.products || []).map((p: any) =>
       this.mapSpartacusProductToSummary(p)
     );
 
     const total = categoryPage.total ?? products.length;
-    const totalPages = Math.max(Math.ceil(total / pageSize), 1);
+    const resolvedPage = categoryPage.page ?? page;
+    const resolvedPageSize = categoryPage.pageSize ?? pageSize;
+    const totalPages = Math.max(Math.ceil(total / resolvedPageSize), 1);
+    const selectedSort = this.normalizeListingSort(categoryPage.sort || requestedSort);
 
     return {
       code: categoryPage.categoryCode,
       name: categoryPage.categoryName,
       products,
       pagination: {
-        currentPage: page,
-        pageSize,
+        currentPage: resolvedPage,
+        pageSize: resolvedPageSize,
         totalResults: total,
         totalPages,
-        hasNext: page < totalPages - 1,
-        hasPrevious: page > 0,
+        hasNext: resolvedPage < totalPages - 1,
+        hasPrevious: resolvedPage > 0,
       },
-      sorts: [
-        { code: 'relevance', name: 'Relevância', selected: true },
-        { code: 'name-asc', name: 'Nome (A-Z)', selected: false },
-        { code: 'price-asc', name: 'Menor Preço', selected: false },
-        { code: 'price-desc', name: 'Maior Preço', selected: false },
-      ],
+      sorts: this.normalizeCategorySorts(categoryPage.sorts, selectedSort),
     };
+  }
+
+  private normalizeCategorySorts(rawSorts: any[] | undefined, selectedSort: string): JuliProductListing['sorts'] {
+    if (Array.isArray(rawSorts) && rawSorts.length > 0) {
+      const mapped = rawSorts
+        .filter(sort => !!sort && typeof sort === 'object')
+        .map((sort: any) => {
+          const code = this.normalizeListingSort(sort.code);
+          return {
+            code,
+            name: sort.name || code,
+            selected: code === selectedSort
+          };
+        })
+        .filter(sort => !!sort.code);
+
+      if (mapped.length > 0) {
+        return mapped;
+      }
+    }
+
+    return [
+      { code: 'relevance', name: this.i18n.translate('normalizer.sortRelevance'), selected: selectedSort === 'relevance' },
+      { code: 'name_asc', name: this.i18n.translate('normalizer.sortNameAsc'), selected: selectedSort === 'name_asc' },
+      { code: 'name_desc', name: this.i18n.translate('normalizer.sortNameDesc'), selected: selectedSort === 'name_desc' },
+      { code: 'price_asc', name: this.i18n.translate('normalizer.sortPriceAsc'), selected: selectedSort === 'price_asc' },
+      { code: 'price_desc', name: this.i18n.translate('normalizer.sortPriceDesc'), selected: selectedSort === 'price_desc' },
+    ];
+  }
+
+  private normalizeListingSort(sort?: string): string {
+    switch ((sort || '').trim().toLowerCase()) {
+      case 'name-asc':
+      case 'name_asc':
+      case 'name,asc':
+      case 'title-asc':
+      case 'title_asc':
+      case 'title,asc':
+        return 'name_asc';
+      case 'name-desc':
+      case 'name_desc':
+      case 'name,desc':
+      case 'title-desc':
+      case 'title_desc':
+      case 'title,desc':
+        return 'name_desc';
+      case 'price-asc':
+      case 'price_asc':
+      case 'price,asc':
+        return 'price_asc';
+      case 'price-desc':
+      case 'price_desc':
+      case 'price,desc':
+        return 'price_desc';
+      default:
+        return 'relevance';
+    }
   }
 
   /**

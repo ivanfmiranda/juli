@@ -1,0 +1,45 @@
+{
+  "kind": "collectionType",
+  "collectionName": "tenant_brandings",
+  "info": {
+    "singularName": "tenant-branding",
+    "pluralName": "tenant-brandings",
+    "displayName": "Tenant Branding",
+    "description": "Per-tenant storefront configuration: colors, navigation categories, footer links, and brand identity."
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "attributes": {
+    "tenantKey": {
+      "type": "string",
+      "required": true,
+      "unique": true
+    },
+    "brandName": {
+      "type": "string",
+      "required": true
+    },
+    "brandIcon": {
+      "type": "string",
+      "default": ""
+    },
+    "logoUrl": {
+      "type": "string"
+    },
+    "theme": {
+      "type": "json",
+      "required": true
+    },
+    "navCategories": {
+      "type": "json",
+      "required": true
+    },
+    "footerLinks": {
+      "type": "json"
+    },
+    "promoText": {
+      "type": "string"
+    }
+  }
+}

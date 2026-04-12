@@ -12,10 +12,11 @@ import { catchError, tap } from 'rxjs/operators';
 import { JuliObservabilityService } from '../services/observability.service';
 import { JuliErrorCategory } from '../models/observability.models';
 import { environment } from '../../../environments/environment';
+import { JuliI18nService } from '../i18n/i18n.service';
 
 @Injectable()
 export class ObservabilityInterceptor implements HttpInterceptor {
-  constructor(private readonly obs: JuliObservabilityService) {}
+  constructor(private readonly obs: JuliObservabilityService, private readonly i18n: JuliI18nService) {}
 
   intercept(req: HttpRequest<unknown>, next: HttpHandler): Observable<HttpEvent<unknown>> {
     const isUbrisRequest = req.url.startsWith(environment.ubrisApiBaseUrl);
@@ -98,10 +99,10 @@ export class ObservabilityInterceptor implements HttpInterceptor {
   }
 
   private getUserMessage(error: HttpErrorResponse): string {
-    if (error.status === 0) return 'Conexão interrompida. Verifique sua internet.';
-    if (error.status === 401) return 'Sua sessão expirou. Faça login novamente.';
-    if (error.status === 403) return 'Você não tem permissão para realizar esta ação.';
-    if (error.status === 404) return 'O recurso solicitado não foi encontrado.';
-    return 'Ocorreu um erro no servidor. Tente novamente em instantes.';
+    if (error.status === 0) return this.i18n.translate('http.connectionLost');
+    if (error.status === 401) return this.i18n.translate('http.sessionExpired');
+    if (error.status === 403) return this.i18n.translate('http.forbidden');
+    if (error.status === 404) return this.i18n.translate('http.notFound');
+    return this.i18n.translate('http.serverError');
   }
 }

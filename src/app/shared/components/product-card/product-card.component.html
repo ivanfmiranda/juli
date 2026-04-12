@@ -31,13 +31,22 @@
       </div>
 
       <!-- Quick Add -->
-      <button 
+      <button
         *ngIf="showQuickAdd && product.available"
         class="btn-quick-add"
         (click)="onAddToCart($event)"
-        [title]="product.stock.status === 'OUT_OF_STOCK' ? 'Indisponível' : 'Adicionar ao carrinho'">
+        [title]="product.stock.status === 'OUT_OF_STOCK' ? ('productCard.quickAddUnavailable' | juliTranslate) : ('productCard.quickAddToCart' | juliTranslate)">
         <span *ngIf="product.stock.status !== 'OUT_OF_STOCK'">🛒</span>
         <span *ngIf="product.stock.status === 'OUT_OF_STOCK'">✕</span>
+      </button>
+
+      <!-- Wishlist Toggle -->
+      <button
+        class="btn-wishlist"
+        [class.saved]="isSaved$ | async"
+        (click)="onToggleWishlist($event)"
+        [title]="(isSaved$ | async) ? ('wishlist.remove' | juliTranslate) : ('wishlist.add' | juliTranslate)">
+        <span>{{ (isSaved$ | async) ? '❤️' : '🤍' }}</span>
       </button>
     </div>
 

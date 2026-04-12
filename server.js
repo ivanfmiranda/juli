@@ -51,7 +51,7 @@ function proxyRequest(req, res, target, rewritePath) {
   req.pipe(proxyReq);
 }
 
-function sendFile(filePath, res) {
+function sendFile(filePath, res, branding) {
   fs.readFile(filePath, (err, data) => {
     if (err) {
       res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -59,11 +59,15 @@ function sendFile(filePath, res) {
       return;
     }
     const extension = path.extname(filePath);
+    let content = data;
+    if (extension === '.html' && branding) {
+      content = injectBranding(data.toString('utf-8'), branding);
+    }
     res.writeHead(200, {
       'Content-Type': contentTypes[extension] || 'application/octet-stream',
       'Cache-Control': extension === '.html' ? 'no-cache' : 'public, max-age=300'
     });
-    res.end(data);
+    res.end(content);
   });
 }
 
@@ -74,72 +78,74 @@ function resolveAssetPath(urlPath) {
 
 function ssrPageBuilder(slug, tenantId, req, res) {
   const strapiTarget = process.env.STRAPI_API_TARGET || 'http://127.0.0.1:1337';
-  let apiUrl = `${strapiTarget}/api/pages?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*`;
+  let apiUrl = `${strapiTarget}/api/pages?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*&locale=all`;
   if (tenantId) {
     apiUrl += `&filters[tenantKey][$eq]=${encodeURIComponent(tenantId)}`;
   }
 
-  http.get(apiUrl, (strapiRes) => {
-    let body = '';
-    strapiRes.on('data', chunk => body += chunk);
-    strapiRes.on('end', () => {
-      try {
-        const json = JSON.parse(body);
-        const entry = json?.data?.[0];
-        const attrs = entry?.attributes || entry || {};
-        const layout = Array.isArray(attrs.layout) ? attrs.layout : [];
-        const title = attrs.title || slug;
+  // Fetch page data and branding in parallel
+  Promise.all([
+    new Promise((resolve) => {
+      http.get(apiUrl, (strapiRes) => {
+        let body = '';
+        strapiRes.on('data', chunk => body += chunk);
+        strapiRes.on('end', () => { try { resolve(JSON.parse(body)); } catch { resolve(null); } });
+      }).on('error', () => resolve(null));
+    }),
+    fetchBranding(tenantId)
+  ]).then(([json, branding]) => {
+    try {
+      if (!json) throw new Error('No page data');
+      const entry = json?.data?.[0];
+      const attrs = entry?.attributes || entry || {};
+      const layout = Array.isArray(attrs.layout) ? attrs.layout : [];
+      const title = attrs.title || slug;
 
-        const blocksHtml = layout.map(renderBlockToHtml).join('\n');
+      const blocksHtml = layout.map(renderBlockToHtml).join('\n');
 
-        const pageData = {
-          slug,
-          title,
-          tenantKey: attrs.tenantKey || '',
-          layout,
-        };
+      const pageData = {
+        slug,
+        title,
+        tenantKey: attrs.tenantKey || '',
+        layout,
+      };
 
-        if (!fs.existsSync(indexFile)) {
-          res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('index.html not found');
-          return;
-        }
-
-        let html = fs.readFileSync(indexFile, 'utf-8');
-        // Inject SSR content and transfer state
-        const ssrContent = `
-          <div id="ssr-page-content" style="max-width:1200px;margin:0 auto;padding:24px 16px;">
-            ${blocksHtml}
-          </div>
-          <script>window.__PAGE_DATA__=window.__PAGE_DATA__||{};window.__PAGE_DATA__[${JSON.stringify(slug)}]=${JSON.stringify(pageData)};</script>
-        `;
-        html = html.replace('</body>', ssrContent + '</body>');
-        // Update title
-        html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | Ubris</title>`);
-
-        res.writeHead(200, {
-          'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'no-cache',
-        });
-        res.end(html);
-      } catch (err) {
-        console.error('[SSR] Failed to render page', slug, err.message);
-        // Fallback to SPA
-        if (fs.existsSync(indexFile)) {
-          sendFile(indexFile, res);
-        } else {
-          res.writeHead(500, { 'Content-Type': 'text/plain' });
-          res.end('SSR error');
-        }
+      if (!fs.existsSync(indexFile)) {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('index.html not found');
+        return;
       }
-    });
-  }).on('error', () => {
-    // Fallback to SPA on Strapi error
-    if (fs.existsSync(indexFile)) {
-      sendFile(indexFile, res);
-    } else {
-      res.writeHead(502, { 'Content-Type': 'text/plain' });
-      res.end('Bad Gateway');
+
+      let html = fs.readFileSync(indexFile, 'utf-8');
+
+      // Inject branding CSS vars to avoid FOUC
+      html = injectBranding(html, branding);
+
+      // Inject SSR content and transfer state
+      const ssrContent = `
+        <div id="ssr-page-content" style="max-width:1200px;margin:0 auto;padding:24px 16px;">
+          ${blocksHtml}
+        </div>
+        <script>window.__PAGE_DATA__=window.__PAGE_DATA__||{};window.__PAGE_DATA__[${JSON.stringify(slug)}]=${JSON.stringify(pageData)};</script>
+      `;
+      html = html.replace('</body>', ssrContent + '</body>');
+      // Update title
+      const brandTitle = branding?.brandName || 'Ubris';
+      html = html.replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(title)} | ${escapeHtml(brandTitle)}</title>`);
+
+      res.writeHead(200, {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Cache-Control': 'no-cache',
+      });
+      res.end(html);
+    } catch (err) {
+      console.error('[SSR] Failed to render page', slug, err.message);
+      if (fs.existsSync(indexFile)) {
+        sendFile(indexFile, res, branding);
+      } else {
+        res.writeHead(500, { 'Content-Type': 'text/plain' });
+        res.end('SSR error');
+      }
     }
   });
 }
@@ -334,6 +340,78 @@ function escapeAttr(str) {
   return String(str).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
+// ── Tenant branding cache (avoids FOUC) ──────────────────────────────
+const brandingCache = new Map(); // tenantId → { theme, brandName, ts }
+const BRANDING_TTL = 5 * 60 * 1000; // 5 min
+
+function fetchBranding(tenantId) {
+  return new Promise((resolve) => {
+    if (!tenantId) { resolve(null); return; }
+    const cached = brandingCache.get(tenantId);
+    if (cached && Date.now() - cached.ts < BRANDING_TTL) { resolve(cached); return; }
+
+    const strapiTarget = process.env.STRAPI_API_TARGET || 'http://127.0.0.1:1337';
+    const url = `${strapiTarget}/api/tenant-brandings?filters[tenantKey][$eq]=${encodeURIComponent(tenantId)}`;
+    http.get(url, (res) => {
+      let body = '';
+      res.on('data', c => body += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          const entry = json?.data?.[0];
+          const attrs = entry?.attributes || entry || {};
+          let theme = attrs.theme;
+          if (typeof theme === 'string') { try { theme = JSON.parse(theme); } catch { theme = {}; } }
+          if (!theme || typeof theme !== 'object') theme = {};
+          let navCategories = attrs.navCategories;
+          if (typeof navCategories === 'string') { try { navCategories = JSON.parse(navCategories); } catch { navCategories = []; } }
+          let footerLinks = attrs.footerLinks;
+          if (typeof footerLinks === 'string') { try { footerLinks = JSON.parse(footerLinks); } catch { footerLinks = null; } }
+          const result = {
+            tenantKey: attrs.tenantKey || tenantId,
+            theme,
+            brandName: attrs.brandName || '',
+            brandIcon: attrs.brandIcon || '',
+            logoUrl: attrs.logoUrl || '',
+            navCategories: Array.isArray(navCategories) ? navCategories : [],
+            footerLinks: footerLinks || null,
+            promoText: attrs.promoText || '',
+            ts: Date.now()
+          };
+          brandingCache.set(tenantId, result);
+          resolve(result);
+        } catch { resolve(null); }
+      });
+    }).on('error', () => resolve(null));
+  });
+}
+
+function buildBrandingStyle(branding) {
+  if (!branding || !branding.theme || Object.keys(branding.theme).length === 0) return '';
+  const vars = Object.entries(branding.theme)
+    .map(([k, v]) => `  ${k}: ${v};`)
+    .join('\n');
+  return `<style id="ssr-branding">:root {\n${vars}\n}</style>`;
+}
+
+function injectBranding(html, branding) {
+  if (!branding) return html;
+  const style = buildBrandingStyle(branding);
+  // Build transfer script with full branding data (avoids FOUC for header/footer/categories)
+  const transferData = {
+    tenantKey: branding.tenantKey || '',
+    brandName: branding.brandName || '',
+    brandIcon: branding.brandIcon || '',
+    logoUrl: branding.logoUrl || '',
+    navCategories: branding.navCategories || [],
+    footerLinks: branding.footerLinks || null,
+    promoText: branding.promoText || '',
+  };
+  const script = `<script>window.__TENANT_BRANDING__=${JSON.stringify(transferData)};</script>`;
+  const inject = (style ? style + '\n' : '') + script + '\n';
+  return html.replace('</head>', inject + '</head>');
+}
+
 const server = http.createServer((req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   const pathname = requestUrl.pathname;
@@ -385,11 +463,13 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Resolve tenant once for downstream handlers
+  const tenantId = resolveTenantFromHost(req.headers.host);
+
   // SSR for page-builder pages: /pages/:slug
   if (pathname.startsWith('/pages/') && (req.method === 'GET' || req.method === 'HEAD')) {
     const slug = decodeURIComponent(pathname.replace('/pages/', ''));
     if (slug && !slug.includes('/') && !slug.includes('.')) {
-      const tenantId = resolveTenantFromHost(req.headers.host);
       ssrPageBuilder(slug, tenantId, req, res);
       return;
     }
@@ -406,7 +486,6 @@ const server = http.createServer((req, res) => {
 
   // SSR for homepage
   if (pathname === '/' && (req.method === 'GET' || req.method === 'HEAD')) {
-    const tenantId = resolveTenantFromHost(req.headers.host);
     ssrPageBuilder('home', tenantId, req, res);
     return;
   }
@@ -417,8 +496,11 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // SPA fallback — inject tenant branding CSS vars to avoid FOUC
   if ((req.method === 'GET' || req.method === 'HEAD') && fs.existsSync(indexFile)) {
-    sendFile(indexFile, res);
+    fetchBranding(tenantId).then(branding => {
+      sendFile(indexFile, res, branding);
+    });
     return;
   }
 

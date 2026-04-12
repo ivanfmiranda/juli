@@ -2,6 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
 import { PageContext, PageType } from '@spartacus/core';
 import { StrapiCmsAdapter } from '../strapi-cms.adapter';
+import { JuliI18nService } from '../../../i18n/i18n.service';
+import { TenantHostService } from '../../../services/tenant-host.service';
+import { PreviewTokenService } from '../../services/preview-token.service';
 
 describe('StrapiCmsAdapter', () => {
   let adapter: StrapiCmsAdapter;
@@ -15,7 +18,29 @@ describe('StrapiCmsAdapter', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
-      providers: [StrapiCmsAdapter]
+      providers: [
+        StrapiCmsAdapter,
+        {
+          provide: JuliI18nService,
+          useValue: {
+            currentLocale: 'en-US',
+            fallback: 'en-US',
+            translate: (key: string) => key
+          }
+        },
+        {
+          provide: TenantHostService,
+          useValue: {
+            currentTenantId: () => 'default'
+          }
+        },
+        {
+          provide: PreviewTokenService,
+          useValue: {
+            getToken: () => null
+          }
+        }
+      ]
     });
 
     adapter = TestBed.inject(StrapiCmsAdapter);
@@ -26,14 +51,14 @@ describe('StrapiCmsAdapter', () => {
     httpMock.verify();
   });
 
-  it('should request the unified /api/pages contract', (done) => {
+  it('should request the Strapi pages contract through /strapi-api/pages', (done) => {
     adapter.load(contentPageContext).subscribe(page => {
       expect(page.page?.label).toBe('demo');
       done();
     });
 
     const req = httpMock.expectOne(request =>
-      request.urlWithParams.includes('/api/pages') &&
+      request.urlWithParams.includes('/strapi-api/pages') &&
       request.urlWithParams.includes('demo')
     );
     expect(req.request.method).toBe('GET');
@@ -212,7 +237,7 @@ describe('StrapiCmsAdapter', () => {
 });
 
 function anyPagesRequest() {
-  return (request: any) => request.urlWithParams.includes('/api/pages');
+  return (request: any) => request.urlWithParams.includes('/strapi-api/pages');
 }
 
 function pageResponse(attributes: Record<string, unknown>) {

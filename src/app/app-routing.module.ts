@@ -8,10 +8,9 @@ import { ProductDetailComponent } from './pages/product-detail/product-detail.co
 import { CategoryPageComponent } from './pages/category-page/category-page.component';
 import { SearchPageComponent } from './pages/search-page/search-page.component';
 import { CartPageComponent } from './pages/cart-page/cart-page.component';
-import { CheckoutPageComponent } from './pages/checkout-page/checkout-page.component';
-import { CheckoutConfirmationPageComponent } from './pages/checkout-confirmation-page/checkout-confirmation-page.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
+import { WishlistPageComponent } from './pages/wishlist-page/wishlist-page.component';
 import { NotFoundPageComponent } from './core/cms/fallback';
 import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
 import { PageRendererComponent } from './pages/page-renderer/page-renderer.component';
@@ -29,12 +28,12 @@ const routes: Routes = [
   { path: 'c/:code', component: CategoryPageComponent },
   { path: 'search', component: SearchPageComponent },
   { path: 'cart', component: CartPageComponent },
-  { path: 'checkout', component: CheckoutPageComponent, canActivate: [AuthGuard] },
-  { path: 'checkout/confirmation/:checkoutId', component: CheckoutConfirmationPageComponent, canActivate: [AuthGuard] },
+  { path: 'checkout', loadChildren: () => import('./pages/checkout-page/checkout.module').then(m => m.CheckoutModule), canActivate: [AuthGuard] },
 
   // Account
   { path: 'account/orders/:code', component: OrderDetailPageComponent, canActivate: [AuthGuard] },
   { path: 'account/orders', component: OrdersPageComponent, canActivate: [AuthGuard] },
+  { path: 'account/wishlist', component: WishlistPageComponent, canActivate: [AuthGuard] },
 
   // CMS Preview
   { path: 'preview', component: PreviewEntryComponent },

@@ -8,6 +8,7 @@
  */
 
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-loading-state',
@@ -19,7 +20,7 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
         </div>
         <div class="juli-pulse" *ngIf="minimal"></div>
         <p class="juli-loading-text" *ngIf="showText && !minimal">
-          {{ loadingText }}
+          {{ loadingText || ('fallback.loading' | juliTranslate) }}
         </p>
       </div>
     </div>
@@ -101,7 +102,7 @@ import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoadingStateRenderer {
-  @Input() loadingText: string = 'Carregando conteúdo...';
+  @Input() loadingText: string = '';
   @Input() showText: boolean = true;
   @Input() minimal: boolean = false;
 }

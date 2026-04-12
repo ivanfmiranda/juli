@@ -12,6 +12,7 @@
 
 import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import {
@@ -21,6 +22,7 @@ import {
 } from '../../core/commerce';
 import { JuliCartFacade } from '../../core/commerce';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
+import { TenantHostService } from '../../core/services/tenant-host.service';
 
 /**
  * ViewModel para a página
@@ -52,13 +54,22 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
   readonly error$ = this.juliProductService.listingError$;
   readonly Math = Math; // Expõe Math para o template
 
+  private siteName: string;
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly juliProductService: JuliProductService,
     private readonly cartFacade: JuliCartFacade,
-    public readonly i18n: JuliI18nService
-  ) {}
+    public readonly i18n: JuliI18nService,
+    private readonly titleService: Title,
+    private readonly tenantHost: TenantHostService
+  ) {
+    const tenantId = this.tenantHost.currentTenantId();
+    this.siteName = tenantId && tenantId !== 'default'
+      ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
+      : 'Juli Store';
+  }
 
   ngOnInit(): void {
     // Observa mudanças nos parâmetros da rota
@@ -78,6 +89,15 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
       const categoryCode = this.route.snapshot.paramMap.get('code') || '';
       if (categoryCode) {
         this.loadListing(categoryCode);
+      }
+    });
+
+    // Set page title when listing loads
+    this.juliProductService.listing$.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe(listing => {
+      if (listing?.name) {
+        this.titleService.setTitle(`${listing.name} — ${this.siteName}`);
       }
     });
   }
@@ -190,7 +210,10 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
    * Retorna o código do sort selecionado
    */
   getSelectedSort(sorts: { code: string; selected: boolean }[]): string {
-    const selected = sorts.find(s => s.selected);
-    return selected?.code || sorts[0]?.code || 'relevance';
+    const sortParam = this.route.snapshot.queryParamMap.get('sort');
+    if (sortParam && sorts.some(s => s.code === sortParam)) {
+      return sortParam;
+    }
+    return sorts[0]?.code || 'relevance';
   }
 }

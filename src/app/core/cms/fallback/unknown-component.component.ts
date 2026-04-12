@@ -10,7 +10,7 @@
 
 import { ChangeDetectionStrategy, Component, Input, Optional, isDevMode } from '@angular/core';
 import { CmsComponentData } from '@spartacus/storefront';
-import { Observable, of } from 'rxjs';
+import { Observable, defer, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FallbackComponentData } from '../../models/cms.model';
 
@@ -106,7 +106,7 @@ export class UnknownComponent {
   constructor(@Optional() protected componentData?: CmsComponentData<FallbackComponentData>) {
     this.data$ = this.componentData?.data$.pipe(
       map(data => data ?? this.defaultData())
-    ) ?? of(this.defaultData());
+    ) ?? defer(() => of(this.defaultData()));
   }
 
   private defaultData(): FallbackComponentData {

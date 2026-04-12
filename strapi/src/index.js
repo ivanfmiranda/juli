@@ -11,9 +11,20 @@ module.exports = {
   register(/*{ strapi }*/) {},
 
   async bootstrap({ strapi }) {
-    await grantPublicReadPermissions(strapi);
-    await ensureApiTokens(strapi);
+    if (internals.shouldGrantPublicRead()) {
+      await internals.grantPublicReadPermissions(strapi);
+    } else {
+      strapi.log.info('[bootstrap] Skipping public permission grant outside dev/test bootstrap');
+    }
+
+    if (internals.shouldSeedApiTokens()) {
+      await internals.ensureApiTokens(strapi);
+    } else {
+      strapi.log.info('[bootstrap] Skipping API token auto-seed outside dev/test bootstrap');
+    }
   },
+
+  _testing: null,
 };
 
 // ---------------------------------------------------------------------------
@@ -31,6 +42,8 @@ async function grantPublicReadPermissions(strapi) {
     const actionsToGrant = [
       'api::page.page.find',
       'api::page.page.findOne',
+      'api::tenant-branding.tenant-branding.find',
+      'api::tenant-branding.tenant-branding.findOne',
     ];
 
     for (const action of actionsToGrant) {
@@ -81,24 +94,26 @@ async function ensureApiTokens(strapi) {
 
 async function ensureToken(strapi, { name, description, type, tokenFile, envKey }) {
   try {
-    // If token file already exists, the token was already seeded — skip creation
     if (fs.existsSync(tokenFile)) {
       strapi.log.info(`[bootstrap] Token "${name}" already seeded (${tokenFile})`);
       return;
     }
 
-    // Allow pre-configuring via env var (deterministic tokens in CI/staging)
-    const predefined = process.env[envKey];
-
     const existing = await strapi
       .query('admin::api-token')
       .findOne({ where: { name } });
 
-    if (existing && !predefined) {
-      // Token exists in DB but file was deleted — cannot recover plaintext.
-      // Regenerate: delete old record and create fresh.
+    if (existing) {
+      if (!shouldRegenerateMissingTokenFiles()) {
+        strapi.log.warn(
+          `[bootstrap] Token "${name}" exists but ${tokenFile} is missing. ` +
+          'Refusing to rotate automatically; set STRAPI_BOOTSTRAP_REGENERATE_MISSING_TOKEN_FILES=true to recreate it explicitly.'
+        );
+        return;
+      }
+
       strapi.log.warn(
-        `[bootstrap] Token file missing for "${name}". Regenerating token — update all consumers.`
+        `[bootstrap] Token file missing for "${name}". Rotating token because STRAPI_BOOTSTRAP_REGENERATE_MISSING_TOKEN_FILES=true.`
       );
       await strapi.query('admin::api-token').delete({ where: { id: existing.id } });
     }
@@ -114,8 +129,42 @@ async function ensureToken(strapi, { name, description, type, tokenFile, envKey 
     fs.writeFileSync(tokenFile, accessKey, 'utf8');
 
     strapi.log.info(`[bootstrap] Token "${name}" created → ${tokenFile}`);
-    strapi.log.info(`[bootstrap] ${envKey}=${accessKey}`);
+    strapi.log.info(`[bootstrap] Use ${envKey} from ${tokenFile} if a downstream consumer needs it.`);
   } catch (err) {
     strapi.log.warn(`[bootstrap] Could not create token "${name}":`, err?.message ?? err);
   }
 }
+
+function shouldGrantPublicRead() {
+  return isDevOrTestBootstrap() || envFlag('STRAPI_BOOTSTRAP_ALLOW_PUBLIC_READ');
+}
+
+function shouldSeedApiTokens() {
+  return isDevOrTestBootstrap() || envFlag('STRAPI_BOOTSTRAP_ALLOW_TOKEN_SEED');
+}
+
+function shouldRegenerateMissingTokenFiles() {
+  return envFlag('STRAPI_BOOTSTRAP_REGENERATE_MISSING_TOKEN_FILES');
+}
+
+function isDevOrTestBootstrap() {
+  const env = String(process.env.NODE_ENV || '').trim().toLowerCase();
+  return env === 'development' || env === 'test';
+}
+
+function envFlag(name) {
+  return String(process.env[name] || '').trim().toLowerCase() === 'true';
+}
+
+const internals = {
+  envFlag,
+  ensureApiTokens,
+  ensureToken,
+  grantPublicReadPermissions,
+  isDevOrTestBootstrap,
+  shouldGrantPublicRead,
+  shouldRegenerateMissingTokenFiles,
+  shouldSeedApiTokens,
+};
+
+module.exports._testing = internals;

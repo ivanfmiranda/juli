@@ -1,17 +1,23 @@
 <section class="login-page">
   <div class="login-card">
-    <h1>Juli</h1>
+    <h1>{{ brandName }}</h1>
     <p>{{ 'login.subtitle' | juliTranslate }}</p>
 
     <form [formGroup]="form" (ngSubmit)="submit()">
       <label>
         {{ 'login.username' | juliTranslate }}
         <input type="text" formControlName="username" autocomplete="off">
+        <span class="field-error" *ngIf="form.get('username')?.touched && form.get('username')?.hasError('required')">
+          {{ 'login.usernameRequired' | juliTranslate }}
+        </span>
       </label>
 
       <label>
         {{ 'login.password' | juliTranslate }}
         <input type="password" formControlName="password" autocomplete="new-password">
+        <span class="field-error" *ngIf="form.get('password')?.touched && form.get('password')?.hasError('required')">
+          {{ 'login.passwordRequired' | juliTranslate }}
+        </span>
       </label>
 
       <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
@@ -22,5 +28,8 @@
       </button>
     </form>
 
+    <p class="register-link">
+      {{ 'login.noAccount' | juliTranslate }} <a routerLink="/register">{{ 'login.createAccount' | juliTranslate }}</a>
+    </p>
   </div>
 </section>

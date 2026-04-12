@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PreviewTokenService } from '../../core/cms/services/preview-token.service';
+import { SmartEditBridgeService } from '../../core/cms/services/smartedit-bridge.service';
 
 @Component({
   selector: 'app-preview-entry',
@@ -11,6 +12,7 @@ export class PreviewEntryComponent implements OnInit {
     private readonly route: ActivatedRoute,
     private readonly router: Router,
     private readonly previewToken: PreviewTokenService,
+    private readonly smartEditBridge: SmartEditBridgeService,
   ) {}
 
   ngOnInit(): void {
@@ -19,6 +21,7 @@ export class PreviewEntryComponent implements OnInit {
     const token = params.get('token');
     const tenant = params.get('tenant');
     const catalogVersion = params.get('catalogVersion');
+    const smartedit = params.get('smartedit');
 
     if (token) {
       this.previewToken.setToken(token);
@@ -32,6 +35,13 @@ export class PreviewEntryComponent implements OnInit {
       this.previewToken.setCatalogVersion('ONLINE');
     }
 
-    this.router.navigate(['/page/preview', slug], { replaceUrl: true });
+    // Activate SmartEdit mode when requested by CMS editor
+    if (smartedit === 'true') {
+      this.smartEditBridge.activate();
+    }
+
+    // Route to the page-builder renderer (same route as normal pages)
+    // This ensures preview renders identically to the live storefront
+    this.router.navigate(['/', slug], { replaceUrl: true });
   }
 }

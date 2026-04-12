@@ -7,6 +7,8 @@
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
+import { RouterTestingModule } from '@angular/router/testing';
+import { CmsComponentData } from '@spartacus/storefront';
 import { of } from 'rxjs';
 import { InfoCardComponent } from '../info-card.component';
 import { InfoCardComponentModel } from '../../../../core/models/cms.model';
@@ -19,6 +21,7 @@ const createMockCmsComponentData = (data: InfoCardComponentModel) => ({
 describe('InfoCardComponent', () => {
   let component: InfoCardComponent;
   let fixture: ComponentFixture<InfoCardComponent>;
+  let cmsComponentData: { data$: ReturnType<typeof of> };
 
   const mockData: InfoCardComponentModel = {
     uid: 'test-123',
@@ -30,32 +33,41 @@ describe('InfoCardComponent', () => {
     link: '/performance'
   };
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({
+  const renderComponent = (data: InfoCardComponentModel = mockData) => {
+    cmsComponentData.data$ = of(data);
+    fixture = TestBed.createComponent(InfoCardComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+  };
+
+  beforeEach(async () => {
+    cmsComponentData = createMockCmsComponentData(mockData);
+
+    await TestBed.configureTestingModule({
+      imports: [RouterTestingModule],
       declarations: [InfoCardComponent],
       providers: [
         {
-          provide: 'CmsComponentData',
-          useValue: createMockCmsComponentData(mockData)
+          provide: CmsComponentData,
+          useValue: cmsComponentData
         }
       ]
-    });
-
-    fixture = TestBed.createComponent(InfoCardComponent);
-    component = fixture.componentInstance;
+    }).compileComponents();
   });
 
   it('should create', () => {
+    renderComponent();
     expect(component).toBeTruthy();
   });
 
   it('should have data$ observable', () => {
+    renderComponent();
     expect(component.data$).toBeDefined();
   });
 
   describe('rendering with full data', () => {
     beforeEach(() => {
-      fixture.detectChanges();
+      renderComponent();
     });
 
     it('should render icon', () => {
@@ -93,13 +105,8 @@ describe('InfoCardComponent', () => {
         ...mockData,
         icon: undefined
       };
-      
-      TestBed.overrideProvider('CmsComponentData', {
-        useValue: createMockCmsComponentData(dataWithoutIcon)
-      });
-      
-      fixture = TestBed.createComponent(InfoCardComponent);
-      fixture.detectChanges();
+
+      renderComponent(dataWithoutIcon);
 
       const icon = fixture.debugElement.query(By.css('.juli-info-card__icon'));
       expect(icon).toBeFalsy();
@@ -110,13 +117,8 @@ describe('InfoCardComponent', () => {
         ...mockData,
         title: undefined
       };
-      
-      TestBed.overrideProvider('CmsComponentData', {
-        useValue: createMockCmsComponentData(dataWithoutTitle)
-      });
-      
-      fixture = TestBed.createComponent(InfoCardComponent);
-      fixture.detectChanges();
+
+      renderComponent(dataWithoutTitle);
 
       const title = fixture.debugElement.query(By.css('.juli-info-card__title'));
       expect(title).toBeFalsy();
@@ -127,13 +129,8 @@ describe('InfoCardComponent', () => {
         ...mockData,
         description: undefined
       };
-      
-      TestBed.overrideProvider('CmsComponentData', {
-        useValue: createMockCmsComponentData(dataWithoutDesc)
-      });
-      
-      fixture = TestBed.createComponent(InfoCardComponent);
-      fixture.detectChanges();
+
+      renderComponent(dataWithoutDesc);
 
       const desc = fixture.debugElement.query(By.css('.juli-info-card__description'));
       expect(desc).toBeFalsy();
@@ -144,13 +141,8 @@ describe('InfoCardComponent', () => {
         ...mockData,
         link: undefined
       };
-      
-      TestBed.overrideProvider('CmsComponentData', {
-        useValue: createMockCmsComponentData(dataWithoutLink)
-      });
-      
-      fixture = TestBed.createComponent(InfoCardComponent);
-      fixture.detectChanges();
+
+      renderComponent(dataWithoutLink);
 
       const link = fixture.debugElement.query(By.css('.juli-info-card__link'));
       expect(link).toBeFalsy();
@@ -161,13 +153,8 @@ describe('InfoCardComponent', () => {
         ...mockData,
         link: undefined
       };
-      
-      TestBed.overrideProvider('CmsComponentData', {
-        useValue: createMockCmsComponentData(dataWithoutLink)
-      });
-      
-      fixture = TestBed.createComponent(InfoCardComponent);
-      fixture.detectChanges();
+
+      renderComponent(dataWithoutLink);
 
       const card = fixture.debugElement.query(By.css('.juli-info-card'));
       expect(card.classes['juli-info-card--clickable']).toBeFalsy();
@@ -176,7 +163,7 @@ describe('InfoCardComponent', () => {
 
   describe('accessibility', () => {
     beforeEach(() => {
-      fixture.detectChanges();
+      renderComponent();
     });
 
     it('should have article element for semantic structure', () => {
@@ -198,7 +185,7 @@ describe('InfoCardComponent', () => {
 
   describe('CSS classes', () => {
     beforeEach(() => {
-      fixture.detectChanges();
+      renderComponent();
     });
 
     it('should have correct BEM classes', () => {

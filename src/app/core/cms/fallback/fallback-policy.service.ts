@@ -101,6 +101,14 @@ export class FallbackPolicyService {
       );
     }
 
+    // Página não encontrada deve ter prioridade sobre payload vazio ou tipo desconhecido
+    if (this.isPageNotFoundLabel(context.pageLabel)) {
+      return this.enrichDecision(
+        this.fallbackRegistry[FallbackType.PAGE_NOT_FOUND],
+        context
+      );
+    }
+
     // Se o typeCode existe mas é desconhecido (validação externa necessária)
     if (context.typeCode === 'UnknownType') {
       return this.enrichDecision(
@@ -113,14 +121,6 @@ export class FallbackPolicyService {
     if (this.isEmptyPayload(context.originalPayload)) {
       return this.enrichDecision(
         this.fallbackRegistry[FallbackType.EMPTY_CONTENT],
-        context
-      );
-    }
-
-    // Página não encontrada
-    if (context.pageLabel === 'not-found' || context.pageLabel === '404') {
-      return this.enrichDecision(
-        this.fallbackRegistry[FallbackType.PAGE_NOT_FOUND],
         context
       );
     }
@@ -154,6 +154,14 @@ export class FallbackPolicyService {
     if (Array.isArray(payload) && payload.length === 0) return true;
     if (typeof payload === 'object' && Object.keys(payload).length === 0) return true;
     return false;
+  }
+
+  private isPageNotFoundLabel(label?: string): boolean {
+    if (!label) {
+      return false;
+    }
+    const normalized = label.trim().toLowerCase();
+    return normalized === '404' || normalized === 'not-found' || normalized === 'page-not-found';
   }
 
   /**

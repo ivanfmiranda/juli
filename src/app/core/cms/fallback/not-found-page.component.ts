@@ -7,6 +7,7 @@
  */
 
 import { Component, ChangeDetectionStrategy } from '@angular/core';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-not-found-page',
@@ -14,16 +15,16 @@ import { Component, ChangeDetectionStrategy } from '@angular/core';
     <div class="juli-not-found">
       <div class="juli-not-found-content">
         <div class="juli-not-found-code">404</div>
-        <h1 class="juli-not-found-title">Página Não Encontrada</h1>
+        <h1 class="juli-not-found-title">{{ 'fallback.notFoundTitle' | juliTranslate }}</h1>
         <p class="juli-not-found-message">
-          A página que você está procurando não existe ou foi movida.
+          {{ 'fallback.notFoundMessage' | juliTranslate }}
         </p>
         <div class="juli-not-found-actions">
           <a routerLink="/" class="juli-btn juli-btn-primary">
-            🏠 Voltar para Home
+            {{ 'fallback.backToHome' | juliTranslate }}
           </a>
           <button class="juli-btn juli-btn-secondary" (click)="goBack()">
-            ← Voltar
+            {{ 'fallback.goBack' | juliTranslate }}
           </button>
         </div>
       </div>

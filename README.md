@@ -28,9 +28,9 @@ Legacy or historical frontend artifacts may still exist elsewhere for reference,
 
 This repository does not maintain a parallel storefront path. The supported runtime is:
 
-1. Strapi running on `http://localhost:1337`
-2. `gateway-bff` running on `http://localhost:8088`
-3. `juli` running on `http://localhost:4200`
+1. `juli` behind the environment reverse proxy
+2. `/ubris-api` and `/strapi-api` resolved through the same host entrypoint used by the supported environment
+3. standalone `localhost` services only for isolated debugging
 
 ## Architecture Summary
 
@@ -88,8 +88,8 @@ Current implementation note:
 
 - Node.js 16 LTS recommended
 - npm available locally
-- Strapi running at `http://localhost:1337`
-- `gateway-bff` running at `http://localhost:8088`
+- nginx-backed environment entrypoint available on this host for supported validation
+- Strapi at `http://localhost:1337` and `gateway-bff` at `http://localhost:8088` only when using isolated standalone mode
 
 ## Local Configuration
 
@@ -101,13 +101,13 @@ Local runtime configuration lives in:
 - [src/environments/environment.prod.ts](src/environments/environment.prod.ts)
 - [proxy.conf.json](proxy.conf.json)
 
-Current development endpoints:
+Current development endpoints inside the Angular app:
 
 - `strapiApiBaseUrl = /strapi-api`
 - `ubrisApiBaseUrl = /ubris-api`
 - `defaultCmsSlug = home`
 
-Proxy rules:
+Dev-server proxy rules:
 
 - `/ubris-api` -> `http://localhost:8088`
 - `/strapi-api` -> `http://localhost:1337/api`
@@ -156,6 +156,42 @@ npm run validate:types
 ```
 
 `validate:types` currently uses the Angular build pipeline as the type-safety gate for this workspace. That is intentional; a standalone `tsc` pass is not yet the authoritative signal for the current Spartacus integration layer.
+
+Standalone Playwright smoke:
+
+```bash
+npm run e2e:standalone
+```
+
+Reverse-proxy Playwright smoke on this host:
+
+```bash
+npm run e2e:proxy
+```
+
+Temporary crypto compatibility debt:
+
+- Angular 12/Webpack in this workspace still requires the OpenSSL legacy provider on Node 20 for the supported build scripts.
+- The workaround is quarantined in `scripts/run-angular-cli.js`.
+- Retirement target: `2026-06-19`.
+- `npm run build:strict-crypto` is the explicit signal to verify whether the workaround can be removed.
+
+## E2E Runtime Modes
+
+- Default: validate through `http://localhost`, which matches the nginx-backed supported path on this host.
+- External environment: set `JULI_E2E_BASE_URL=https://tenant.ubris.com.br` and run `npm run e2e`.
+- Standalone storefront-only debug: set `JULI_E2E_SERVER_MODE=standalone` and run `npm run e2e`.
+- CI falls back to standalone mode automatically when no explicit base URL is provided.
+- The proxy smoke only proves request dispatching through `/ubris-api`, `/strapi-api`, and `/cms`; it is not a substitute for healthy downstream integration proof.
+
+Live commercial journeys do not use mocks. For authenticated or catalog-specific flows, provide real environment data through:
+
+- `JULI_E2E_CATEGORY_CODE`
+- `JULI_E2E_PRODUCT_CODE`
+- `JULI_E2E_USERNAME`
+- `JULI_E2E_PASSWORD`
+- `JULI_E2E_REGISTER_USERNAME`
+- `JULI_E2E_REGISTER_PASSWORD`
 
 ## Main Routes
 

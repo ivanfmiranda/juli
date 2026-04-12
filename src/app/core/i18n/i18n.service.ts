@@ -25,7 +25,11 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       signIn: 'Entrar',
       signingIn: 'Entrando...',
       noAccount: 'Ainda não tem conta?',
-      createAccount: 'Cadastre-se'
+      createAccount: 'Cadastre-se',
+      invalidCredentials: 'Usuário ou senha inválidos.',
+      cartPromotionWarning: 'Login concluído, mas não foi possível recuperar o carrinho anterior.',
+      usernameRequired: 'Usuário é obrigatório',
+      passwordRequired: 'Senha é obrigatória'
     },
     register: {
       subtitle: 'Crie sua conta',
@@ -38,7 +42,14 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       createAccount: 'Criar conta',
       creating: 'Criando...',
       hasAccount: 'Já tem conta?',
-      signIn: 'Entrar'
+      signIn: 'Entrar',
+      emailRequired: 'E-mail é obrigatório',
+      emailInvalid: 'E-mail inválido',
+      passwordRequired: 'Senha é obrigatória',
+      passwordMinLength: 'Mínimo de 8 caracteres',
+      passwordMismatch: 'As senhas não conferem',
+      emailConflict: 'Este e-mail já está cadastrado.',
+      genericError: 'Não foi possível criar a conta. Tente novamente.'
     },
     cart: {
       empty: {
@@ -374,12 +385,133 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       detailNotFound: 'Confirmação do checkout não encontrada para este ID.',
       detailUnknown: 'Não foi possível carregar a confirmação no momento.'
     },
+    pdp: {
+      loading: 'Carregando produto...',
+      errorTitle: 'Erro ao carregar produto',
+      goBack: '← Voltar',
+      retry: 'Tentar novamente',
+      home: 'Home',
+      zoomHint: '🔍 Passe o mouse para zoom',
+      reviews: '({{count}} avaliações)',
+      quantity: 'Quantidade:',
+      adding: 'Adicionando...',
+      addToCart: 'Adicionar ao Carrinho',
+      unavailable: 'Indisponível',
+      wishlistTitle: 'Adicionar à lista de desejos',
+      freeShipping: 'Frete grátis disponível',
+      tabDescription: 'Descrição',
+      tabSpecifications: 'Especificações',
+      tabReviews: 'Avaliações',
+      relatedProducts: 'Produtos Relacionados',
+      stockInStock: '✓ Em estoque',
+      stockLow: '⚠️ Apenas {{quantity}} em estoque',
+      stockOut: '✗ Indisponível',
+      stockUnknown: 'Consultar disponibilidade',
+      addToCartError: 'Erro ao adicionar ao carrinho. Tente novamente.'
+    },
+    productCard: {
+      badgeNew: 'Novo',
+      badgeTop: 'Top',
+      badgeSale: '{{percentage}}% OFF',
+      badgeLimited: 'Últimas',
+      stockInStock: '✓ Em estoque',
+      stockLow: '⚠️ Apenas {{quantity}} un.',
+      stockOut: '✗ Esgotado',
+      stockUnknown: 'Consultar',
+      quickAddUnavailable: 'Indisponível',
+      quickAddToCart: 'Adicionar ao carrinho'
+    },
+    normalizer: {
+      sortRelevance: 'Relevância',
+      sortNameAsc: 'Nome (A-Z)',
+      sortNameDesc: 'Nome (Z-A)',
+      sortPriceAsc: 'Menor Preço',
+      sortPriceDesc: 'Maior Preço',
+      sortNewest: 'Mais Recentes',
+      availInStock: 'Em estoque ({{quantity}} disponíveis)',
+      availInStockSimple: 'Em estoque',
+      availLowStock: 'Apenas {{quantity}} em estoque',
+      availLowStockSimple: 'Estoque baixo',
+      availOutOfStock: 'Fora de estoque',
+      availUnknown: 'Consultar disponibilidade',
+      deliveryInStock: 'Entrega em 2-5 dias úteis',
+      deliveryLowStock: 'Entrega em 3-7 dias úteis',
+      deliveryOutOfStock: 'Produto indisponível',
+      deliveryUnknown: 'Consultar prazo de entrega'
+    },
+    productService: {
+      variantUnavailable: 'Variante indisponível',
+      combinationUnavailable: 'Combinação não disponível',
+      unknownError: 'Erro desconhecido'
+    },
+    fallback: {
+      errorTitle: 'Erro ao Carregar Conteúdo',
+      errorHint: 'Não foi possível carregar este conteúdo. Tente atualizar a página ou volte mais tarde.',
+      retry: 'Tentar Novamente',
+      loading: 'Carregando conteúdo...',
+      notFoundTitle: 'Página Não Encontrada',
+      notFoundMessage: 'A página que você está procurando não existe ou foi movida.',
+      backToHome: 'Voltar para Home',
+      goBack: 'Voltar'
+    },
+    formBlock: {
+      selectPlaceholder: 'Selecione...',
+      submitting: 'Enviando...',
+      submitDefault: 'Enviar',
+      successMessage: 'Formulário enviado com sucesso!',
+      errorMessage: 'Erro ao enviar formulário. Tente novamente.'
+    },
+    http: {
+      connectionLost: 'Conexão interrompida. Verifique sua internet.',
+      sessionExpired: 'Sua sessão expirou. Faça login novamente.',
+      forbidden: 'Você não tem permissão para realizar esta ação.',
+      notFound: 'O recurso solicitado não foi encontrado.',
+      serverError: 'Ocorreu um erro no servidor. Tente novamente em instantes.'
+    },
+    pageRenderer: {
+      notFoundTitle: 'Página não encontrada',
+      notFoundMessage: 'A página solicitada não existe ou não está publicada.',
+      loading: 'Carregando página...'
+    },
     categories: {
       electronics: 'Eletrônicos',
       fashion: 'Moda',
       home: 'Casa & Decoração',
       sports: 'Esportes',
       beauty: 'Beleza'
+    },
+    reviews: {
+      title: 'Avaliações dos clientes',
+      noReviews: 'Ainda não há avaliações.',
+      beFirst: 'Seja o primeiro a avaliar este produto.',
+      averageRating: 'Avaliação média',
+      outOf: 'de 5',
+      writeReview: 'Escrever avaliação',
+      yourRating: 'Sua avaliação',
+      titleLabel: 'Título',
+      titlePlaceholder: 'Resumo da sua avaliação',
+      bodyLabel: 'Comentário',
+      bodyPlaceholder: 'Descreva sua experiência com o produto...',
+      submit: 'Enviar avaliação',
+      submitting: 'Enviando...',
+      loginToReview: 'Faça login para avaliar este produto.',
+      alreadyReviewed: 'Você já avaliou este produto.',
+      editReview: 'Editar avaliação',
+      successMessage: 'Avaliação enviada com sucesso!',
+      errorMessage: 'Não foi possível enviar a avaliação. Tente novamente.'
+    },
+    wishlist: {
+      title: 'Minha Lista de Desejos',
+      empty: 'Sua lista de desejos está vazia.',
+      emptyHint: 'Adicione produtos à sua lista de desejos para salvá-los.',
+      add: 'Adicionar à lista de desejos',
+      remove: 'Remover da lista de desejos',
+      saved: 'Salvo na lista de desejos',
+      loginRequired: 'Faça login para usar a lista de desejos.',
+      viewWishlist: 'Ver lista de desejos',
+      addToCart: 'Adicionar ao carrinho',
+      removeItem: 'Remover',
+      browseCatalog: 'Explorar catálogo'
     }
   },
   'en-US': {
@@ -390,7 +522,11 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       signIn: 'Sign in',
       signingIn: 'Signing in...',
       noAccount: 'Don\'t have an account?',
-      createAccount: 'Sign up'
+      createAccount: 'Sign up',
+      invalidCredentials: 'Invalid username or password.',
+      cartPromotionWarning: 'Login completed, but we could not recover your previous cart.',
+      usernameRequired: 'Username is required',
+      passwordRequired: 'Password is required'
     },
     register: {
       subtitle: 'Create your account',
@@ -403,7 +539,14 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       createAccount: 'Create account',
       creating: 'Creating...',
       hasAccount: 'Already have an account?',
-      signIn: 'Sign in'
+      signIn: 'Sign in',
+      emailRequired: 'Email is required',
+      emailInvalid: 'Invalid email address',
+      passwordRequired: 'Password is required',
+      passwordMinLength: 'At least 8 characters',
+      passwordMismatch: 'Passwords do not match',
+      emailConflict: 'This email is already registered.',
+      genericError: 'Could not create account. Please try again.'
     },
     cart: {
       empty: {
@@ -739,12 +882,133 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       detailNotFound: 'Checkout confirmation was not found for this checkout id.',
       detailUnknown: 'Unable to load checkout confirmation right now.'
     },
+    pdp: {
+      loading: 'Loading product...',
+      errorTitle: 'Error loading product',
+      goBack: '← Back',
+      retry: 'Try again',
+      home: 'Home',
+      zoomHint: '🔍 Hover to zoom',
+      reviews: '({{count}} reviews)',
+      quantity: 'Quantity:',
+      adding: 'Adding...',
+      addToCart: 'Add to Cart',
+      unavailable: 'Unavailable',
+      wishlistTitle: 'Add to wishlist',
+      freeShipping: 'Free shipping available',
+      tabDescription: 'Description',
+      tabSpecifications: 'Specifications',
+      tabReviews: 'Reviews',
+      relatedProducts: 'Related Products',
+      stockInStock: '✓ In stock',
+      stockLow: '⚠️ Only {{quantity}} in stock',
+      stockOut: '✗ Unavailable',
+      stockUnknown: 'Check availability',
+      addToCartError: 'Error adding to cart. Please try again.'
+    },
+    productCard: {
+      badgeNew: 'New',
+      badgeTop: 'Top',
+      badgeSale: '{{percentage}}% OFF',
+      badgeLimited: 'Last units',
+      stockInStock: '✓ In stock',
+      stockLow: '⚠️ Only {{quantity}} left',
+      stockOut: '✗ Sold out',
+      stockUnknown: 'Check',
+      quickAddUnavailable: 'Unavailable',
+      quickAddToCart: 'Add to cart'
+    },
+    normalizer: {
+      sortRelevance: 'Relevance',
+      sortNameAsc: 'Name (A-Z)',
+      sortNameDesc: 'Name (Z-A)',
+      sortPriceAsc: 'Lowest Price',
+      sortPriceDesc: 'Highest Price',
+      sortNewest: 'Newest',
+      availInStock: 'In stock ({{quantity}} available)',
+      availInStockSimple: 'In stock',
+      availLowStock: 'Only {{quantity}} in stock',
+      availLowStockSimple: 'Low stock',
+      availOutOfStock: 'Out of stock',
+      availUnknown: 'Check availability',
+      deliveryInStock: 'Delivery in 2-5 business days',
+      deliveryLowStock: 'Delivery in 3-7 business days',
+      deliveryOutOfStock: 'Product unavailable',
+      deliveryUnknown: 'Check delivery time'
+    },
+    productService: {
+      variantUnavailable: 'Variant unavailable',
+      combinationUnavailable: 'Combination not available',
+      unknownError: 'Unknown error'
+    },
+    fallback: {
+      errorTitle: 'Failed to Load Content',
+      errorHint: 'This content could not be loaded. Try refreshing the page or come back later.',
+      retry: 'Try Again',
+      loading: 'Loading content...',
+      notFoundTitle: 'Page Not Found',
+      notFoundMessage: 'The page you are looking for does not exist or has been moved.',
+      backToHome: 'Back to Home',
+      goBack: 'Go Back'
+    },
+    formBlock: {
+      selectPlaceholder: 'Select...',
+      submitting: 'Submitting...',
+      submitDefault: 'Submit',
+      successMessage: 'Form submitted successfully!',
+      errorMessage: 'Error submitting form. Please try again.'
+    },
+    http: {
+      connectionLost: 'Connection lost. Please check your internet.',
+      sessionExpired: 'Your session has expired. Please sign in again.',
+      forbidden: 'You do not have permission to perform this action.',
+      notFound: 'The requested resource was not found.',
+      serverError: 'A server error occurred. Please try again shortly.'
+    },
+    pageRenderer: {
+      notFoundTitle: 'Page not found',
+      notFoundMessage: 'The requested page does not exist or is not published.',
+      loading: 'Loading page...'
+    },
     categories: {
       electronics: 'Electronics',
       fashion: 'Fashion',
       home: 'Home & Decor',
       sports: 'Sports',
       beauty: 'Beauty'
+    },
+    reviews: {
+      title: 'Customer Reviews',
+      noReviews: 'No reviews yet.',
+      beFirst: 'Be the first to review this product.',
+      averageRating: 'Average rating',
+      outOf: 'out of 5',
+      writeReview: 'Write a review',
+      yourRating: 'Your rating',
+      titleLabel: 'Title',
+      titlePlaceholder: 'Summarize your review',
+      bodyLabel: 'Review',
+      bodyPlaceholder: 'Describe your experience with this product...',
+      submit: 'Submit review',
+      submitting: 'Submitting...',
+      loginToReview: 'Sign in to review this product.',
+      alreadyReviewed: 'You have already reviewed this product.',
+      editReview: 'Edit review',
+      successMessage: 'Review submitted successfully!',
+      errorMessage: 'Could not submit review. Please try again.'
+    },
+    wishlist: {
+      title: 'My Wishlist',
+      empty: 'Your wishlist is empty.',
+      emptyHint: 'Add products to your wishlist to save them.',
+      add: 'Add to wishlist',
+      remove: 'Remove from wishlist',
+      saved: 'Saved to wishlist',
+      loginRequired: 'Sign in to use the wishlist.',
+      viewWishlist: 'View wishlist',
+      addToCart: 'Add to cart',
+      removeItem: 'Remove',
+      browseCatalog: 'Browse catalog'
     }
   }
 };

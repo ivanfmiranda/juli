@@ -6,6 +6,7 @@ import { distinctUntilChanged, filter, switchMap, map, startWith, takeUntil } fr
 import { PageLayoutService } from './page-layout.service';
 import { PageLayout } from './page-block.model';
 import { TenantHostService } from '../../core/services/tenant-host.service';
+import { JuliI18nService } from '../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-page-renderer',
@@ -26,12 +27,12 @@ import { TenantHostService } from '../../core/services/tenant-host.service';
         </ng-container>
       </div>
       <div *ngIf="!layout.layout?.length" class="pb-not-found">
-        <h2>Pagina nao encontrada</h2>
-        <p>A pagina solicitada nao existe ou nao esta publicada.</p>
+        <h2>{{ 'pageRenderer.notFoundTitle' | juliTranslate }}</h2>
+        <p>{{ 'pageRenderer.notFoundMessage' | juliTranslate }}</p>
       </div>
     </ng-container>
     <ng-template #loading>
-      <div class="pb-loading">Carregando pagina...</div>
+      <div class="pb-loading">{{ 'pageRenderer.loading' | juliTranslate }}</div>
     </ng-template>
   `,
   styles: [`

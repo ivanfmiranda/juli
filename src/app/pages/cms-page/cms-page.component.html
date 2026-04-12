@@ -1,4 +1,4 @@
-<div *ngIf="isPreview" class="preview-bar" aria-label="Preview mode active">
+<div *ngIf="isPreview && !(smartEdit.isActive$ | async)" class="preview-bar" aria-label="Preview mode active">
   MODO PREVIEW — rascunho ainda não publicado
 </div>
 
@@ -18,8 +18,12 @@
           *ngIf="page.regions[regionName]?.components?.length"
         >
           <app-cms-component-host
-            *ngFor="let component of page.regions[regionName].components; trackBy: trackByComponent"
+            *ngFor="let component of page.regions[regionName].components; let i = index; trackBy: trackByComponent"
             [component]="component"
+            appSmartEditOverlay
+            [appSmartEditOverlay]="component.typeCode"
+            [seSlotName]="getSlotName(regionName)"
+            [seComponentIndex]="i"
           ></app-cms-component-host>
         </section>
       </ng-container>

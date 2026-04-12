@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { JuliI18nService } from '../../../core/i18n/i18n.service';
 
 @Component({
   selector: 'app-form-block',
@@ -40,13 +41,13 @@ import { HttpClient } from '@angular/common/http';
             [name]="field.label"
             [(ngModel)]="formData[field.label]"
           >
-            <option value="" disabled selected>{{ field.placeholder || 'Selecione...' }}</option>
+            <option value="" disabled selected>{{ field.placeholder || ('formBlock.selectPlaceholder' | juliTranslate) }}</option>
             <option *ngFor="let opt of field.options || []" [value]="opt">{{ opt }}</option>
           </select>
         </div>
 
         <button type="submit" class="pb-form__submit" [disabled]="submitting">
-          {{ submitting ? 'Enviando...' : (props?.submitLabel || 'Enviar') }}
+          {{ submitting ? ('formBlock.submitting' | juliTranslate) : (props?.submitLabel || ('formBlock.submitDefault' | juliTranslate)) }}
         </button>
       </form>
 
@@ -88,7 +89,7 @@ export class FormBlockComponent {
   feedback = '';
   feedbackError = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private i18n: JuliI18nService) {}
 
   onSubmit(): void {
     if (!this.props?.endpoint || this.submitting) return;
@@ -99,13 +100,13 @@ export class FormBlockComponent {
 
     this.http.post(this.props.endpoint, this.formData).subscribe({
       next: () => {
-        this.feedback = 'Formulario enviado com sucesso!';
+        this.feedback = this.i18n.translate('formBlock.successMessage');
         this.feedbackError = false;
         this.submitting = false;
         this.formData = {};
       },
       error: () => {
-        this.feedback = 'Erro ao enviar formulario. Tente novamente.';
+        this.feedback = this.i18n.translate('formBlock.errorMessage');
         this.feedbackError = true;
         this.submitting = false;
       }

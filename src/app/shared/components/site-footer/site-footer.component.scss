@@ -1,8 +1,8 @@
 // Site Footer Styles - Premium Design
 
-$color-primary: #274060;
-$color-primary-dark: #1a2d40;
-$color-accent: #3d5a80;
+$color-primary: var(--header-primary, #274060);
+$color-primary-dark: var(--header-primary-dark, #1a2d40);
+$color-accent: var(--header-accent, #3d5a80);
 $color-white: #ffffff;
 $color-gray-100: #f7f9fc;
 $color-gray-200: #e5e9f0;
@@ -21,7 +21,7 @@ $radius-md: 10px;
 
 // Newsletter Section
 .newsletter-section {
-  background: linear-gradient(90deg, $color-primary, $color-accent);
+  background: var(--topbar-bg, linear-gradient(90deg, $color-primary, $color-accent));
   padding: 3rem 0;
   color: $color-white;
 
@@ -117,6 +117,15 @@ $radius-md: 10px;
     font-weight: 800;
     color: $color-white;
     margin-bottom: 1rem;
+
+    .logo-image {
+      height: 56px;
+      width: auto;
+      object-fit: contain;
+      background: #000;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
 
     .logo-icon {
       font-size: 2.25rem;

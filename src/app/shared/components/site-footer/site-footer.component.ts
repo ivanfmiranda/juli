@@ -1,11 +1,15 @@
 /**
  * Site Footer Component
- * 
+ *
  * Footer comercial premium do JULI.
+ * Links and branding are fetched from the tenant-branding API.
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { JuliI18nService } from '../../../core/i18n/i18n.service';
+import { TenantBrandingApiService, FooterLinkSet } from '../../../core/services/tenant-branding-api.service';
 
 @Component({
   selector: 'app-site-footer',
@@ -13,48 +17,54 @@ import { JuliI18nService } from '../../../core/i18n/i18n.service';
   styleUrls: ['./site-footer.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SiteFooterComponent {
+export class SiteFooterComponent implements OnInit, OnDestroy {
   readonly currentYear = new Date().getFullYear();
+
+  brandName = 'JULI';
+  brandIcon = '🛍️';
+  logoUrl: string | null = null;
 
   newsletterEmail = '';
   newsletterSubmitting = false;
   newsletterSuccess = false;
   newsletterError = false;
-  
-  readonly footerLinks = {
-    shop: [
-      { name: 'categories.electronics', url: '/c/eletronicos' },
-      { name: 'categories.fashion', url: '/c/moda' },
-      { name: 'categories.home', url: '/c/casa' },
-      { name: 'header.sale', url: '/c/promocoes' },
-    ],
-    support: [
-      { name: 'Central de Ajuda', url: '/page/ajuda' },
-      { name: 'Trocas e Devoluções', url: '/page/trocas' },
-      { name: 'Entregas', url: '/page/entregas' },
-      { name: 'Pagamentos', url: '/page/pagamentos' },
-    ],
-    company: [
-      { name: 'Sobre a JULI', url: '/page/sobre' },
-      { name: 'Trabalhe Conosco', url: '/page/carreiras' },
-      { name: 'Seja um Parceiro', url: '/page/parceiros' },
-      { name: 'Blog', url: '/page/blog' },
-    ],
+
+  footerLinks: FooterLinkSet = {
+    shop: [],
+    support: [],
+    company: [],
   };
 
-  readonly paymentMethods = ['💳 Visa', '💳 Mastercard', '💳 Amex', '💳 Elo', '📱 Pix', '💰 Boleto'];
-  
+  readonly paymentMethods = ['💳 Visa', '💳 Mastercard', '💳 Elo', '📱 Pix'];
+
   readonly socialLinks = [
     { name: 'Instagram', icon: '📷', url: '#' },
     { name: 'Facebook', icon: '👍', url: '#' },
-    { name: 'Twitter', icon: '🐦', url: '#' },
     { name: 'YouTube', icon: '▶️', url: '#' },
   ];
 
+  private readonly destroy$ = new Subject<void>();
+
   constructor(
     public readonly i18n: JuliI18nService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly brandingApi: TenantBrandingApiService,
   ) {}
+
+  ngOnInit(): void {
+    this.brandingApi.config$.pipe(takeUntil(this.destroy$)).subscribe(config => {
+      this.brandName = config.brandName;
+      this.brandIcon = config.brandIcon;
+      this.logoUrl = config.logoUrl;
+      this.footerLinks = config.footerLinks;
+      this.cdr.markForCheck();
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
   subscribeNewsletter(): void {
     const email = this.newsletterEmail.trim();
@@ -67,7 +77,6 @@ export class SiteFooterComponent {
     this.newsletterError = false;
     this.cdr.markForCheck();
 
-    // Simulate async submission — replace with real API call when available
     setTimeout(() => {
       this.newsletterSubmitting = false;
       this.newsletterSuccess = true;

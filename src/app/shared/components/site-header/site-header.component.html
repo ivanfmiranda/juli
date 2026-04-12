@@ -2,7 +2,7 @@
   <!-- Top Bar -->
   <div class="top-bar">
     <div class="container">
-      <p class="promo-text">{{ 'header.promo' | juliTranslate }}</p>
+      <p class="promo-text">{{ promoText || ('header.promo' | juliTranslate) }}</p>
     </div>
   </div>
 
@@ -18,8 +18,11 @@
 
       <!-- Logo -->
       <a routerLink="/" class="logo">
-        <span class="logo-icon">🛍️</span>
-        <span class="logo-text">JULI</span>
+        <img *ngIf="logoUrl" [src]="logoUrl" [alt]="brandName" class="logo-image" />
+        <ng-container *ngIf="!logoUrl">
+          <span class="logo-icon">{{ brandIcon }}</span>
+          <span class="logo-text">{{ brandName }}</span>
+        </ng-container>
       </a>
 
       <!-- Search -->
@@ -63,6 +66,14 @@
           <span class="label desktop-only">{{ 'header.logout' | juliTranslate }}</span>
         </button>
 
+        <a *ngIf="isLoggedIn$ | async"
+           routerLink="/account/wishlist"
+           class="action-btn"
+           [attr.title]="'wishlist.title' | juliTranslate">
+          <span class="icon">🤍</span>
+          <span class="label desktop-only">{{ 'wishlist.title' | juliTranslate }}</span>
+        </a>
+
         <a routerLink="/cart" class="action-btn cart-btn" [attr.title]="'header.cart' | juliTranslate">
           <span class="icon">🛒</span>
           <span class="badge" *ngIf="cartTotal$ | async as total">{{ total }}</span>
@@ -79,10 +90,10 @@
         <li *ngFor="let cat of categories">
           <a [routerLink]="['/c', cat.code]" class="nav-link">
             <span class="nav-icon">{{ cat.icon }}</span>
-            <span>{{ cat.translationKey | juliTranslate }}</span>
+            <span>{{ cat.label || ((cat.translationKey || '') | juliTranslate) }}</span>
           </a>
         </li>
-        <li class="nav-highlight">
+        <li class="nav-highlight" *ngIf="!useTenantNav">
           <a routerLink="/c/promocoes" class="nav-link sale">
             <span class="nav-icon">🏷️</span>
             <span>{{ 'header.sale' | juliTranslate }}</span>

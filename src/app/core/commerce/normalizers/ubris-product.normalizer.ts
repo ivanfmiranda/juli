@@ -28,6 +28,7 @@ import {
   ProductNormalizerUtils,
   COMMON_STOCK_MAPPINGS,
 } from './product-normalizer.interface';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 /**
  * Estrutura esperada de produto Ubris
@@ -107,7 +108,9 @@ interface UbrisVariantRaw {
 
 @Injectable({ providedIn: 'root' })
 export class UbrisProductNormalizer implements ProductNormalizer {
-  
+
+  constructor(private readonly i18n: JuliI18nService) {}
+
   /**
    * Normaliza um produto para resumo (PLP)
    */
@@ -434,12 +437,12 @@ export class UbrisProductNormalizer implements ProductNormalizer {
 
   private getDefaultSorts(): JuliProductListing['sorts'] {
     return [
-      { code: 'relevance', name: 'Relevância', selected: true },
-      { code: 'name-asc', name: 'Nome (A-Z)', selected: false },
-      { code: 'name-desc', name: 'Nome (Z-A)', selected: false },
-      { code: 'price-asc', name: 'Menor Preço', selected: false },
-      { code: 'price-desc', name: 'Maior Preço', selected: false },
-      { code: 'newest', name: 'Mais Recentes', selected: false },
+      { code: 'relevance', name: this.i18n.translate('normalizer.sortRelevance'), selected: true },
+      { code: 'name-asc', name: this.i18n.translate('normalizer.sortNameAsc'), selected: false },
+      { code: 'name-desc', name: this.i18n.translate('normalizer.sortNameDesc'), selected: false },
+      { code: 'price-asc', name: this.i18n.translate('normalizer.sortPriceAsc'), selected: false },
+      { code: 'price-desc', name: this.i18n.translate('normalizer.sortPriceDesc'), selected: false },
+      { code: 'newest', name: this.i18n.translate('normalizer.sortNewest'), selected: false },
     ];
   }
 
@@ -447,29 +450,29 @@ export class UbrisProductNormalizer implements ProductNormalizer {
     switch (status) {
       case 'IN_STOCK':
         return quantity !== undefined && quantity > 0
-          ? `Em estoque (${quantity} disponíveis)`
-          : 'Em estoque';
+          ? this.i18n.translate('normalizer.availInStock', { quantity })
+          : this.i18n.translate('normalizer.availInStockSimple');
       case 'LOW_STOCK':
         return quantity !== undefined && quantity > 0
-          ? `Apenas ${quantity} em estoque`
-          : 'Estoque baixo';
+          ? this.i18n.translate('normalizer.availLowStock', { quantity })
+          : this.i18n.translate('normalizer.availLowStockSimple');
       case 'OUT_OF_STOCK':
-        return 'Fora de estoque';
+        return this.i18n.translate('normalizer.availOutOfStock');
       default:
-        return 'Consultar disponibilidade';
+        return this.i18n.translate('normalizer.availUnknown');
     }
   }
 
   private getDeliveryMessage(status: JuliStockStatus): string {
     switch (status) {
       case 'IN_STOCK':
-        return 'Entrega em 2-5 dias úteis';
+        return this.i18n.translate('normalizer.deliveryInStock');
       case 'LOW_STOCK':
-        return 'Entrega em 3-7 dias úteis';
+        return this.i18n.translate('normalizer.deliveryLowStock');
       case 'OUT_OF_STOCK':
-        return 'Produto indisponível';
+        return this.i18n.translate('normalizer.deliveryOutOfStock');
       default:
-        return 'Consultar prazo de entrega';
+        return this.i18n.translate('normalizer.deliveryUnknown');
     }
   }
 

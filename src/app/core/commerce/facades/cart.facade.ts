@@ -29,6 +29,7 @@ export class JuliCartFacade {
   private readonly anonymousCartIdSubject = new BehaviorSubject<string | null>(null);
   private readonly anonymousCartSubject = new BehaviorSubject<Cart | null>(null);
   private readonly anonymousCartLoadingSubject = new BehaviorSubject<boolean>(false);
+  private readonly cartDeleteReady$ = new BehaviorSubject<boolean>(true);
 
   /**
    * Observable that emits the current cart state type
@@ -290,11 +291,16 @@ export class JuliCartFacade {
         this.anonymousCartStorage.clearAfterPromotion();
         this.authService.clearAnonymousPrincipal();
         this.anonymousCartIdSubject.next(null);
+        this.anonymousCartSubject.next(null);
 
-        // Store new cartId in regular cart storage
+        // Store new cartId and load into NgRx store
         if (result.cart.code) {
           this.cartIdStorage.write(session.username, result.cart.code);
           this.cartIdSubject.next(result.cart.code);
+          this.multiCartService.loadCart({
+            userId: session.username,
+            cartId: result.cart.code
+          });
         }
       })
     );
@@ -330,7 +336,30 @@ export class JuliCartFacade {
         userId: session.username,
         cartId
       });
-      return this.waitForReadyCart(cartId);
+      // Wait for the load to actually start and finish (not stale state)
+      return this.multiCartService.getCartEntity(cartId).pipe(
+        scan((state, entity) => ({
+          loadingObserved: state.loadingObserved || !!entity.loading,
+          entity
+        }), {
+          loadingObserved: false,
+          entity: {} as { loading?: boolean; error?: boolean; value?: Cart; processesCount?: number }
+        }),
+        switchMap(state => {
+          if (!state.loadingObserved) {
+            return EMPTY;
+          }
+          const entity = state.entity;
+          if (entity.error && !entity.loading && !entity.value) {
+            return throwError(new Error('Cart reload failed'));
+          }
+          if (entity.value && !entity.loading && (entity.processesCount ?? 0) === 0) {
+            return of(entity.value);
+          }
+          return EMPTY;
+        }),
+        take(1)
+      );
     }
 
     // Anonymous reload
@@ -349,6 +378,12 @@ export class JuliCartFacade {
     const cartId = this.cartIdSubject.value;
 
     if (session && cartId) {
+      // Delete cart on backend — gate prevents createCart() from racing
+      this.cartDeleteReady$.next(false);
+      this.cartConnector.delete(cartId).pipe(
+        catchError(() => of(undefined)),
+        finalize(() => this.cartDeleteReady$.next(true))
+      ).subscribe();
       this.multiCartService.deleteCart(cartId, session.username);
       this.cartIdStorage.clear(session.username);
       this.cartIdSubject.next(null);
@@ -407,21 +442,27 @@ export class JuliCartFacade {
   }
 
   private ensureAuthenticatedCart(userId: string): Observable<Cart> {
-    const cartId = this.cartIdSubject.value;
-    if (cartId) {
-      this.multiCartService.loadCart({
-        userId,
-        cartId
-      });
-      return this.waitForReadyCart(cartId).pipe(
-        catchError(() => {
-          this.resetCart(userId);
-          return this.createCart(userId);
-        })
-      );
-    }
+    return this.cartDeleteReady$.pipe(
+      filter(ready => ready),
+      take(1),
+      switchMap(() => {
+        const cartId = this.cartIdSubject.value;
+        if (cartId) {
+          this.multiCartService.loadCart({
+            userId,
+            cartId
+          });
+          return this.waitForReadyCart(cartId).pipe(
+            catchError(() => {
+              this.resetCart(userId);
+              return this.createCart(userId);
+            })
+          );
+        }
 
-    return this.createCart(userId);
+        return this.createCart(userId);
+      })
+    );
   }
 
   private ensureAnonymousCart(): Observable<Cart> {

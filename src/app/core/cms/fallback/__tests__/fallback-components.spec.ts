@@ -5,12 +5,31 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { NO_ERRORS_SCHEMA, Pipe, PipeTransform } from '@angular/core';
 import { By } from '@angular/platform-browser';
+import { RouterTestingModule } from '@angular/router/testing';
 import { UnknownComponent } from '../unknown-component.component';
 import { ErrorComponent } from '../error-component.component';
 import { EmptyStateComponent } from '../empty-state.component';
 import { LoadingStateRenderer } from '../loading-state.component';
 import { NotFoundPageComponent } from '../not-found-page.component';
+
+@Pipe({ name: 'juliTranslate' })
+class MockJuliTranslatePipe implements PipeTransform {
+  transform(value: string): string {
+    const translations: Record<string, string> = {
+      'fallback.errorTitle': 'Erro ao Carregar Conteúdo',
+      'fallback.errorHint': 'Não foi possível carregar este conteúdo. Tente atualizar a página ou volte mais tarde.',
+      'fallback.loading': 'Carregando conteúdo...',
+      'fallback.retry': 'Tentar Novamente',
+      'fallback.notFoundTitle': 'Página Não Encontrada',
+      'fallback.notFoundMessage': 'A página que você está procurando não existe ou foi movida.',
+      'fallback.backToHome': 'Voltar para Home',
+      'fallback.goBack': 'Voltar'
+    };
+    return translations[value] ?? value;
+  }
+}
 
 describe('UnknownComponent', () => {
   let component: UnknownComponent;
@@ -58,7 +77,7 @@ describe('ErrorComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [ErrorComponent]
+      declarations: [ErrorComponent, MockJuliTranslatePipe]
     });
     fixture = TestBed.createComponent(ErrorComponent);
     component = fixture.componentInstance;
@@ -112,14 +131,14 @@ describe('ErrorComponent', () => {
   });
 
   it('should reload page when retry clicked without handler', () => {
-    spyOn(window.location, 'reload');
+    const reloadSpy = spyOn<any>(component, 'reloadPage').and.stub();
     component.showRetry = true;
     fixture.detectChanges();
     
     const button = fixture.debugElement.query(By.css('.juli-retry-btn'));
     button.nativeElement.click();
     
-    expect(window.location.reload).toHaveBeenCalled();
+    expect(reloadSpy).toHaveBeenCalled();
   });
 });
 
@@ -169,7 +188,7 @@ describe('LoadingStateRenderer', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [LoadingStateRenderer]
+      declarations: [LoadingStateRenderer, MockJuliTranslatePipe]
     });
     fixture = TestBed.createComponent(LoadingStateRenderer);
     component = fixture.componentInstance;
@@ -232,7 +251,9 @@ describe('NotFoundPageComponent', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      declarations: [NotFoundPageComponent]
+      imports: [RouterTestingModule],
+      declarations: [NotFoundPageComponent, MockJuliTranslatePipe],
+      schemas: [NO_ERRORS_SCHEMA]
     });
     fixture = TestBed.createComponent(NotFoundPageComponent);
     component = fixture.componentInstance;
@@ -259,7 +280,7 @@ describe('NotFoundPageComponent', () => {
   it('should have link to home', () => {
     fixture.detectChanges();
     
-    const homeLink = fixture.debugElement.query(By.css('a[routerLink="/"]'));
+    const homeLink = fixture.debugElement.query(By.css('a.juli-btn-primary'));
     expect(homeLink).toBeTruthy();
   });
 

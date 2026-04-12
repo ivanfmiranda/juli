@@ -1,0 +1,31 @@
+<div class="wishlist-page">
+  <h1>{{ 'wishlist.title' | juliTranslate }}</h1>
+
+  <div class="wishlist-loading" *ngIf="loading$ | async">
+    <div class="spinner"></div>
+  </div>
+
+  <ng-container *ngIf="!(loading$ | async)">
+    <div class="wishlist-empty" *ngIf="(items$ | async)?.length === 0">
+      <p>{{ 'wishlist.empty' | juliTranslate }}</p>
+      <p class="hint">{{ 'wishlist.emptyHint' | juliTranslate }}</p>
+      <a routerLink="/" class="btn-primary">{{ 'wishlist.browseCatalog' | juliTranslate }}</a>
+    </div>
+
+    <ul class="wishlist-list" *ngIf="(items$ | async)?.length">
+      <li class="wishlist-item" *ngFor="let item of items$ | async">
+        <a [routerLink]="['/product', item.productCode]" class="item-link">
+          {{ item.productCode }}
+        </a>
+        <div class="item-actions">
+          <button class="btn-secondary" (click)="addToCart(item.productCode)">
+            {{ 'wishlist.addToCart' | juliTranslate }}
+          </button>
+          <button class="btn-link btn-remove" (click)="removeItem(item.sku)">
+            {{ 'wishlist.removeItem' | juliTranslate }}
+          </button>
+        </div>
+      </li>
+    </ul>
+  </ng-container>
+</div>

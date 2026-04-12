@@ -19,7 +19,14 @@ module.exports = [
   {
     name: 'strapi::cors',
     config: {
-      origin: ['*'],
+      origin: [
+        'https://ubris.com.br',
+        'https://*.ubris.com.br',
+        'https://*.demo.ubris.com.br',
+        'http://localhost:4200',
+        'http://localhost:3100',
+        'http://localhost:8080',
+      ],
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
       headers: ['Content-Type', 'Authorization', 'X-Frame-Options'],
       keepHeaderOnError: true,

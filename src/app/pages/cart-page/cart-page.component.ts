@@ -12,6 +12,7 @@ export class CartPageComponent {
   readonly cart$ = this.cartFacade.cart$;
   readonly itemCount$ = this.cartFacade.itemCount$;
   readonly loading$ = this.cartFacade.loading$;
+  reloading = true;
   updating = false;
   productImages: Record<string, string> = {};
 
@@ -20,7 +21,11 @@ export class CartPageComponent {
     private readonly cdr: ChangeDetectorRef,
     private readonly productAdapter: UbrisProductAdapter
   ) {
-    this.cartFacade.reload().subscribe({ error: () => undefined });
+    this.cartFacade.reload().subscribe({
+      next: () => { this.reloading = false; this.cdr.markForCheck(); },
+      error: () => { this.reloading = false; this.cdr.markForCheck(); },
+      complete: () => { this.reloading = false; this.cdr.markForCheck(); }
+    });
     this.cart$.subscribe(cart => {
       if (cart?.entries) {
         for (const entry of cart.entries) {

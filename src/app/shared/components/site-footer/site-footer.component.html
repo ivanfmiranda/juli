@@ -25,11 +25,14 @@
       <!-- Brand -->
       <div class="footer-brand">
         <a routerLink="/" class="logo">
-          <span class="logo-icon">🛍️</span>
-          <span class="logo-text">JULI</span>
+          <img *ngIf="logoUrl" [src]="logoUrl" [alt]="brandName" class="logo-image" />
+          <ng-container *ngIf="!logoUrl">
+            <span class="logo-icon">{{ brandIcon }}</span>
+            <span class="logo-text">{{ brandName }}</span>
+          </ng-container>
         </a>
         <p class="brand-tagline">{{ 'footer.tagline' | juliTranslate }}</p>
-        
+
         <!-- Social -->
         <div class="social-links">
           <a *ngFor="let social of socialLinks" [href]="social.url" [attr.aria-label]="social.name">
@@ -83,9 +86,9 @@
   <div class="bottom-bar">
     <div class="container">
       <p class="copyright">
-        © {{ currentYear }} JULI. {{ 'footer.rights' | juliTranslate }}
+        © {{ currentYear }} {{ brandName }}. {{ 'footer.rights' | juliTranslate }}
       </p>
-      
+
       <div class="payment-methods">
         <span *ngFor="let method of paymentMethods">{{ method }}</span>
       </div>

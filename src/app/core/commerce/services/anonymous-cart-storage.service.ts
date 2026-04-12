@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
+import { TenantHostService } from '../../services/tenant-host.service';
 
 /**
  * Anonymous cart storage with signed token support.
- * 
+ *
  * The token format is: base64Url(payload).signature
  * Payload: version.anonymousId.timestamp.random
- * 
+ *
  * This provides security against:
  * - Cart enumeration attacks (can't guess valid tokens)
  * - Cart hijacking (token is signed)
@@ -26,14 +27,13 @@ export interface AnonymousCartStorage {
 
 @Injectable({ providedIn: 'root' })
 export class AnonymousCartStorageService {
-  private readonly storageKey = 'juli.anon.cart';
   private readonly TOKEN_VERSION = 1;
   private readonly TOKEN_TTL_DAYS = 7;
-  
+
   /** BroadcastChannel for cross-tab synchronization */
   private broadcastChannel: BroadcastChannel | null = null;
 
-  constructor() {
+  constructor(private readonly tenantHost: TenantHostService) {
     // Initialize BroadcastChannel for cross-tab sync
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
       this.broadcastChannel = new BroadcastChannel('juli_cart_sync');
@@ -41,6 +41,11 @@ export class AnonymousCartStorageService {
         this.handleBroadcastMessage(event.data);
       };
     }
+  }
+
+  private get storageKey(): string {
+    const tenant = this.tenantHost.currentTenantId();
+    return `juli.anon.cart.${tenant}`;
   }
 
   /**

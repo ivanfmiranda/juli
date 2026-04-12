@@ -22,8 +22,8 @@
     <button class="btn-primary" (click)="retryLoad()">{{ 'orders.retry' | juliTranslate }}</button>
   </div>
 
-  <!-- Content -->
-  <ng-container *ngIf="(vm$ | async) as vm">
+  <!-- Content (hidden when error) -->
+  <ng-container *ngIf="!(error$ | async) && (vm$ | async) as vm">
     <!-- Toolbar -->
     <section class="orders-toolbar" *ngIf="vm.orders?.orders?.length">
       <div class="results-info">
