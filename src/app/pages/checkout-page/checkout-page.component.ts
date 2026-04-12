@@ -8,9 +8,9 @@ import {
   ViewChild
 } from '@angular/core';
 import { trigger, transition, style, animate } from '@angular/animations';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin, of, Subject, Subscription, timer } from 'rxjs';
+import { firstValueFrom, forkJoin, of, Subject, Subscription, timer } from 'rxjs';
 import { catchError, finalize, map, switchMap, takeUntil } from 'rxjs/operators';
 import type { Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
@@ -110,7 +110,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   ];
 
   constructor(
-    private readonly fb: FormBuilder,
+    private readonly fb: UntypedFormBuilder,
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
     private readonly checkoutFacade: JuliCheckoutFacade,
@@ -583,7 +583,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     try {
       this.refreshingPaymentStatus = true;
       this.statusMessage = message;
-      this.paymentStatus = await this.checkoutFacade.paymentStatus(this.checkoutId).toPromise();
+      this.paymentStatus = await firstValueFrom(this.checkoutFacade.paymentStatus(this.checkoutId));
       this.updateSteps();
       if (this.paymentReadyForReview) {
         this.stopPaymentStatusPolling();

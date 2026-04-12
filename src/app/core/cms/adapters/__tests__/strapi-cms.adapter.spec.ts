@@ -1,10 +1,11 @@
 import { TestBed } from '@angular/core/testing';
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { StrapiCmsAdapter } from '../strapi-cms.adapter';
 import { JuliPageContext } from '../../types';
 import { JuliI18nService } from '../../../i18n/i18n.service';
 import { TenantHostService } from '../../../services/tenant-host.service';
 import { PreviewTokenService } from '../../services/preview-token.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('StrapiCmsAdapter', () => {
   let adapter: StrapiCmsAdapter;
@@ -17,31 +18,33 @@ describe('StrapiCmsAdapter', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [
+    imports: [],
+    providers: [
         StrapiCmsAdapter,
         {
-          provide: JuliI18nService,
-          useValue: {
-            currentLocale: 'en-US',
-            fallback: 'en-US',
-            translate: (key: string) => key
-          }
+            provide: JuliI18nService,
+            useValue: {
+                currentLocale: 'en-US',
+                fallback: 'en-US',
+                translate: (key: string) => key
+            }
         },
         {
-          provide: TenantHostService,
-          useValue: {
-            currentTenantId: () => 'default'
-          }
+            provide: TenantHostService,
+            useValue: {
+                currentTenantId: () => 'default'
+            }
         },
         {
-          provide: PreviewTokenService,
-          useValue: {
-            getToken: () => null
-          }
-        }
-      ]
-    });
+            provide: PreviewTokenService,
+            useValue: {
+                getToken: () => null
+            }
+        },
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting()
+    ]
+});
 
     adapter = TestBed.inject(StrapiCmsAdapter);
     httpMock = TestBed.inject(HttpTestingController);

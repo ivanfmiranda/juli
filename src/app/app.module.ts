@@ -1,4 +1,4 @@
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -31,91 +31,87 @@ import { PageRendererModule } from './pages/page-renderer/page-renderer.module';
 import { JuliFeatureService } from './core/services/juli-feature.service';
 import { JuliBrandingService } from './core/services/juli-branding.service';
 import { tap, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 import { JuliI18nService } from './core/i18n/i18n.service';
 import { LocaleInterceptor } from './core/i18n/locale.interceptor';
 import { JuliI18nModule } from './core/i18n/i18n.module';
 
-function initializeSaaSContext(featureService: JuliFeatureService, brandingService: JuliBrandingService): () => any {
-  return () => featureService.init().pipe(
-    tap(ctx => ctx?.branding && brandingService.applyBranding(ctx.branding)),
-    catchError(err => {
-      console.warn('[Juli] Tenant init failed, continuing:', err?.message ?? err);
-      return of(null);
-    })
-  ).toPromise();
+function initializeSaaSContext(featureService: JuliFeatureService, brandingService: JuliBrandingService): () => Promise<any> {
+  return () => firstValueFrom(
+    featureService.init().pipe(
+      tap(ctx => ctx?.branding && brandingService.applyBranding(ctx.branding)),
+      catchError(err => {
+        console.warn('[Juli] Tenant init failed, continuing:', err?.message ?? err);
+        return of(null);
+      })
+    )
+  );
 }
 
 function initializeLocale(i18n: JuliI18nService): () => void {
   return () => i18n.initialize();
 }
 
-@NgModule({
-  declarations: [
-    AppComponent,
-    LoginComponent,
-    RegisterComponent,
-    CmsPageComponent,
-    ProductDetailComponent,
-    CategoryPageComponent,
-    SearchPageComponent,
-    CartPageComponent,
-    OrdersPageComponent,
-    OrderDetailPageComponent,
-    CmsComponentHostComponent,
-    SmartEditOverlayDirective,
-    PreviewEntryComponent,
-    SiteHeaderComponent,
-    SiteFooterComponent,
-    ProductCardComponent,
-    WishlistPageComponent
-  ],
-  imports: [
-    BrowserModule,
-    BrowserAnimationsModule,
-    HttpClientModule,
-    FormsModule,
-    ReactiveFormsModule,
-    JuliI18nModule,
-    AppRoutingModule,
-    CommerceModule.forRoot(),
-    StrapiCmsModule,
-    PageRendererModule
-  ],
-  providers: [
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: AuthInterceptor,
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: LocaleInterceptor,
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: ObservabilityInterceptor,
-      multi: true
-    },
-    {
-      provide: HTTP_INTERCEPTORS,
-      useClass: CatalogVersionInterceptor,
-      multi: true
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeSaaSContext,
-      deps: [JuliFeatureService, JuliBrandingService],
-      multi: true
-    },
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initializeLocale,
-      deps: [JuliI18nService],
-      multi: true
-    }
-  ],
-  bootstrap: [AppComponent]
-})
+@NgModule({ declarations: [
+        AppComponent,
+        LoginComponent,
+        RegisterComponent,
+        CmsPageComponent,
+        ProductDetailComponent,
+        CategoryPageComponent,
+        SearchPageComponent,
+        CartPageComponent,
+        OrdersPageComponent,
+        OrderDetailPageComponent,
+        CmsComponentHostComponent,
+        SmartEditOverlayDirective,
+        PreviewEntryComponent,
+        SiteHeaderComponent,
+        SiteFooterComponent,
+        ProductCardComponent,
+        WishlistPageComponent
+    ],
+    bootstrap: [AppComponent], imports: [BrowserModule,
+        BrowserAnimationsModule,
+        FormsModule,
+        ReactiveFormsModule,
+        JuliI18nModule,
+        AppRoutingModule,
+        CommerceModule.forRoot(),
+        StrapiCmsModule,
+        PageRendererModule], providers: [
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: AuthInterceptor,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: LocaleInterceptor,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: ObservabilityInterceptor,
+            multi: true
+        },
+        {
+            provide: HTTP_INTERCEPTORS,
+            useClass: CatalogVersionInterceptor,
+            multi: true
+        },
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeSaaSContext,
+            deps: [JuliFeatureService, JuliBrandingService],
+            multi: true
+        },
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeLocale,
+            deps: [JuliI18nService],
+            multi: true
+        },
+        provideHttpClient(withInterceptorsFromDi())
+    ] })
 export class AppModule {}

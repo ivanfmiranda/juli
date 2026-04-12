@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { of } from 'rxjs';
 import { catchError, finalize, switchMap, timeout } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
@@ -27,7 +27,7 @@ export class LoginComponent implements OnInit {
   warningMessage?: string;
 
   constructor(
-    private readonly fb: FormBuilder,
+    private readonly fb: UntypedFormBuilder,
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
     private readonly router: Router,

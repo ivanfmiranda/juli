@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { JuliI18nModule } from '../../core/i18n/i18n.module';
 import { PageRendererComponent } from './page-renderer.component';
@@ -15,21 +15,18 @@ import { FormBlockComponent } from './blocks/form-block.component';
 import { MapBlockComponent } from './blocks/map-block.component';
 import { ProductCarouselBlockComponent } from './blocks/product-carousel-block.component';
 
-@NgModule({
-  declarations: [
-    PageRendererComponent,
-    BannerBlockComponent,
-    TextBlockComponent,
-    ProductGridBlockComponent,
-    CarouselBlockComponent,
-    HtmlBlockComponent,
-    SpacerBlockComponent,
-    VideoBlockComponent,
-    FormBlockComponent,
-    MapBlockComponent,
-    ProductCarouselBlockComponent,
-  ],
-  imports: [CommonModule, HttpClientModule, FormsModule, JuliI18nModule],
-  exports: [PageRendererComponent],
-})
+@NgModule({ declarations: [
+        PageRendererComponent,
+        BannerBlockComponent,
+        TextBlockComponent,
+        ProductGridBlockComponent,
+        CarouselBlockComponent,
+        HtmlBlockComponent,
+        SpacerBlockComponent,
+        VideoBlockComponent,
+        FormBlockComponent,
+        MapBlockComponent,
+        ProductCarouselBlockComponent,
+    ],
+    exports: [PageRendererComponent], imports: [CommonModule, FormsModule, JuliI18nModule], providers: [provideHttpClient(withInterceptorsFromDi())] })
 export class PageRendererModule {}

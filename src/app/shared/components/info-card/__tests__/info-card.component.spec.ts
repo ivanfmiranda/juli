@@ -8,7 +8,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { InfoCardComponent } from '../info-card.component';
 import { InfoCardComponentModel } from '../../../../core/models/cms.model';
 import { JULI_CMS_COMPONENT_DATA } from '../../../../core/cms/tokens';
@@ -21,7 +21,7 @@ const createMockCmsComponentData = (data: InfoCardComponentModel) => ({
 describe('InfoCardComponent', () => {
   let component: InfoCardComponent;
   let fixture: ComponentFixture<InfoCardComponent>;
-  let cmsComponentData: { data$: ReturnType<typeof of> };
+  let cmsComponentData: { data$: Observable<InfoCardComponentModel> };
 
   const mockData: InfoCardComponentModel = {
     uid: 'test-123',

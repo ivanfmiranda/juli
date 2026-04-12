@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, Validators } from '@angular/forms';
+import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { finalize, timeout } from 'rxjs/operators';
 import { AuthService } from '../../core/auth/auth.service';
 import { TenantBrandingApiService } from '../../core/services/tenant-branding-api.service';
@@ -25,7 +25,7 @@ export class RegisterComponent implements OnInit {
   successMessage?: string;
 
   constructor(
-    private readonly fb: FormBuilder,
+    private readonly fb: UntypedFormBuilder,
     private readonly authService: AuthService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,

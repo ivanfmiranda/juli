@@ -1,7 +1,8 @@
-import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { TenantBrandingApiService } from '../tenant-branding-api.service';
 import { TenantHostService } from '../tenant-host.service';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
 
 describe('TenantBrandingApiService', () => {
   let httpMock: HttpTestingController;
@@ -16,12 +17,14 @@ describe('TenantBrandingApiService', () => {
     tenantHost.currentTenantId.and.returnValue('tenant-a');
 
     TestBed.configureTestingModule({
-      imports: [HttpClientTestingModule],
-      providers: [
+    imports: [],
+    providers: [
         TenantBrandingApiService,
-        { provide: TenantHostService, useValue: tenantHost }
-      ]
-    });
+        { provide: TenantHostService, useValue: tenantHost },
+        provideHttpClient(withInterceptorsFromDi()),
+        provideHttpClientTesting()
+    ]
+});
 
     httpMock = TestBed.inject(HttpTestingController);
   });

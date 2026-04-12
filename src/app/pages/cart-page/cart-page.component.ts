@@ -51,9 +51,9 @@ export class CartPageComponent {
   incrementQuantity(entry: any): void {
     if (this.updating) return;
     this.updating = true;
-    this.cartFacade.updateEntry(entry.entryNumber, (entry.quantity ?? 0) + 1).subscribe({
-      next: () => { this.updating = false; this.cdr.markForCheck(); },
-      error: () => { this.updating = false; this.cdr.markForCheck(); }
+    this.cartFacade.updateEntry(entry.product?.code, (entry.quantity ?? 0) + 1).subscribe({
+      next: () => { this.updating = false; this.cdr.detectChanges(); },
+      error: () => { this.updating = false; this.cdr.detectChanges(); }
     });
   }
 
@@ -62,14 +62,14 @@ export class CartPageComponent {
     const newQty = (entry.quantity ?? 0) - 1;
     this.updating = true;
     if (newQty <= 0) {
-      this.cartFacade.removeEntry(entry.entryNumber).subscribe({
-        next: () => { this.updating = false; this.cdr.markForCheck(); },
-        error: () => { this.updating = false; this.cdr.markForCheck(); }
+      this.cartFacade.removeEntry(entry.product?.code).subscribe({
+        next: () => { this.updating = false; this.cdr.detectChanges(); },
+        error: () => { this.updating = false; this.cdr.detectChanges(); }
       });
     } else {
-      this.cartFacade.updateEntry(entry.entryNumber, newQty).subscribe({
-        next: () => { this.updating = false; this.cdr.markForCheck(); },
-        error: () => { this.updating = false; this.cdr.markForCheck(); }
+      this.cartFacade.updateEntry(entry.product?.code, newQty).subscribe({
+        next: () => { this.updating = false; this.cdr.detectChanges(); },
+        error: () => { this.updating = false; this.cdr.detectChanges(); }
       });
     }
   }
@@ -77,9 +77,9 @@ export class CartPageComponent {
   removeItem(entry: any): void {
     if (this.updating) return;
     this.updating = true;
-    this.cartFacade.removeEntry(entry.entryNumber).subscribe({
-      next: () => { this.updating = false; this.cdr.markForCheck(); },
-      error: () => { this.updating = false; this.cdr.markForCheck(); }
+    this.cartFacade.removeEntry(entry.product?.code).subscribe({
+      next: () => { this.updating = false; this.cdr.detectChanges(); },
+      error: () => { this.updating = false; this.cdr.detectChanges(); }
     });
   }
 

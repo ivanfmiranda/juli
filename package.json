@@ -22,30 +22,32 @@
     "e2e:report": "npx playwright show-report"
   },
   "dependencies": {
-    "@angular/animations": "~12.2.0",
-    "@angular/common": "~12.2.0",
-    "@angular/compiler": "~12.2.0",
-    "@angular/core": "~12.2.0",
-    "@angular/forms": "~12.2.0",
-    "@angular/platform-browser": "~12.2.0",
-    "@angular/platform-browser-dynamic": "~12.2.0",
-    "@angular/router": "~12.2.0",
-    "@angular/service-worker": "~12.2.0",
-    "@ng-bootstrap/ng-bootstrap": "^10.0.0",
-    "@ng-select/ng-select": "^7.0.1",
+    "@angular/animations": "^18.2.14",
+    "@angular/common": "^18.2.14",
+    "@angular/compiler": "^18.2.14",
+    "@angular/core": "^18.2.14",
+    "@angular/forms": "^18.2.14",
+    "@angular/platform-browser": "^18.2.14",
+    "@angular/platform-browser-dynamic": "^18.2.14",
+    "@angular/router": "^18.2.14",
+    "@angular/service-worker": "^18.2.14",
+    "@ng-bootstrap/ng-bootstrap": "^17.0.1",
+    "@ng-select/ng-select": "^14.9.0",
     "@stripe/stripe-js": "^4.8.0",
-    "angular-oauth2-oidc": "^10.0.1",
+    "angular-oauth2-oidc": "^18.0.0",
     "i18next": "^20.2.2",
     "i18next-http-backend": "^1.2.2",
-    "ngx-infinite-scroll": "^8.0.0",
-    "rxjs": "~6.6.0",
+    "ngx-infinite-scroll": "^18.0.0",
+    "rxjs": "^7.8.2",
     "tslib": "^2.3.0",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.14.10"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~12.2.18",
-    "@angular/cli": "~12.2.18",
-    "@angular/compiler-cli": "~12.2.0",
+    "@angular-devkit/build-angular": "^18.2.21",
+    "@angular-devkit/core": "^18.2.21",
+    "@angular-devkit/schematics": "^18.2.21",
+    "@angular/cli": "^18.2.21",
+    "@angular/compiler-cli": "^18.2.14",
     "@playwright/test": "^1.59.1",
     "@types/jasmine": "~3.8.0",
     "@types/node": "^12.11.1",
@@ -55,6 +57,6 @@
     "karma-coverage": "~2.0.3",
     "karma-jasmine": "~4.0.0",
     "karma-jasmine-html-reporter": "~1.7.0",
-    "typescript": "~4.3.5"
+    "typescript": "~5.4.5"
   }
 }

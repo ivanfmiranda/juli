@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, EMPTY, Observable, combineLatest, forkJoin, of, throwError } from 'rxjs';
+import { BehaviorSubject, EMPTY, Observable, combineLatest, of, throwError } from 'rxjs';
 import { catchError, distinctUntilChanged, filter, finalize, map, shareReplay, switchMap, take, tap } from 'rxjs/operators';
 import { AuthService } from '../../auth/auth.service';
-import { UbrisProductConnector } from '../connectors/product.connector';
 import { JuliCartIdStorageService } from '../services/cart-id.storage.service';
 import { AnonymousCartStorageService } from '../services/anonymous-cart-storage.service';
 import { UbrisCartConnector } from '../connectors/cart.connector';
@@ -87,16 +86,12 @@ export class JuliCartFacade {
     switchMap(([session, cartId, anonymousCartId, anonymousPrincipal]) => {
       // Authenticated flow
       if (session && cartId) {
-        return this.authenticatedCartSubject.pipe(
-          switchMap(cart => cart ? this.enrichEntries(cart) : of<JuliCart | null>(null))
-        );
+        return this.authenticatedCartSubject.asObservable();
       }
 
       // Anonymous flow
       if (anonymousPrincipal && anonymousCartId) {
-        return this.anonymousCartSubject.pipe(
-          switchMap(cart => cart ? this.enrichEntries(cart) : of<JuliCart | null>(null))
-        );
+        return this.anonymousCartSubject.asObservable();
       }
 
       return of<JuliCart | null>(null);
@@ -129,7 +124,6 @@ export class JuliCartFacade {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly productConnector: UbrisProductConnector,
     private readonly cartIdStorage: JuliCartIdStorageService,
     private readonly anonymousCartStorage: AnonymousCartStorageService,
     private readonly cartConnector: UbrisCartConnector
@@ -554,34 +548,4 @@ export class JuliCartFacade {
     );
   }
 
-  private enrichEntries(cart: JuliCart): Observable<JuliCart | null> {
-    const entries = cart.entries ?? [];
-    if (entries.length === 0) {
-      return of(cart);
-    }
-
-    return forkJoin(entries.map((entry) => {
-      const productCode = entry.product?.code;
-      if (!productCode) {
-        return of(entry);
-      }
-
-      return this.productConnector.get(productCode).pipe(
-        map((product) => ({
-          ...entry,
-          product: {
-            ...entry.product,
-            code: productCode,
-            name: (product as any).name ?? entry.product?.name ?? productCode
-          }
-        })),
-        catchError(() => of(entry))
-      );
-    })).pipe(
-      map((enrichedEntries) => ({
-        ...cart,
-        entries: enrichedEntries
-      }))
-    );
-  }
 }
