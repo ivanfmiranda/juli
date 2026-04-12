@@ -63,6 +63,8 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       items: 'itens',
       each: 'cada',
       removeItem: 'Remover item',
+      decreaseQty: 'Diminuir quantidade',
+      increaseQty: 'Aumentar quantidade',
       proceedToCheckout: 'Ir para o checkout',
       continueShopping: 'Continuar comprando',
       orderSummary: 'Resumo do pedido',
@@ -466,7 +468,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       sessionExpired: 'Sua sessão expirou. Faça login novamente.',
       forbidden: 'Você não tem permissão para realizar esta ação.',
       notFound: 'O recurso solicitado não foi encontrado.',
-      serverError: 'Ocorreu um erro no servidor. Tente novamente em instantes.'
+      serverError: 'Ocorreu um erro no servidor. Tente novamente em instantes.',
+      cartCreationFailed: 'Não foi possível criar o carrinho. Tente novamente.',
+      invalidCartPayload: 'Resposta inválida do servidor ao aplicar promoção.'
     },
     pageRenderer: {
       notFoundTitle: 'Página não encontrada',
@@ -560,6 +564,8 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       items: 'items',
       each: 'each',
       removeItem: 'Remove item',
+      decreaseQty: 'Decrease quantity',
+      increaseQty: 'Increase quantity',
       proceedToCheckout: 'Proceed to Checkout',
       continueShopping: 'Continue Shopping',
       orderSummary: 'Order Summary',
@@ -963,7 +969,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       sessionExpired: 'Your session has expired. Please sign in again.',
       forbidden: 'You do not have permission to perform this action.',
       notFound: 'The requested resource was not found.',
-      serverError: 'A server error occurred. Please try again shortly.'
+      serverError: 'A server error occurred. Please try again shortly.',
+      cartCreationFailed: 'Could not create cart. Please try again.',
+      invalidCartPayload: 'Invalid server response when applying promotion.'
     },
     pageRenderer: {
       notFoundTitle: 'Page not found',
