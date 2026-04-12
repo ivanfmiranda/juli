@@ -13,7 +13,7 @@ import { JuliI18nService } from '../../i18n/i18n.service';
 @Component({
   selector: 'app-loading-state',
   template: `
-    <div class="juli-loading-state" [class.minimal]="minimal">
+    <div class="juli-loading-state" [class.minimal]="minimal" role="status" aria-live="polite">
       <div class="juli-loading-content">
         <div class="juli-spinner" *ngIf="!minimal">
           <div class="juli-spinner-ring"></div>

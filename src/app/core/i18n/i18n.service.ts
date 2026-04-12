@@ -409,7 +409,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockLow: '⚠️ Apenas {{quantity}} em estoque',
       stockOut: '✗ Indisponível',
       stockUnknown: 'Consultar disponibilidade',
-      addToCartError: 'Erro ao adicionar ao carrinho. Tente novamente.'
+      addToCartError: 'Erro ao adicionar ao carrinho. Tente novamente.',
+      galleryPrev: 'Imagem anterior',
+      galleryNext: 'Próxima imagem'
     },
     productCard: {
       badgeNew: 'Novo',
@@ -910,7 +912,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockLow: '⚠️ Only {{quantity}} in stock',
       stockOut: '✗ Unavailable',
       stockUnknown: 'Check availability',
-      addToCartError: 'Error adding to cart. Please try again.'
+      addToCartError: 'Error adding to cart. Please try again.',
+      galleryPrev: 'Previous image',
+      galleryNext: 'Next image'
     },
     productCard: {
       badgeNew: 'New',

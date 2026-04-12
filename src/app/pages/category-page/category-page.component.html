@@ -27,7 +27,7 @@
       <!-- Header -->
       <header class="category-header">
         <!-- Breadcrumbs -->
-        <nav class="breadcrumbs" *ngIf="vm.listing.breadcrumbs?.length">
+        <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb" *ngIf="vm.listing.breadcrumbs?.length">
           <a routerLink="/">{{ 'category.home' | juliTranslate }}</a>
           <span class="separator">/</span>
           <ng-container *ngFor="let crumb of vm.listing.breadcrumbs; let last = last">

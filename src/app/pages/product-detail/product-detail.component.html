@@ -20,7 +20,7 @@
   <ng-container *ngIf="(product$ | async) as product">
     <ng-container *ngIf="(variantSelection$ | async) as selection">
       <!-- Breadcrumbs -->
-      <nav class="breadcrumbs">
+      <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
         <a routerLink="/">{{ 'pdp.home' | juliTranslate }}</a>
         <span class="separator">/</span>
         <ng-container *ngIf="product.categories?.length; else productOnly">
@@ -39,6 +39,7 @@
         <section class="product-gallery">
           <div class="main-image">
             <button class="nav-btn prev" *ngIf="product.gallery && product.gallery.length > 1"
+                    [attr.aria-label]="'pdp.galleryPrev' | juliTranslate"
                     (click)="previousImage(product.gallery.length)">←</button>
 
             <img *ngIf="product.gallery?.[selectedImageIndex]?.url"
@@ -50,6 +51,7 @@
             </div>
 
             <button class="nav-btn next" *ngIf="product.gallery && product.gallery.length > 1"
+                    [attr.aria-label]="'pdp.galleryNext' | juliTranslate"
                     (click)="nextImage(product.gallery.length)">→</button>
 
             <!-- Zoom hint -->

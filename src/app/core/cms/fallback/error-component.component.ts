@@ -18,7 +18,7 @@ import { JuliI18nService } from '../../i18n/i18n.service';
 @Component({
   selector: 'app-error-component',
   template: `
-    <div class="juli-fallback error" *ngIf="data$ | async as data">
+    <div class="juli-fallback error" role="alert" *ngIf="data$ | async as data">
       <div class="juli-fallback-content">
         <div class="juli-fallback-icon">⚠️</div>
         <div class="juli-fallback-text">
