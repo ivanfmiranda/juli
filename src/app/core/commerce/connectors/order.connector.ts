@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Order, OrderHistoryList, ReturnRequest, ReturnRequestEntryInputList } from '@spartacus/core';
+import { JuliOrder, JuliOrderHistoryList } from '../models/juli-order.model';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { UbrisOrderAdapter } from '../adapters/ubris/ubris-order.adapter';
@@ -15,7 +15,7 @@ export class UbrisOrderConnector {
     private readonly obs: JuliObservabilityService
   ) {}
 
-  load(userId: string, orderCode: string): Observable<Order> {
+  load(userId: string, orderCode: string): Observable<JuliOrder> {
     return this.adapter.load(userId, orderCode);
   }
 
@@ -24,7 +24,7 @@ export class UbrisOrderConnector {
     pageSize?: number,
     currentPage?: number,
     sort?: string
-  ): Observable<OrderHistoryList> {
+  ): Observable<JuliOrderHistoryList> {
     return this.adapter.loadHistory(userId, pageSize, currentPage, sort);
   }
 
@@ -37,7 +37,7 @@ export class UbrisOrderConnector {
     );
   }
 
-  createReturnRequest(userId: string, orderCode: string, entries: ReturnRequestEntryInputList): Observable<ReturnRequest> {
+  createReturnRequest(userId: string, orderCode: string, entries: unknown): Observable<unknown> {
     return this.adapter.createReturnRequestInternal(userId, orderCode, entries).pipe(
       map(response => this.normalizer.normalizeReturnRequest(response.data))
     );

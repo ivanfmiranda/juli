@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, Inject, Optional } from '@angular/core';
 import { ContactFormComponentModel } from '../../../core/models/cms.model';
+import { JULI_CMS_COMPONENT_DATA, JuliCmsComponentContext } from '../../../core/cms/tokens';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -14,7 +14,7 @@ export class ContactFormComponent {
   submitted = false;
 
   constructor(
-    protected componentData: CmsComponentData<ContactFormComponentModel>,
+    @Optional() @Inject(JULI_CMS_COMPONENT_DATA) protected componentData: JuliCmsComponentContext<ContactFormComponentModel>,
     private cdr: ChangeDetectorRef
   ) {}
 

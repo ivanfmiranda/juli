@@ -1,7 +1,8 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { CmsComponentAdapter, CmsPageAdapter, ConfigModule } from '@spartacus/core';
+import { JuliI18nModule } from '../core/i18n/i18n.module';
+import { JULI_CMS_COMPONENT_REGISTRY } from '../core/cms/tokens';
 
 // Components
 import { HeroBannerComponent } from '../shared/components/hero-banner/hero-banner.component';
@@ -13,23 +14,15 @@ import { CategoryTeaserComponent } from '../shared/components/category-teaser/ca
 import { CtaBlockComponent } from '../shared/components/cta-block/cta-block.component';
 import { ContactFormComponent } from '../shared/components/contact-form/contact-form.component';
 import { ProductGridComponent } from '../shared/components/product-grid/product-grid.component';
-import { JuliI18nModule } from '../core/i18n/i18n.module';
 
 // Fallback Components
-import { 
-  UnknownComponent, 
-  ErrorComponent, 
+import {
+  UnknownComponent,
+  ErrorComponent,
   EmptyStateComponent,
   LoadingStateRenderer,
-  NotFoundPageComponent 
+  NotFoundPageComponent
 } from '../core/cms/fallback';
-
-// Adapter
-import { StrapiCmsAdapter } from '../core/cms/adapters/strapi-cms.adapter';
-import { Injectable } from '@angular/core';
-import { CmsComponent } from '@spartacus/core';
-import { Observable } from 'rxjs';
-import { PageContext } from '@spartacus/core';
 
 export const CMS_COMPONENT_REGISTRY = {
   JuliHeroBannerComponent: {
@@ -73,24 +66,9 @@ export const CMS_COMPONENT_REGISTRY = {
   }
 };
 
-@Injectable()
-export class StrapiCmsComponentAdapter extends CmsComponentAdapter {
-  constructor(private readonly pageAdapter: StrapiCmsAdapter) {
-    super();
-  }
-
-  load<T extends CmsComponent>(id: string, pageContext: PageContext): Observable<T> {
-    return this.pageAdapter.loadComponent(id, pageContext) as Observable<T>;
-  }
-
-  findComponentsByIds(ids: string[], pageContext: PageContext): Observable<CmsComponent[]> {
-    return this.pageAdapter.findComponentsByIds(ids, pageContext);
-  }
-}
-
 /**
  * Strapi CMS Module
- * 
+ *
  * Centraliza o registro de todos os componentes CMS e o adapter.
  * Este é o ponto único de configuração para o CMS.
  */
@@ -98,20 +76,10 @@ export class StrapiCmsComponentAdapter extends CmsComponentAdapter {
   imports: [
     CommonModule,
     JuliI18nModule,
-    RouterModule,
-    ConfigModule.withConfig({
-      cmsComponents: CMS_COMPONENT_REGISTRY
-    })
+    RouterModule
   ],
   providers: [
-    {
-      provide: CmsPageAdapter,
-      useClass: StrapiCmsAdapter
-    },
-    {
-      provide: CmsComponentAdapter,
-      useClass: StrapiCmsComponentAdapter
-    }
+    { provide: JULI_CMS_COMPONENT_REGISTRY, useValue: CMS_COMPONENT_REGISTRY }
   ],
   declarations: [
     // Componentes

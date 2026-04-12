@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Product } from '@spartacus/core';
 import { JuliCategoryPage, UbrisStorefrontList } from '../models/ubris-commerce.models';
+
+type Product = { code?: string; name?: string; [key: string]: unknown };
 import { UbrisProductNormalizer } from './product.normalizer';
 
 @Injectable({ providedIn: 'root' })

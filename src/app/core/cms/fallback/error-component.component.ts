@@ -8,8 +8,8 @@
  * para garantir que o usuário saiba que algo deu errado.
  */
 
-import { ChangeDetectionStrategy, Component, Input, Optional } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
+import { ChangeDetectionStrategy, Component, Inject, Input, Optional } from '@angular/core';
+import { JULI_CMS_COMPONENT_DATA, JuliCmsComponentContext } from '../tokens';
 import { Observable, defer, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FallbackComponentData } from '../../models/cms.model';
@@ -128,7 +128,7 @@ export class ErrorComponent {
   @Input() retryHandler?: () => void;
   data$: Observable<FallbackComponentData>;
 
-  constructor(@Optional() protected componentData?: CmsComponentData<FallbackComponentData>) {
+  constructor(@Optional() @Inject(JULI_CMS_COMPONENT_DATA) protected componentData?: JuliCmsComponentContext<FallbackComponentData>) {
     this.data$ = this.componentData?.data$.pipe(
       map(data => data ?? this.defaultData())
     ) ?? defer(() => of(this.defaultData()));

@@ -1,6 +1,6 @@
-import { Component, ChangeDetectionStrategy } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
+import { Component, ChangeDetectionStrategy, Inject, Optional } from '@angular/core';
 import { HeroBannerComponentModel } from '../../../core/models/cms.model';
+import { JULI_CMS_COMPONENT_DATA, JuliCmsComponentContext } from '../../../core/cms/tokens';
 import { Observable } from 'rxjs';
 
 @Component({
@@ -12,5 +12,5 @@ import { Observable } from 'rxjs';
 export class HeroBannerComponent {
   data$: Observable<HeroBannerComponentModel> = this.componentData.data$;
 
-  constructor(protected componentData: CmsComponentData<HeroBannerComponentModel>) {}
+  constructor(@Optional() @Inject(JULI_CMS_COMPONENT_DATA) protected componentData: JuliCmsComponentContext<HeroBannerComponentModel>) {}
 }

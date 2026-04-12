@@ -8,10 +8,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
-import { CmsComponentData } from '@spartacus/storefront';
 import { of } from 'rxjs';
 import { InfoCardComponent } from '../info-card.component';
 import { InfoCardComponentModel } from '../../../../core/models/cms.model';
+import { JULI_CMS_COMPONENT_DATA } from '../../../../core/cms/tokens';
 
 // Mock do CmsComponentData
 const createMockCmsComponentData = (data: InfoCardComponentModel) => ({
@@ -48,7 +48,7 @@ describe('InfoCardComponent', () => {
       declarations: [InfoCardComponent],
       providers: [
         {
-          provide: CmsComponentData,
+          provide: JULI_CMS_COMPONENT_DATA,
           useValue: cmsComponentData
         }
       ]

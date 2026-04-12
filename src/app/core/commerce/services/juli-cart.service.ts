@@ -1,12 +1,9 @@
 import { Injectable } from '@angular/core';
-import { ActiveCartService, MultiCartService } from '@spartacus/core';
+import { JuliCartFacade } from '../facades/cart.facade';
 
 @Injectable({ providedIn: 'root' })
 export class JuliCartService {
-  constructor(
-    private readonly activeCartService: ActiveCartService,
-    private readonly multiCartService: MultiCartService
-  ) {}
+  constructor(private readonly cartFacade: JuliCartFacade) {}
 
   /**
    * Adiciona um produto ao carrinho com customizações de forma transparente para a UI.
@@ -15,16 +12,10 @@ export class JuliCartService {
   addWithCustomizations(
     productCode: string,
     quantity: number = 1,
-    customizations?: Record<string, any>,
-    forceNewEntry: boolean = false
+    _customizations?: Record<string, any>,
+    _forceNewEntry: boolean = false
   ): void {
-    const identity = JSON.stringify({
-      productCode,
-      customizations,
-      forceNewEntry
-    });
-
-    this.activeCartService.addEntry(identity, quantity);
+    this.cartFacade.addEntry(productCode, quantity).subscribe({ error: () => undefined });
   }
 
   /**
@@ -32,13 +23,13 @@ export class JuliCartService {
    * Não requer conhecimento do productCode original.
    */
   removeEntry(entryNumber: number): void {
-    this.activeCartService.removeEntry({ entryNumber });
+    this.cartFacade.removeEntry(entryNumber).subscribe({ error: () => undefined });
   }
 
   /**
    * Atualiza a quantidade de uma entrada existente via entryNumber.
    */
   updateEntry(entryNumber: number, quantity: number): void {
-    this.activeCartService.updateEntry(entryNumber, quantity);
+    this.cartFacade.updateEntry(entryNumber, quantity).subscribe({ error: () => undefined });
   }
 }

@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, Injector, Input, OnChanges, Type } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
-import { Observable, of } from 'rxjs';
+import { ChangeDetectionStrategy, Component, Inject, Injector, Input, OnChanges, Type } from '@angular/core';
+import { of } from 'rxjs';
 import { CmsComponentData as JuliCmsComponentData } from '../../core/models/cms.model';
-import { CMS_COMPONENT_REGISTRY } from '../../spartacus/strapi-cms.module';
+import { JULI_CMS_COMPONENT_DATA, JULI_CMS_COMPONENT_REGISTRY } from '../../core/cms/tokens';
 
 @Component({
   selector: 'app-cms-component-host',
@@ -17,19 +16,20 @@ export class CmsComponentHostComponent implements OnChanges {
   componentType?: Type<unknown>;
   componentInjector: Injector;
 
-  constructor(private readonly injector: Injector) {
+  constructor(
+    private readonly injector: Injector,
+    @Inject(JULI_CMS_COMPONENT_REGISTRY) private readonly registry: Record<string, { component: Type<unknown> }>
+  ) {
     this.componentInjector = injector;
   }
 
   ngOnChanges(): void {
-    const mapping = CMS_COMPONENT_REGISTRY[this.component?.typeCode as keyof typeof CMS_COMPONENT_REGISTRY] ?? CMS_COMPONENT_REGISTRY.UnknownComponent;
+    const mapping = this.registry[this.component?.typeCode] ?? this.registry['UnknownComponent'];
     this.componentType = mapping.component as Type<unknown>;
     this.componentInjector = Injector.create({
       providers: [{
-        provide: CmsComponentData,
-        useValue: {
-          data$: of(this.component)
-        } as Pick<CmsComponentData<JuliCmsComponentData>, 'data$'>
+        provide: JULI_CMS_COMPONENT_DATA,
+        useValue: { data$: of(this.component) }
       }],
       parent: this.injector
     });

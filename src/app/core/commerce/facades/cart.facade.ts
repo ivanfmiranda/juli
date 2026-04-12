@@ -1,15 +1,39 @@
 import { Injectable } from '@angular/core';
-import { Cart, MultiCartService } from '@spartacus/core';
 import { BehaviorSubject, EMPTY, Observable, combineLatest, forkJoin, of, throwError } from 'rxjs';
-import { catchError, distinctUntilChanged, filter, finalize, map, scan, shareReplay, switchMap, take, tap } from 'rxjs/operators';
-import { AuthService, AnonymousPrincipal } from '../../auth/auth.service';
+import { catchError, distinctUntilChanged, filter, finalize, map, shareReplay, switchMap, take, tap } from 'rxjs/operators';
+import { AuthService } from '../../auth/auth.service';
 import { UbrisProductConnector } from '../connectors/product.connector';
 import { JuliCartIdStorageService } from '../services/cart-id.storage.service';
 import { AnonymousCartStorageService } from '../services/anonymous-cart-storage.service';
 import { UbrisCartConnector } from '../connectors/cart.connector';
 
+/** Minimal cart entry shape used across the Juli storefront */
+export interface JuliCartEntry {
+  entryNumber?: number;
+  quantity?: number;
+  product?: { code?: string; name?: string };
+  basePrice?: { value?: number; currencyIso?: string; formattedValue?: string };
+  totalPrice?: { value?: number; currencyIso?: string; formattedValue?: string };
+  updateable?: boolean;
+  customizations?: unknown;
+  [key: string]: unknown;
+}
+
+/** Minimal cart shape used across the Juli storefront */
+export interface JuliCart {
+  code?: string;
+  entries?: JuliCartEntry[];
+  subTotal?: { value?: number; currencyIso?: string; formattedValue?: string };
+  totalTax?: { value?: number; currencyIso?: string; formattedValue?: string };
+  totalPrice?: { value?: number; currencyIso?: string; formattedValue?: string };
+  totalDiscounts?: { value?: number; currencyIso?: string; formattedValue?: string };
+  totalItems?: number;
+  totalUnitCount?: number;
+  [key: string]: unknown;
+}
+
 export interface CartPromotionResult {
-  cart: Cart;
+  cart: JuliCart;
   mergeOccurred: boolean;
   cartChanged: boolean;
   warnings: any[];
@@ -27,9 +51,11 @@ export type CartStateType = 'UNAUTHENTICATED' | 'ANONYMOUS' | 'AUTHENTICATED';
 export class JuliCartFacade {
   private readonly cartIdSubject = new BehaviorSubject<string | null>(null);
   private readonly anonymousCartIdSubject = new BehaviorSubject<string | null>(null);
-  private readonly anonymousCartSubject = new BehaviorSubject<Cart | null>(null);
+  private readonly anonymousCartSubject = new BehaviorSubject<JuliCart | null>(null);
   private readonly anonymousCartLoadingSubject = new BehaviorSubject<boolean>(false);
   private readonly cartDeleteReady$ = new BehaviorSubject<boolean>(true);
+  private readonly authenticatedCartSubject = new BehaviorSubject<JuliCart | null>(null);
+  private readonly authenticatedCartLoadingSubject = new BehaviorSubject<boolean>(false);
 
   /**
    * Observable that emits the current cart state type
@@ -61,19 +87,19 @@ export class JuliCartFacade {
     switchMap(([session, cartId, anonymousCartId, anonymousPrincipal]) => {
       // Authenticated flow
       if (session && cartId) {
-        return this.multiCartService.getCart(cartId).pipe(
-          switchMap(cart => cart ? this.enrichEntries(cart) : of<Cart | null>(null))
+        return this.authenticatedCartSubject.pipe(
+          switchMap(cart => cart ? this.enrichEntries(cart) : of<JuliCart | null>(null))
         );
       }
 
       // Anonymous flow
       if (anonymousPrincipal && anonymousCartId) {
         return this.anonymousCartSubject.pipe(
-          switchMap(cart => cart ? this.enrichEntries(cart) : of<Cart | null>(null))
+          switchMap(cart => cart ? this.enrichEntries(cart) : of<JuliCart | null>(null))
         );
       }
 
-      return of<Cart | null>(null);
+      return of<JuliCart | null>(null);
     }),
     shareReplay({ bufferSize: 1, refCount: true })
   );
@@ -85,18 +111,12 @@ export class JuliCartFacade {
     this.authService.anonymousPrincipal$
   ]).pipe(
     switchMap(([session, cartId, anonymousCartId, anonymousPrincipal]) => {
-      // Authenticated flow
       if (session && cartId) {
-        return this.multiCartService.getCartEntity(cartId).pipe(
-          map(entity => !!entity.loading || (entity.processesCount ?? 0) > 0)
-        );
+        return this.authenticatedCartLoadingSubject.asObservable();
       }
-
-      // Anonymous flow
       if (anonymousPrincipal && anonymousCartId) {
         return this.anonymousCartLoadingSubject.asObservable();
       }
-
       return of(false);
     }),
     distinctUntilChanged(),
@@ -109,7 +129,6 @@ export class JuliCartFacade {
 
   constructor(
     private readonly authService: AuthService,
-    private readonly multiCartService: MultiCartService,
     private readonly productConnector: UbrisProductConnector,
     private readonly cartIdStorage: JuliCartIdStorageService,
     private readonly anonymousCartStorage: AnonymousCartStorageService,
@@ -119,6 +138,7 @@ export class JuliCartFacade {
     this.authService.session$.subscribe(session => {
       if (!session) {
         this.cartIdSubject.next(null);
+        this.authenticatedCartSubject.next(null);
         // Don't clear anonymous cart on logout - it persists until explicitly cleared or promoted
         this.restoreAnonymousCart();
         return;
@@ -138,7 +158,7 @@ export class JuliCartFacade {
    * Generates anonymousId via authService, creates cart via connector,
    * and stores in AnonymousCartStorageService.
    */
-  createAnonymousCart(): Observable<Cart> {
+  createAnonymousCart(): Observable<JuliCart> {
     const anonymousPrincipal = this.authService.createAnonymousPrincipal();
     const anonymousId = anonymousPrincipal.anonymousId;
 
@@ -153,10 +173,11 @@ export class JuliCartFacade {
               this.anonymousCartStorage.write(anonymousId, cart.code, anonymousToken);
               this.anonymousCartIdSubject.next(cart.code);
             }
-            this.anonymousCartSubject.next(cart);
+            this.anonymousCartSubject.next(cart as JuliCart);
           })
         )
       ),
+      map(cart => cart as JuliCart),
       finalize(() => this.anonymousCartLoadingSubject.next(false))
     );
   }
@@ -167,7 +188,7 @@ export class JuliCartFacade {
    * - If not authenticated and no anonymous cart: creates anonymous cart
    * - If not authenticated and has anonymous cart: loads it
    */
-  ensureCart(): Observable<Cart> {
+  ensureCart(): Observable<JuliCart> {
     const session = this.authService.currentSession;
 
     // Authenticated flow
@@ -184,7 +205,7 @@ export class JuliCartFacade {
    * - If authenticated: uses existing logic with bearer token
    * - If anonymous: uses anonymousId header
    */
-  addEntry(productCode: string, quantity: number = 1): Observable<Cart> {
+  addEntry(productCode: string, quantity: number = 1): Observable<JuliCart> {
     const session = this.authService.currentSession;
 
     if (session) {
@@ -196,8 +217,9 @@ export class JuliCartFacade {
             return throwError(new Error('Cart id is missing'));
           }
 
-          this.multiCartService.addEntry(session.username, cartId, productCode, quantity);
-          return this.waitForCartMutation(cartId);
+          return this.cartConnector.addEntry(cartId, productCode, quantity).pipe(
+            switchMap(() => this.reloadAuthenticated(cartId))
+          );
         })
       );
     }
@@ -222,7 +244,7 @@ export class JuliCartFacade {
     );
   }
 
-  updateEntry(entryNumber: string | number, quantity: number): Observable<Cart> {
+  updateEntry(entryNumber: string | number, quantity: number): Observable<JuliCart> {
     const session = this.authService.currentSession;
     const cartId = this.cartIdSubject.value;
 
@@ -243,7 +265,7 @@ export class JuliCartFacade {
     return EMPTY;
   }
 
-  removeEntry(entryNumber: string | number): Observable<Cart> {
+  removeEntry(entryNumber: string | number): Observable<JuliCart> {
     const session = this.authService.currentSession;
     const cartId = this.cartIdSubject.value;
 
@@ -293,23 +315,21 @@ export class JuliCartFacade {
         this.anonymousCartIdSubject.next(null);
         this.anonymousCartSubject.next(null);
 
-        // Store new cartId and load into NgRx store
+        // Store new cartId and update authenticated cart subject
         if (result.cart.code) {
           this.cartIdStorage.write(session.username, result.cart.code);
           this.cartIdSubject.next(result.cart.code);
-          this.multiCartService.loadCart({
-            userId: session.username,
-            cartId: result.cart.code
-          });
+          this.authenticatedCartSubject.next(result.cart as JuliCart);
         }
-      })
+      }),
+      map(result => result as CartPromotionResult)
     );
   }
 
   /**
    * Gets the current cart (authenticated or anonymous).
    */
-  getCart(): Observable<Cart | null> {
+  getCart(): Observable<JuliCart | null> {
     return this.cart$;
   }
 
@@ -327,39 +347,12 @@ export class JuliCartFacade {
     return this.anonymousCartIdSubject.value;
   }
 
-  reload(): Observable<Cart> {
+  reload(): Observable<JuliCart> {
     const session = this.authService.currentSession;
     const cartId = this.cartIdSubject.value;
 
     if (session && cartId) {
-      this.multiCartService.loadCart({
-        userId: session.username,
-        cartId
-      });
-      // Wait for the load to actually start and finish (not stale state)
-      return this.multiCartService.getCartEntity(cartId).pipe(
-        scan((state, entity) => ({
-          loadingObserved: state.loadingObserved || !!entity.loading,
-          entity
-        }), {
-          loadingObserved: false,
-          entity: {} as { loading?: boolean; error?: boolean; value?: Cart; processesCount?: number }
-        }),
-        switchMap(state => {
-          if (!state.loadingObserved) {
-            return EMPTY;
-          }
-          const entity = state.entity;
-          if (entity.error && !entity.loading && !entity.value) {
-            return throwError(new Error('Cart reload failed'));
-          }
-          if (entity.value && !entity.loading && (entity.processesCount ?? 0) === 0) {
-            return of(entity.value);
-          }
-          return EMPTY;
-        }),
-        take(1)
-      );
+      return this.reloadAuthenticated(cartId);
     }
 
     // Anonymous reload
@@ -384,9 +377,9 @@ export class JuliCartFacade {
         catchError(() => of(undefined)),
         finalize(() => this.cartDeleteReady$.next(true))
       ).subscribe();
-      this.multiCartService.deleteCart(cartId, session.username);
       this.cartIdStorage.clear(session.username);
       this.cartIdSubject.next(null);
+      this.authenticatedCartSubject.next(null);
       this.anonymousCartSubject.next(null);
       return;
     }
@@ -441,32 +434,30 @@ export class JuliCartFacade {
     return this.anonymousCartIdSubject.value;
   }
 
-  private ensureAuthenticatedCart(userId: string): Observable<Cart> {
+  private ensureAuthenticatedCart(userId: string): Observable<JuliCart> {
     return this.cartDeleteReady$.pipe(
       filter(ready => ready),
       take(1),
       switchMap(() => {
         const cartId = this.cartIdSubject.value;
         if (cartId) {
-          this.multiCartService.loadCart({
-            userId,
-            cartId
-          });
-          return this.waitForReadyCart(cartId).pipe(
+          const current = this.authenticatedCartSubject.value;
+          if (current) {
+            return of(current);
+          }
+          return this.reloadAuthenticated(cartId).pipe(
             catchError(() => {
               this.resetCart(userId);
               return this.createCart(userId);
             })
           );
         }
-
         return this.createCart(userId);
       })
     );
   }
 
-  private ensureAnonymousCart(): Observable<Cart> {
-    const anonymousPrincipal = this.authService.currentAnonymousPrincipal;
+  private ensureAnonymousCart(): Observable<JuliCart> {
     const storedAnonymousCart = this.anonymousCartStorage.read();
 
     // Has existing anonymous cart
@@ -488,78 +479,51 @@ export class JuliCartFacade {
     return this.createAnonymousCart();
   }
 
-  private createCart(userId: string): Observable<Cart> {
-    return this.multiCartService.createCart({ userId }).pipe(
-      filter(entity => !entity.loading),
-      switchMap(entity => {
-        const cart = entity.value;
-        if (entity.error || !cart?.code) {
-          return throwError(new Error('Cart creation failed'));
+  private createCart(userId: string): Observable<JuliCart> {
+    this.authenticatedCartLoadingSubject.next(true);
+    return this.cartConnector.create(userId).pipe(
+      tap(cart => {
+        if (cart.code) {
+          this.cartIdStorage.write(userId, cart.code);
+          this.cartIdSubject.next(cart.code);
+          this.authenticatedCartSubject.next(cart as JuliCart);
         }
-
-        this.cartIdStorage.write(userId, cart.code);
-        this.cartIdSubject.next(cart.code);
-        return of(cart);
       }),
-      take(1)
+      map(cart => {
+        if (!cart.code) {
+          throw new Error('Cart creation failed');
+        }
+        return cart as JuliCart;
+      }),
+      finalize(() => this.authenticatedCartLoadingSubject.next(false))
     );
   }
 
-  private waitForReadyCart(cartId: string): Observable<Cart> {
-    return this.multiCartService.getCartEntity(cartId).pipe(
-      filter(entity => !entity.loading),
-      switchMap(entity => {
-        if (entity.error && !entity.value) {
-          return throwError(new Error('Cart load failed'));
-        }
-        if (entity.value && (entity.processesCount ?? 0) === 0) {
-          return of(entity.value);
-        }
-        return EMPTY;
-      }),
-      take(1)
-    );
-  }
-
-  private waitForCartMutation(cartId: string): Observable<Cart> {
-    return this.multiCartService.getCartEntity(cartId).pipe(
-      scan((state, entity) => ({
-        busyObserved: state.busyObserved || !!entity.loading || (entity.processesCount ?? 0) > 0,
-        entity
-      }), {
-        busyObserved: false,
-        entity: {} as { loading?: boolean; error?: boolean; value?: Cart; processesCount?: number }
-      }),
-      switchMap(state => {
-        const entity = state.entity;
-        if (!state.busyObserved) {
-          return EMPTY;
-        }
-        if (entity.error && !entity.loading && !entity.value) {
-          return throwError(new Error('Cart update failed'));
-        }
-        if (entity.value && !entity.loading && (entity.processesCount ?? 0) === 0) {
-          return of(entity.value);
-        }
-        return EMPTY;
-      }),
-      take(1)
+  private reloadAuthenticated(cartId: string): Observable<JuliCart> {
+    this.authenticatedCartLoadingSubject.next(true);
+    return this.cartConnector.load(cartId).pipe(
+      tap(cart => this.authenticatedCartSubject.next(cart as JuliCart)),
+      map(cart => cart as JuliCart),
+      finalize(() => this.authenticatedCartLoadingSubject.next(false))
     );
   }
 
   private resetCart(userId: string): void {
     this.cartIdStorage.clear(userId);
     this.cartIdSubject.next(null);
+    this.authenticatedCartSubject.next(null);
   }
 
   private loadOrCreateAuthenticatedCart(username: string): void {
     const storedCartId = this.cartIdStorage.read(username);
     this.cartIdSubject.next(storedCartId);
     if (storedCartId) {
-      this.multiCartService.loadCart({
-        userId: username,
-        cartId: storedCartId
-      });
+      this.reloadAuthenticated(storedCartId).pipe(
+        catchError(() => {
+          this.resetCart(username);
+          return EMPTY;
+        })
+      ).subscribe();
     }
   }
 
@@ -577,19 +541,20 @@ export class JuliCartFacade {
     }
   }
 
-  private loadAnonymousCart(cartId: string, anonymousToken: string): Observable<Cart> {
+  private loadAnonymousCart(cartId: string, anonymousToken: string): Observable<JuliCart> {
     this.anonymousCartLoadingSubject.next(true);
 
     return this.cartConnector.loadAnonymous(cartId, anonymousToken).pipe(
       tap(cart => {
         this.anonymousCartIdSubject.next(cart.code ?? cartId);
-        this.anonymousCartSubject.next(cart);
+        this.anonymousCartSubject.next(cart as JuliCart);
       }),
+      map(cart => cart as JuliCart),
       finalize(() => this.anonymousCartLoadingSubject.next(false))
     );
   }
 
-  private enrichEntries(cart: Cart): Observable<Cart | null> {
+  private enrichEntries(cart: JuliCart): Observable<JuliCart | null> {
     const entries = cart.entries ?? [];
     if (entries.length === 0) {
       return of(cart);
@@ -607,7 +572,7 @@ export class JuliCartFacade {
           product: {
             ...entry.product,
             code: productCode,
-            name: product.name ?? entry.product?.name ?? productCode
+            name: (product as any).name ?? entry.product?.name ?? productCode
           }
         })),
         catchError(() => of(entry))

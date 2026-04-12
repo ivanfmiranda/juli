@@ -1,6 +1,18 @@
 import { Injectable } from '@angular/core';
-import { ProductSearchPage, SearchConfig, Suggestion } from '@spartacus/core';
+import { SearchConfig } from '../models/ubris-commerce.models';
 import { Observable } from 'rxjs';
+
+interface ProductSearchPage {
+  freeTextSearch?: string;
+  products?: Array<{ name?: string; code?: string; [key: string]: unknown }>;
+  pagination?: { currentPage?: number; pageSize?: number; totalResults?: number; totalPages?: number };
+  [key: string]: unknown;
+}
+
+interface Suggestion {
+  value?: string;
+  [key: string]: unknown;
+}
 import { map } from 'rxjs/operators';
 import { UbrisSearchAdapter } from '../adapters/search.adapter';
 import { UbrisSearchNormalizer } from '../normalizers/search.normalizer';

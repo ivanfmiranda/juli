@@ -1,7 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
+import { ChangeDetectionStrategy, Component, Inject, Optional } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BannerData } from '../../../core/models/cms.model';
+import { JULI_CMS_COMPONENT_DATA, JuliCmsComponentContext } from '../../../core/cms/tokens';
 
 @Component({
   selector: 'app-simple-banner',
@@ -11,5 +11,5 @@ import { BannerData } from '../../../core/models/cms.model';
 export class SimpleBannerComponent {
   data$: Observable<BannerData> = this.componentData.data$;
 
-  constructor(protected componentData: CmsComponentData<BannerData>) {}
+  constructor(@Optional() @Inject(JULI_CMS_COMPONENT_DATA) protected componentData: JuliCmsComponentContext<BannerData>) {}
 }

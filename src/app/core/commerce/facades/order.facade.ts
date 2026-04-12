@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Order, OrderHistoryList } from '@spartacus/core';
 import { Observable, throwError } from 'rxjs';
-import { filter, map, switchMap, take } from 'rxjs/operators';
+import { filter, switchMap, take } from 'rxjs/operators';
+import { JuliOrder, JuliOrderHistoryList } from '../models/juli-order.model';
 import { AuthService } from '../../auth/auth.service';
 import { UbrisOrderAdapter } from '../adapters/ubris/ubris-order.adapter';
 
@@ -13,7 +13,7 @@ export class JuliOrderFacade {
     private readonly orderAdapter: UbrisOrderAdapter
   ) {}
 
-  list(pageSize: number = 20, currentPage: number = 0, sort: string = 'byDateDesc'): Observable<OrderHistoryList> {
+  list(pageSize: number = 20, currentPage: number = 0, sort: string = 'byDateDesc'): Observable<JuliOrderHistoryList> {
     return this.authService.session$.pipe(
       take(1),
       switchMap(session => {
@@ -25,7 +25,7 @@ export class JuliOrderFacade {
     );
   }
 
-  get(orderCode: string): Observable<Order> {
+  get(orderCode: string): Observable<JuliOrder> {
     return this.authService.session$.pipe(
       take(1),
       switchMap(session => {

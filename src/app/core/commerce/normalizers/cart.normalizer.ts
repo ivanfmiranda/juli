@@ -1,5 +1,13 @@
 import { Injectable } from '@angular/core';
-import { Cart, CartModification } from '@spartacus/core';
+import { JuliCart, JuliCartEntry } from '../facades/cart.facade';
+
+type Cart = JuliCart;
+interface CartModification {
+  statusCode: string;
+  quantity?: number;
+  quantityAdded?: number;
+  entry?: JuliCartEntry;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UbrisCartNormalizer {

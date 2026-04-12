@@ -1,6 +1,14 @@
 import { Injectable } from '@angular/core';
-import { Cart, CartModification } from '@spartacus/core';
+import { JuliCart, JuliCartEntry } from '../facades/cart.facade';
 import { Observable } from 'rxjs';
+
+type Cart = JuliCart;
+interface CartModification {
+  statusCode?: string;
+  quantity?: number;
+  quantityAdded?: number;
+  entry?: JuliCartEntry;
+}
 import { map, tap } from 'rxjs/operators';
 import { UbrisCartAdapter, CartPromotionResponse } from '../adapters/cart.adapter';
 import { UbrisCartNormalizer } from '../normalizers/cart.normalizer';

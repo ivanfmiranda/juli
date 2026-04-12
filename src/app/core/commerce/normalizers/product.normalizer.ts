@@ -1,5 +1,19 @@
 import { Injectable } from '@angular/core';
-import { ImageType, Product } from '@spartacus/core';
+
+const ImageType = { PRIMARY: 'PRIMARY' } as const;
+type ImageType = typeof ImageType[keyof typeof ImageType];
+
+interface Product {
+  code?: string;
+  name?: string;
+  summary?: string;
+  description?: string;
+  url?: string;
+  price?: { currencyIso?: string; value?: number; formattedValue?: string };
+  stock?: { stockLevelStatus?: string; stockLevel?: number };
+  images?: unknown;
+  [key: string]: unknown;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UbrisProductNormalizer {

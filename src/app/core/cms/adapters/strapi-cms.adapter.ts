@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { CmsComponent, CmsStructureModel, Page, PageContext } from '@spartacus/core';
+import { JuliPageContext } from '../types';
 import {
   BannerData,
   CmsComponentData,
@@ -69,13 +69,6 @@ const REGION_PATHS: Record<CmsRegionName, string> = {
   belowFold: 'below_fold_slots',
   footer: 'footer_slots'
 };
-const REGION_SLOT_NAMES: Record<CmsRegionName, string> = {
-  header: 'Header',
-  main: 'Section1',
-  sidebar: 'Sidebar',
-  belowFold: 'Section2',
-  footer: 'Footer'
-};
 
 @Injectable({
   providedIn: 'root'
@@ -91,18 +84,7 @@ export class StrapiCmsAdapter {
     private readonly previewTokenService: PreviewTokenService,
   ) {}
 
-  load(pageContext: PageContext): Observable<CmsStructureModel> {
-    return this.loadCanonical(pageContext).pipe(
-      map(page => ({ page: this.mapToSpartacusPage(page) })),
-      catchError(error => {
-        const slug = this.normalizeSlug(pageContext);
-        console.error('[StrapiCmsAdapter] Failed to load page', { slug, pageContext, error });
-        return of({ page: this.mapToSpartacusPage(this.createErrorPage(slug, pageContext)) });
-      })
-    );
-  }
-
-  loadCanonical(pageContext: PageContext, preview: boolean = false): Observable<CmsPage> {
+  loadCanonical(pageContext: JuliPageContext, preview: boolean = false): Observable<CmsPage> {
     const slug = this.normalizeSlug(pageContext);
     this.componentIndex.clear();
 
@@ -115,17 +97,17 @@ export class StrapiCmsAdapter {
     );
   }
 
-  loadComponent<T extends CmsComponent = CmsComponentData>(id: string, pageContext: PageContext): Observable<T> {
+  loadComponent(id: string, pageContext: JuliPageContext): Observable<CmsComponentData> {
     if (this.componentIndex.has(id)) {
-      return of(this.componentIndex.get(id)! as unknown as T);
+      return of(this.componentIndex.get(id)!);
     }
 
     return this.loadCanonical(pageContext).pipe(
-      map(() => (this.componentIndex.get(id) ?? this.createErrorComponent(id, 'Component not found in loaded CMS page')) as unknown as T)
+      map(() => this.componentIndex.get(id) ?? this.createErrorComponent(id, 'Component not found in loaded CMS page'))
     );
   }
 
-  findComponentsByIds(ids: string[], pageContext: PageContext): Observable<CmsComponent[]> {
+  findComponentsByIds(ids: string[], pageContext: JuliPageContext): Observable<CmsComponentData[]> {
     return this.loadCanonical(pageContext).pipe(
       map(() => ids
         .map(id => this.componentIndex.get(id))
@@ -134,7 +116,7 @@ export class StrapiCmsAdapter {
     );
   }
 
-  private mapToCanonicalPage(response: StrapiPageResponse | null | undefined, pageContext: PageContext, requestedSlug: string): CmsPage {
+  private mapToCanonicalPage(response: StrapiPageResponse | null | undefined, pageContext: JuliPageContext, requestedSlug: string): CmsPage {
     const entry = response?.data?.[0];
     const attributes = entry?.attributes ?? {};
     const label = this.valueOrFallback(attributes.slug, requestedSlug);
@@ -351,22 +333,6 @@ export class StrapiCmsAdapter {
     };
   }
 
-  private mapToSpartacusPage(page: CmsPage): Page {
-    return {
-      label: page.label,
-      title: page.title,
-      type: page.type as any,
-      template: page.template,
-      slots: Object.entries(page.regions).reduce((slots, [regionName, region]) => {
-        const slotName = REGION_SLOT_NAMES[regionName as CmsRegionName] ?? regionName;
-        slots[slotName] = {
-          components: region.components
-        };
-        return slots;
-      }, {} as Record<string, { components: CmsComponentData[] }>)
-    };
-  }
-
   private mapSeo(seo: StrapiPageAttributes['seo']): SeoMetadataModel | undefined {
     if (!seo) {
       return undefined;
@@ -388,7 +354,7 @@ export class StrapiCmsAdapter {
     });
   }
 
-  private createErrorPage(slug: string, pageContext: PageContext): CmsPage {
+  private createErrorPage(slug: string, pageContext: JuliPageContext): CmsPage {
     const errorComponent = this.createErrorComponent(`error-${slug}`, 'Failed to load CMS page');
     return {
       uid: `page-${slug}`,
@@ -489,7 +455,7 @@ export class StrapiCmsAdapter {
       : new HttpHeaders();
   }
 
-  private normalizeSlug(pageContext: PageContext): string {
+  private normalizeSlug(pageContext: JuliPageContext): string {
     const rawId = pageContext?.id ? String(pageContext.id) : 'home';
     return rawId === 'homepage' ? 'home' : rawId;
   }

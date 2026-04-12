@@ -3,16 +3,12 @@ import { NgModule, APP_INITIALIZER } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CartModule, ConfigModule, SiteContextModule } from '@spartacus/core';
-import { EffectsModule } from '@ngrx/effects';
-import { StoreModule } from '@ngrx/store';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthInterceptor } from './core/auth/auth.interceptor';
 import { ObservabilityInterceptor } from './core/services/observability.interceptor';
 import { CatalogVersionInterceptor } from './core/commerce/catalog-version.interceptor';
 import { CommerceModule } from './core/commerce';
-import { MinimalUserModule } from './core/user'; // Solução minimalista
 import { CmsPageComponent } from './pages/cms-page/cms-page.component';
 import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
 import { LoginComponent } from './pages/login/login.component';
@@ -81,20 +77,7 @@ function initializeLocale(i18n: JuliI18nService): () => void {
     FormsModule,
     ReactiveFormsModule,
     JuliI18nModule,
-    StoreModule.forRoot({}),
-    EffectsModule.forRoot([]),
     AppRoutingModule,
-    ConfigModule.withConfig({
-      context: {
-        baseSite: ['electronics'],
-        currency: ['USD'],
-        language: ['pt', 'en']
-      }
-    }),
-    SiteContextModule.forRoot(),
-    CartModule.forRoot(),
-    // UserTransitional_4_2_Module.forRoot(), // REMOVIDO - causa NullInjectorError
-    MinimalUserModule.forRootMinimal(), // NOVO - configuração minimalista
     CommerceModule.forRoot(),
     StrapiCmsModule,
     PageRendererModule

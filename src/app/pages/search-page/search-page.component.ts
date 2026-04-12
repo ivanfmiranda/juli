@@ -1,12 +1,26 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { Product, ProductSearchPage } from '@spartacus/core';
 import { Observable, combineLatest, of } from 'rxjs';
 import { map, switchMap, tap } from 'rxjs/operators';
 import { JuliCartFacade, UbrisProductSearchConnector } from '../../core/commerce';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
 import { TenantHostService } from '../../core/services/tenant-host.service';
+
+interface JuliProduct {
+  code?: string;
+  name?: string;
+  price?: { formattedValue?: string; value?: number; currencyIso?: string };
+  images?: unknown;
+  url?: string;
+  [key: string]: unknown;
+}
+
+interface JuliProductSearchPage {
+  freeTextSearch?: string;
+  products?: JuliProduct[];
+  pagination?: { currentPage?: number; pageSize?: number; totalResults?: number; totalPages?: number };
+}
 
 @Component({
   selector: 'app-search-page',
@@ -16,7 +30,7 @@ import { TenantHostService } from '../../core/services/tenant-host.service';
 })
 export class SearchPageComponent {
   private readonly pageSize = 12;
-  readonly vm$: Observable<{ query: string; page: ProductSearchPage; products: Product[]; total: number }> = combineLatest([
+  readonly vm$: Observable<{ query: string; page: JuliProductSearchPage; products: JuliProduct[]; total: number }> = combineLatest([
     this.route.queryParamMap.pipe(map(params => params.get('q') || '')),
     this.route.queryParamMap.pipe(map(params => Math.max(Number(params.get('page') || '0') || 0, 0)))
   ]).pipe(
@@ -24,8 +38,8 @@ export class SearchPageComponent {
       if (!query.trim()) {
         return of({
           query,
-          page: { freeTextSearch: query, products: [], pagination: { currentPage: 0, pageSize: this.pageSize, totalResults: 0, totalPages: 0 } } as ProductSearchPage,
-          products: [],
+          page: { freeTextSearch: query, products: [], pagination: { currentPage: 0, pageSize: this.pageSize, totalResults: 0, totalPages: 0 } } as JuliProductSearchPage,
+          products: [] as JuliProduct[],
           total: 0
         });
       }
@@ -33,9 +47,9 @@ export class SearchPageComponent {
       return this.searchConnector.search(query, { currentPage: page, pageSize: this.pageSize }).pipe(
         map(result => ({
           query,
-          page: result,
-          products: result.products ?? [],
-          total: result.pagination?.totalResults ?? (result.products?.length ?? 0)
+          page: result as JuliProductSearchPage,
+          products: (result.products ?? []) as JuliProduct[],
+          total: (result.pagination as any)?.totalResults ?? ((result.products?.length ?? 0))
         })),
         tap(result => this.titleService.setTitle(
           result.query ? `Busca: ${result.query} — ${this.siteName}` : `Busca — ${this.siteName}`
@@ -80,12 +94,12 @@ export class SearchPageComponent {
     });
   }
 
-  imageUrl(product: Product): string | undefined {
+  imageUrl(product: JuliProduct): string | undefined {
     const primary = (product.images as any)?.PRIMARY;
     return primary?.product?.url || primary?.thumbnail?.url || primary?.zoom?.url;
   }
 
-  imageAlt(product: Product): string {
+  imageAlt(product: JuliProduct): string {
     const primary = (product.images as any)?.PRIMARY;
     return primary?.product?.altText || primary?.thumbnail?.altText || product.name || this.i18n.translate('commerce.viewProduct');
   }

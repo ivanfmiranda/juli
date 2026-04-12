@@ -1,4 +1,10 @@
-import { SearchConfig } from '@spartacus/core';
+/** Configuração de busca paginada */
+export interface SearchConfig {
+  currentPage?: number;
+  pageSize?: number;
+  sort?: string;
+  [key: string]: unknown;
+}
 
 export interface GatewayEnvelope<T> {
   success?: boolean;

@@ -1,7 +1,18 @@
 import { Injectable } from '@angular/core';
-import { PaginationModel, ProductSearchPage, SearchConfig, Suggestion } from '@spartacus/core';
-import { UbrisStorefrontList } from '../models/ubris-commerce.models';
+import { UbrisStorefrontList, SearchConfig } from '../models/ubris-commerce.models';
 import { UbrisProductNormalizer } from './product.normalizer';
+
+interface ProductSearchPage {
+  freeTextSearch?: string;
+  products?: Array<{ name?: string; code?: string; [key: string]: unknown }>;
+  pagination?: { currentPage?: number; pageSize?: number; totalResults?: number; totalPages?: number };
+  [key: string]: unknown;
+}
+
+interface Suggestion {
+  value?: string;
+  [key: string]: unknown;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UbrisSearchNormalizer {
@@ -22,7 +33,7 @@ export class UbrisSearchNormalizer {
         pageSize,
         totalResults,
         totalPages: Math.ceil(totalResults / (pageSize || 1))
-      } as PaginationModel
+      }
     };
   }
 

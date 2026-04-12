@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { PageContext, PageType } from '@spartacus/core';
 import { StrapiCmsAdapter } from '../strapi-cms.adapter';
+import { JuliPageContext } from '../../types';
 import { JuliI18nService } from '../../../i18n/i18n.service';
 import { TenantHostService } from '../../../services/tenant-host.service';
 import { PreviewTokenService } from '../../services/preview-token.service';
@@ -10,9 +10,9 @@ describe('StrapiCmsAdapter', () => {
   let adapter: StrapiCmsAdapter;
   let httpMock: HttpTestingController;
 
-  const contentPageContext: PageContext = {
+  const contentPageContext: JuliPageContext = {
     id: 'demo',
-    type: PageType.CONTENT_PAGE
+    type: 'ContentPage'
   };
 
   beforeEach(() => {
@@ -52,8 +52,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should request the Strapi pages contract through /strapi-api/pages', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      expect(page.page?.label).toBe('demo');
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      expect(page.label).toBe('demo');
       done();
     });
 
@@ -66,8 +66,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should normalize hero banner data for the Angular component contract', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const component: any = page.page?.slots?.Section1?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const component: any = page.regions?.['main']?.components?.[0];
       expect(component.typeCode).toBe('JuliHeroBannerComponent');
       expect(component.flexType).toBe('JuliHeroBannerComponent');
       expect(component.title).toBe('Welcome');
@@ -101,8 +101,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should normalize product teaser data for the Angular component contract', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const component: any = page.page?.slots?.Section1?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const component: any = page.regions?.['main']?.components?.[0];
       expect(component.typeCode).toBe('JuliProductTeaserComponent');
       expect(component.productCode).toBe('3881010');
       expect(component.teaserText).toBe('Featured smartphone');
@@ -122,13 +122,13 @@ describe('StrapiCmsAdapter', () => {
     }));
   });
 
-  it('should map canonical regions into Spartacus slots without breaking pages that only use main', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      expect(page.page?.slots?.Header?.components?.length).toBe(1);
-      expect(page.page?.slots?.Section1?.components?.length).toBe(1);
-      expect(page.page?.slots?.Sidebar?.components?.length).toBe(1);
-      expect(page.page?.slots?.Section2?.components?.length).toBe(1);
-      expect(page.page?.slots?.Footer?.components?.length).toBe(1);
+  it('should map canonical regions without breaking pages that only use main', (done) => {
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      expect(page.regions?.['header']?.components?.length).toBe(1);
+      expect(page.regions?.['main']?.components?.length).toBe(1);
+      expect(page.regions?.['sidebar']?.components?.length).toBe(1);
+      expect(page.regions?.['belowFold']?.components?.length).toBe(1);
+      expect(page.regions?.['footer']?.components?.length).toBe(1);
       done();
     });
 
@@ -143,9 +143,9 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should emit dedicated component type codes for CTA and category teasers', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const cta: any = page.page?.slots?.Section2?.components?.[0];
-      const category: any = page.page?.slots?.Footer?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const cta: any = page.regions?.['belowFold']?.components?.[0];
+      const category: any = page.regions?.['footer']?.components?.[0];
       expect(cta.typeCode).toBe('JuliCtaBlockComponent');
       expect(category.typeCode).toBe('JuliCategoryTeaserComponent');
       expect(category.link).toBe('/c/578');
@@ -160,8 +160,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should emit UnknownComponent for unsupported types', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const component: any = page.page?.slots?.Section1?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const component: any = page.regions?.['main']?.components?.[0];
       expect(component.typeCode).toBe('UnknownComponent');
       expect(component.flexType).toBe('UnknownComponent');
       expect(component.originalType).toBe('unknown-widget');
@@ -176,8 +176,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should emit ErrorComponent when __component is missing or malformed', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const component: any = page.page?.slots?.Section1?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const component: any = page.regions?.['main']?.components?.[0];
       expect(component.typeCode).toBe('ErrorComponent');
       expect(component.status).toBe('invalid');
       expect(component.errorMessage).toContain('Component type is missing');
@@ -191,8 +191,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should resolve loadComponent from the normalized page cache', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      const component: any = page.page?.slots?.Section1?.components?.[0];
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      const component: any = page.regions?.['main']?.components?.[0];
 
       adapter.loadComponent(component.uid, contentPageContext).subscribe(loadedComponent => {
         expect((loadedComponent as any).typeCode).toBe('JuliHeroBannerComponent');
@@ -226,8 +226,8 @@ describe('StrapiCmsAdapter', () => {
   });
 
   it('should return a safe error page when the CMS request fails', (done) => {
-    adapter.load(contentPageContext).subscribe(page => {
-      expect(page.page?.slots?.Section1?.components?.[0].typeCode).toBe('ErrorComponent');
+    adapter.loadCanonical(contentPageContext).subscribe(page => {
+      expect(page.regions?.['main']?.components?.[0].typeCode).toBe('ErrorComponent');
       done();
     });
 

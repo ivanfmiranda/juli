@@ -8,8 +8,8 @@
  * Em produção: Renderiza silenciosamente (ou pode ser configurado para não renderizar)
  */
 
-import { ChangeDetectionStrategy, Component, Input, Optional, isDevMode } from '@angular/core';
-import { CmsComponentData } from '@spartacus/storefront';
+import { ChangeDetectionStrategy, Component, Inject, Input, Optional, isDevMode } from '@angular/core';
+import { JULI_CMS_COMPONENT_DATA, JuliCmsComponentContext } from '../tokens';
 import { Observable, defer, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { FallbackComponentData } from '../../models/cms.model';
@@ -103,7 +103,7 @@ export class UnknownComponent {
   data$: Observable<FallbackComponentData>;
   isDevMode = isDevMode();
 
-  constructor(@Optional() protected componentData?: CmsComponentData<FallbackComponentData>) {
+  constructor(@Optional() @Inject(JULI_CMS_COMPONENT_DATA) protected componentData?: JuliCmsComponentContext<FallbackComponentData>) {
     this.data$ = this.componentData?.data$.pipe(
       map(data => data ?? this.defaultData())
     ) ?? defer(() => of(this.defaultData()));

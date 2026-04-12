@@ -1,5 +1,57 @@
 import { Injectable } from '@angular/core';
-import { Order, OrderHistoryList, OrderEntry, Price, ReturnRequest } from '@spartacus/core';
+
+interface Price {
+  currencyIso?: string;
+  value?: number;
+  formattedValue?: string;
+}
+
+interface OrderEntry {
+  entryNumber?: number;
+  quantity?: number;
+  basePrice?: Price;
+  totalPrice?: Price;
+  product?: { code?: string; name?: string };
+  customizations?: unknown;
+  [key: string]: unknown;
+}
+
+interface Order {
+  code?: string;
+  status?: string;
+  statusDisplay?: string;
+  created?: Date;
+  totalPrice?: Price;
+  totalPriceWithTax?: Price;
+  subTotal?: Price;
+  totalTax?: Price;
+  totalItems?: number;
+  user?: { uid?: string };
+  entries?: OrderEntry[];
+  [key: string]: unknown;
+}
+
+interface OrderHistoryList {
+  orders?: Array<{
+    code?: string;
+    status?: string;
+    statusDisplay?: string;
+    placed?: Date;
+    total?: Price;
+    [key: string]: unknown;
+  }>;
+  pagination?: { currentPage?: number; pageSize?: number; totalResults?: number; totalPages?: number };
+  sorts?: Array<{ code?: string; name?: string; selected?: boolean }>;
+}
+
+interface ReturnRequest {
+  order?: { code?: string };
+  code?: string;
+  status?: string;
+  returnEntries?: unknown[];
+  cancellable?: boolean;
+  [key: string]: unknown;
+}
 
 type NormalizeHistoryOptions = {
   currentPage?: number;
