@@ -330,20 +330,35 @@ export class UbrisProductNormalizer implements ProductNormalizer {
 
   private normalizeImages(rawImages: unknown, fallbackAlt: string): JuliMedia[] {
     const images = ProductNormalizerUtils.asArray<UbrisImageRaw>(rawImages);
-    
+
     return images.map((img, index): JuliMedia => {
       const id = img.id ?? String(index);
       const hash = img.contentHash;
       const versionQuery = hash ? `?v=${encodeURIComponent(hash)}` : '';
-      
+
+      const rawUrl = img.url ?? `/img/pdp/${encodeURIComponent(id)}${versionQuery}`;
+      // Route catalog media through thumbor so the PDP gallery serves right-sized
+      // thumbnails/zooms instead of the original blob. See product.normalizer.ts
+      // for the matching card variant.
+      const isCatalogOrigin = typeof img.url === 'string' && img.url.startsWith('/api/catalog/img/');
+      const cardUrl = isCatalogOrigin
+        ? `/thumbor/unsafe/800x800/smart/ubris-commerce-core:8082${img.url}`
+        : rawUrl;
+      const thumbUrl = isCatalogOrigin
+        ? `/thumbor/unsafe/300x300/smart/ubris-commerce-core:8082${img.url}`
+        : `${rawUrl}?w=300`;
+      const zoomUrl = isCatalogOrigin
+        ? `/thumbor/unsafe/1200x1200/smart/ubris-commerce-core:8082${img.url}`
+        : `${rawUrl}?w=1200`;
+
       return {
         id,
-        url: img.url ?? `/img/pdp/${encodeURIComponent(id)}${versionQuery}`,
+        url: cardUrl,
         type: (img.type?.toUpperCase() as JuliMediaType) ?? 'IMAGE',
         altText: img.altText ?? fallbackAlt,
         title: img.title,
-        thumbnailUrl: img.url ? `${img.url}?w=300` : undefined,
-        zoomUrl: img.url ? `${img.url}?w=1200` : undefined,
+        thumbnailUrl: thumbUrl,
+        zoomUrl,
         width: img.width,
         height: img.height,
         primary: index === 0,

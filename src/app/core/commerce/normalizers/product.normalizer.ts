@@ -83,6 +83,13 @@ export class UbrisProductNormalizer {
     let url: string;
     if (rawUrl && (rawUrl.startsWith('http://') || rawUrl.startsWith('https://'))) {
       url = rawUrl;
+    } else if (rawUrl && rawUrl.startsWith('/api/catalog/img/')) {
+      // Wrap the origin URL through our public thumbor endpoint so the storefront
+      // gets a right-sized + cached thumbnail instead of the full-res original.
+      // The source uses the internal docker hostname because the thumbor container
+      // resolves services via docker DNS; the public browser never sees a request
+      // direct to that host — only /thumbor/... proxied by nginx.
+      url = `/thumbor/unsafe/600x600/smart/ubris-commerce-core:8082${rawUrl}`;
     } else {
       const hash = this.firstNonBlank(image, 'contentHash');
       const versionQuery = hash ? `?v=${encodeURIComponent(hash)}` : '';
