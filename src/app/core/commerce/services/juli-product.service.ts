@@ -23,6 +23,7 @@ import {
 } from '../models/juli-product.model';
 import { UbrisProductConnector } from '../connectors/product.connector';
 import { UbrisCategoryConnector } from '../connectors/category.connector';
+import { UbrisProductSearchConnector } from '../connectors/search.connector';
 import { JuliI18nService } from '../../i18n/i18n.service';
 
 /**
@@ -82,6 +83,7 @@ export class JuliProductService implements OnDestroy {
   constructor(
     private readonly productConnector: UbrisProductConnector,
     private readonly categoryConnector: UbrisCategoryConnector,
+    private readonly searchConnector: UbrisProductSearchConnector,
     private readonly i18n: JuliI18nService,
   ) {}
 
@@ -108,6 +110,41 @@ export class JuliProductService implements OnDestroy {
       takeUntil(this.destroy$),
       // Mapeia JuliCategoryPage para JuliProductListing
       map(categoryPage => this.mapCategoryPageToListing(categoryPage, page, pageSize, sort)),
+      tap(listing => {
+        this.patchState({
+          listing,
+          loading: { ...this.state.value.loading, listingLoading: false, listingError: undefined }
+        });
+      }),
+      catchError(error => {
+        this.patchState({
+          loading: {
+            ...this.state.value.loading,
+            listingLoading: false,
+            listingError: this.extractErrorMessage(error)
+          }
+        });
+        return of(null);
+      })
+    ).subscribe();
+  }
+
+  /**
+   * Carrega listagem de produtos por query de busca.
+   * Mapeia o resultado do search connector para a mesma forma JuliProductListing usada pela PLP,
+   * para que o componente da search page reuse o layout da category page.
+   */
+  loadSearchListing(
+    query: string,
+    page: number = 0,
+    pageSize: number = 12,
+    sort?: string
+  ): void {
+    this.setListingLoading(true);
+
+    this.searchConnector.search(query, { currentPage: page, pageSize, ...(sort ? { sort } : {}) } as any).pipe(
+      takeUntil(this.destroy$),
+      map(searchPage => this.mapSearchPageToListing(searchPage, query, page, pageSize, sort)),
       tap(listing => {
         this.patchState({
           listing,
@@ -311,6 +348,42 @@ export class JuliProductService implements OnDestroy {
         hasPrevious: resolvedPage > 0,
       },
       sorts: this.normalizeCategorySorts(categoryPage.sorts, selectedSort),
+    };
+  }
+
+  /**
+   * Mapeia o resultado do UbrisProductSearchConnector para JuliProductListing.
+   * Os produtos já vêm como JuliProductSummary (vindo do UbrisProductNormalizer no search.normalizer),
+   * então não há necessidade de mapSpartacusProductToSummary.
+   */
+  private mapSearchPageToListing(
+    searchPage: any,
+    query: string,
+    page: number,
+    pageSize: number,
+    requestedSort?: string
+  ): JuliProductListing {
+    const products: JuliProductSummary[] = Array.isArray(searchPage?.products) ? searchPage.products : [];
+    const pagination = searchPage?.pagination || {};
+    const total = pagination.totalResults ?? products.length;
+    const resolvedPage = pagination.currentPage ?? page;
+    const resolvedPageSize = pagination.pageSize ?? pageSize;
+    const totalPages = Math.max(Math.ceil(total / (resolvedPageSize || 1)), 1);
+    const selectedSort = this.normalizeListingSort(searchPage?.sort || requestedSort);
+
+    return {
+      code: `search:${query}`,
+      name: this.i18n.translate('search.resultsFor', { query }),
+      products,
+      pagination: {
+        currentPage: resolvedPage,
+        pageSize: resolvedPageSize,
+        totalResults: total,
+        totalPages,
+        hasNext: resolvedPage < totalPages - 1,
+        hasPrevious: resolvedPage > 0,
+      },
+      sorts: this.normalizeCategorySorts(searchPage?.sorts, selectedSort),
     };
   }
 

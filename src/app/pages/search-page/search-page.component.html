@@ -1,46 +1,108 @@
-<ng-container *ngIf="vm$ | async as vm">
-  <section class="listing-page">
-    <header class="listing-page__header">
-      <p class="eyebrow">{{ 'search.eyebrow' | juliTranslate }}</p>
-      <h1 *ngIf="vm.query; else emptySearch">{{ 'search.resultsFor' | juliTranslate:{ query: vm.query } }}</h1>
-      <ng-template #emptySearch><h1>{{ 'search.searchCatalog' | juliTranslate }}</h1></ng-template>
-      <p>{{ 'search.productsCount' | juliTranslate:{ count: vm.total } }}</p>
-    </header>
+<div class="category-page">
+  <!-- Loading State -->
+  <div class="loading-state" *ngIf="loading$ | async">
+    <div class="skeleton-grid">
+      <div class="skeleton-card" *ngFor="let i of [1,2,3,4,5,6,7,8]">
+        <div class="skeleton-image"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-    <div class="listing-grid" *ngIf="vm.products.length; else noResults">
-      <article class="listing-card" *ngFor="let product of vm.products">
-        <a [routerLink]="product.url || ['/product', product.code]">
-          <img *ngIf="imageUrl(product)" [src]="imageUrl(product)" [alt]="imageAlt(product)">
-          <h2>{{ product.name }}</h2>
-          <p>{{ product.price?.formattedValue }}</p>
-        </a>
-        <button type="button" class="btn-add" (click)="addToCart(product.code)">{{ 'commerce.addToCart' | juliTranslate }}</button>
-      </article>
+  <!-- Error State -->
+  <div class="error-state" *ngIf="error$ | async as error">
+    <div class="error-icon">⚠️</div>
+    <h3>{{ 'category.errorTitle' | juliTranslate }}</h3>
+    <p>{{ error }}</p>
+    <button class="btn-primary" (click)="retryLoad()">{{ 'category.retry' | juliTranslate }}</button>
+  </div>
+
+  <!-- Content -->
+  <ng-container *ngIf="(vm$ | async) as vm">
+    <!-- Empty query: prompt the user to type something -->
+    <div class="empty-state" *ngIf="!vm.query">
+      <div class="empty-icon">🔎</div>
+      <h3>{{ 'search.searchCatalog' | juliTranslate }}</h3>
+      <p>{{ 'search.noProductsHint' | juliTranslate }}</p>
     </div>
 
-    <ng-template #noResults>
-      <section class="listing-empty">
-        <h2>{{ 'search.noProducts' | juliTranslate }}</h2>
-        <p>{{ 'search.noProductsHint' | juliTranslate }}</p>
-      </section>
-    </ng-template>
+    <ng-container *ngIf="vm.query && vm.listing">
+      <!-- Header -->
+      <header class="category-header">
+        <p class="eyebrow">{{ 'search.eyebrow' | juliTranslate }}</p>
+        <h1 class="category-title">{{ 'search.resultsFor' | juliTranslate:{ query: vm.query } }}</h1>
 
-    <footer class="listing-pagination" *ngIf="vm.page.pagination as pagination">
-      <button
-        type="button"
-        (click)="changePage(vm.query, (pagination.currentPage || 0) - 1)"
-        [disabled]="(pagination.currentPage || 0) <= 0"
-      >
-        {{ 'search.previous' | juliTranslate }}
-      </button>
-      <span>{{ 'search.pageOf' | juliTranslate:{ page: (pagination.currentPage || 0) + 1, total: pagination.totalPages || 1 } }}</span>
-      <button
-        type="button"
-        (click)="changePage(vm.query, (pagination.currentPage || 0) + 1)"
-        [disabled]="(pagination.currentPage || 0) + 1 >= (pagination.totalPages || 1)"
-      >
-        {{ 'search.next' | juliTranslate }}
-      </button>
-    </footer>
-  </section>
-</ng-container>
+        <div class="category-meta">
+          <span class="results-count">
+            {{ 'search.productsCount' | juliTranslate:{ count: vm.listing.pagination.totalResults } }}
+          </span>
+
+          <!-- Sort Control -->
+          <div class="sort-control" *ngIf="vm.listing.sorts?.length">
+            <label for="sort-select">{{ 'category.sortBy' | juliTranslate }}</label>
+            <select id="sort-select"
+                    (change)="changeSort($any($event.target).value)">
+              <option *ngFor="let sort of vm.listing.sorts"
+                      [value]="sort.code"
+                      [selected]="sort.code === getSelectedSort(vm.listing.sorts)">
+                {{ sort.name }}
+              </option>
+            </select>
+          </div>
+        </div>
+      </header>
+
+      <!-- Products Grid -->
+      <section class="products-section" *ngIf="vm.listing.products?.length; else noProducts">
+        <div class="products-grid">
+          <app-product-card
+            *ngFor="let product of vm.listing.products"
+            [product]="product"
+            (addToCart)="addToCart($event)">
+          </app-product-card>
+        </div>
+
+        <!-- Pagination -->
+        <footer class="pagination" *ngIf="vm.listing.pagination.totalPages > 1">
+          <button type="button"
+                  class="btn-page"
+                  (click)="changePage(vm.listing.pagination.currentPage - 1)"
+                  [disabled]="!vm.listing.pagination.hasPrevious">
+            ← {{ 'category.previous' | juliTranslate }}
+          </button>
+
+          <div class="page-numbers">
+            <button *ngFor="let pageNum of getPageNumbers(vm.listing.pagination)"
+                    type="button"
+                    class="btn-page-number"
+                    [class.active]="pageNum === vm.listing.pagination.currentPage"
+                    (click)="changePage(pageNum)">
+              {{ pageNum + 1 }}
+            </button>
+          </div>
+
+          <button type="button"
+                  class="btn-page"
+                  (click)="changePage(vm.listing.pagination.currentPage + 1)"
+                  [disabled]="!vm.listing.pagination.hasNext">
+            {{ 'category.next' | juliTranslate }} →
+          </button>
+        </footer>
+      </section>
+
+      <!-- Empty State (no matches for the query) -->
+      <ng-template #noProducts>
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <h3>{{ 'search.noProducts' | juliTranslate }}</h3>
+          <p>{{ 'search.noProductsHint' | juliTranslate }}</p>
+          <a routerLink="/" class="btn-primary">{{ 'category.explore' | juliTranslate }}</a>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+</div>
