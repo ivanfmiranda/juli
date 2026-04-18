@@ -29,7 +29,8 @@
     <div class="summary-section summary-items" *ngIf="cart?.entries?.length">
       <div class="ub-order-item" *ngFor="let entry of cart?.entries">
         <div class="ub-order-item__image">
-          <i class="fas fa-image"></i>
+          <img *ngIf="entry.product?.imageUrl" [src]="entry.product!.imageUrl" [alt]="entry.product?.name ?? ''" loading="lazy">
+          <i *ngIf="!entry.product?.imageUrl" class="fas fa-image"></i>
         </div>
         <div class="ub-order-item__details">
           <div class="ub-order-item__name">{{ entry.product?.name }}</div>

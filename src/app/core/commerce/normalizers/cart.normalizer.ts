@@ -45,12 +45,19 @@ export class UbrisCartNormalizer {
   private normalizeEntry(raw: Record<string, unknown>, index: number) {
     const currencyIso = this.firstNonBlank(raw, 'currency') ?? 'BRL';
     const productCode = this.firstNonBlank(raw, 'productCode', 'sku', 'code') ?? `entry-${index}`;
+    const rawImageUrl = this.firstNonBlank(raw, 'imageUrl');
+    // Same thumbor-wrapping rule the product normalizer uses — keeps cart thumbnails
+    // consistently sized and cached via the public /thumbor/ proxy.
+    const imageUrl = rawImageUrl && rawImageUrl.startsWith('/api/catalog/img/')
+      ? `/thumbor/unsafe/120x120/smart/ubris-commerce-core:8082${rawImageUrl}`
+      : rawImageUrl ?? undefined;
     return {
       entryNumber: this.asNumber(raw.entryNumber, index),
       quantity: this.asNumber(raw.quantity, 0),
       product: {
         code: productCode,
-        name: this.firstNonBlank(raw, 'name', 'productName') ?? productCode
+        name: this.firstNonBlank(raw, 'name', 'productName') ?? productCode,
+        imageUrl
       },
       basePrice: this.money(raw.unitPrice, currencyIso),
       totalPrice: this.money(raw.lineTotal, currencyIso),

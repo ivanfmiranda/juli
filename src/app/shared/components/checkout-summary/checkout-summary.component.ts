@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input, Output, EventEmitter } from 
 import { JuliI18nService } from '../../../core/i18n/i18n.service';
 // JuliCart type from commerce facade
 interface CartEntry {
-  product?: { name?: string };
+  product?: { name?: string; imageUrl?: string };
   quantity?: number;
   totalPrice?: { formattedValue?: string; value?: number; currencyIso?: string };
 }

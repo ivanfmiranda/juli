@@ -10,7 +10,7 @@ import { UbrisCartConnector } from '../connectors/cart.connector';
 export interface JuliCartEntry {
   entryNumber?: number;
   quantity?: number;
-  product?: { code?: string; name?: string };
+  product?: { code?: string; name?: string; imageUrl?: string };
   basePrice?: { value?: number; currencyIso?: string; formattedValue?: string };
   totalPrice?: { value?: number; currencyIso?: string; formattedValue?: string };
   updateable?: boolean;
