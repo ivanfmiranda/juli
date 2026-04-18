@@ -33,7 +33,7 @@ export class PageLayoutService {
 
     // 3. HTTP call to Strapi
     const tenantId = this.tenantHost.currentTenantId();
-    let url = `${environment.strapiApiBaseUrl}/pages?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*&locale=all`;
+    let url = `${environment.strapiApiBaseUrl}/api/pages?filters[slug][$eq]=${encodeURIComponent(slug)}&populate=*&locale=all`;
     if (tenantId && tenantId !== 'default') {
       url += `&filters[tenantKey][$eq]=${encodeURIComponent(tenantId)}`;
     }

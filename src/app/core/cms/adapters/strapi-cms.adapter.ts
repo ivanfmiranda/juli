@@ -60,7 +60,7 @@ type StrapiComponentPayload = Record<string, unknown> & {
   __component?: string;
 };
 
-const PAGE_ENDPOINT = '/pages';
+const PAGE_ENDPOINT = '/api/pages';
 const CANONICAL_REGION_ORDER: CmsRegionName[] = ['header', 'main', 'sidebar', 'belowFold', 'footer'];
 const REGION_PATHS: Record<CmsRegionName, string> = {
   header: 'header_slots',

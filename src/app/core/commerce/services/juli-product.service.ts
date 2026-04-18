@@ -353,8 +353,8 @@ export class JuliProductService implements OnDestroy {
 
   /**
    * Mapeia o resultado do UbrisProductSearchConnector para JuliProductListing.
-   * Os produtos já vêm como JuliProductSummary (vindo do UbrisProductNormalizer no search.normalizer),
-   * então não há necessidade de mapSpartacusProductToSummary.
+   * UbrisProductNormalizer devolve o shape do Spartacus (images.PRIMARY, stock.stockLevelStatus),
+   * então precisamos converter para JuliProductSummary (mainImage, stock.status) antes do card.
    */
   private mapSearchPageToListing(
     searchPage: any,
@@ -363,7 +363,8 @@ export class JuliProductService implements OnDestroy {
     pageSize: number,
     requestedSort?: string
   ): JuliProductListing {
-    const products: JuliProductSummary[] = Array.isArray(searchPage?.products) ? searchPage.products : [];
+    const rawProducts = Array.isArray(searchPage?.products) ? searchPage.products : [];
+    const products: JuliProductSummary[] = rawProducts.map((p: any) => this.mapSpartacusProductToSummary(p));
     const pagination = searchPage?.pagination || {};
     const total = pagination.totalResults ?? products.length;
     const resolvedPage = pagination.currentPage ?? page;
@@ -468,6 +469,9 @@ export class JuliProductService implements OnDestroy {
         status: this.mapStockStatus(stock.stockLevelStatus),
         quantity: stock.stockLevel,
       },
+      // UNKNOWN/missing stock info (common for ML-synced products without inventory integration)
+      // should NOT block add-to-cart — the real check happens at cart/checkout time.
+      // Only an explicit OUT_OF_STOCK from the backend disables the button.
       available: stock.stockLevelStatus !== 'outOfStock',
       metadata: { _source: 'spartacus' },
     };

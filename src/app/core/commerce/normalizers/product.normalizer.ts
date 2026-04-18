@@ -105,14 +105,15 @@ export class UbrisProductNormalizer {
 
   private normalizeStock(value: string | null): string {
     if (!value) {
-      return 'inStock';
+      return 'outOfStock';
     }
     const upper = value.toUpperCase();
     if (upper === 'IN_STOCK') return 'inStock';
     if (upper === 'LOW_STOCK') return 'lowStock';
-    if (upper === 'OUT_OF_STOCK') return 'outOfStock';
-    // UNKNOWN or other → treat as in stock (availability checked separately)
-    return 'inStock';
+    // OUT_OF_STOCK, UNKNOWN, or anything else → not purchasable.
+    // The authoritative gate is the backend reservation; mapping UNKNOWN to
+    // inStock would hide catalog/inventory desync and mislead customers.
+    return 'outOfStock';
   }
 
   private asRecord(value: unknown): Record<string, unknown> | null {
