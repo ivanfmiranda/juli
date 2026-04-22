@@ -9,7 +9,7 @@
         loading="lazy">
       
       <div class="image-placeholder" *ngIf="!product.mainImage?.url">
-        <span>📦</span>
+        <app-icon name="package" [size]="40"></app-icon>
       </div>
 
       <!-- Hover Image -->
@@ -36,8 +36,8 @@
         class="btn-quick-add"
         (click)="onAddToCart($event)"
         [title]="product.stock.status === 'OUT_OF_STOCK' ? ('productCard.quickAddUnavailable' | juliTranslate) : ('productCard.quickAddToCart' | juliTranslate)">
-        <span *ngIf="product.stock.status !== 'OUT_OF_STOCK'">🛒</span>
-        <span *ngIf="product.stock.status === 'OUT_OF_STOCK'">✕</span>
+        <app-icon *ngIf="product.stock.status !== 'OUT_OF_STOCK'" name="shopping-cart" [size]="18"></app-icon>
+        <app-icon *ngIf="product.stock.status === 'OUT_OF_STOCK'" name="x" [size]="18"></app-icon>
       </button>
 
       <!-- Wishlist Toggle -->
@@ -46,7 +46,7 @@
         [class.saved]="isSaved$ | async"
         (click)="onToggleWishlist($event)"
         [title]="(isSaved$ | async) ? ('wishlist.remove' | juliTranslate) : ('wishlist.add' | juliTranslate)">
-        <span>{{ (isSaved$ | async) ? '❤️' : '🤍' }}</span>
+        <app-icon name="heart" [size]="18" [filled]="!!(isSaved$ | async)"></app-icon>
       </button>
     </div>
 
@@ -55,9 +55,11 @@
       <!-- Rating -->
       <div class="product-rating" *ngIf="product.rating">
         <div class="stars">
-          <span *ngFor="let star of [1,2,3,4,5]" 
-                class="star"
-                [class.filled]="star <= Math.floor(product.rating)">⭐</span>
+          <app-icon *ngFor="let star of [1,2,3,4,5]"
+                    name="star"
+                    [size]="14"
+                    [filled]="star <= Math.floor(product.rating)"
+                    [class.filled]="star <= Math.floor(product.rating)"></app-icon>
         </div>
         <span class="count">({{ product.reviewCount }})</span>
       </div>
@@ -75,10 +77,18 @@
         </span>
       </div>
 
-      <!-- Stock -->
-      <div class="product-stock" [class]="getStockClass()">
-        {{ getStockMessage() }}
+      <!-- Parcelamento -->
+      <div class="product-installment" *ngIf="getInstallment() as inst">
+        ou <strong>{{ inst.count }}x de {{ inst.amount }}</strong> sem juros
       </div>
+
+      <!-- Stock -->
+      <span *ngIf="getStockStatus() as stock"
+            [class]="stock.cssClass"
+            [attr.aria-label]="stock.ariaLabel"
+            role="status">
+        {{ stock.label }}
+      </span>
     </div>
   </a>
 </article>

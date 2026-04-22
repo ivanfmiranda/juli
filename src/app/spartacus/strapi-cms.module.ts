@@ -6,6 +6,7 @@ import { JULI_CMS_COMPONENT_REGISTRY } from '../core/cms/tokens';
 
 // Components
 import { HeroBannerComponent } from '../shared/components/hero-banner/hero-banner.component';
+import { IconComponent } from '../shared/components/icon/icon.component';
 import { InfoCardComponent } from '../shared/components/info-card/info-card.component';
 import { ProductTeaserComponent } from '../shared/components/product-teaser/product-teaser.component';
 import { ParagraphComponent } from '../shared/components/paragraph/paragraph.component';
@@ -76,7 +77,8 @@ export const CMS_COMPONENT_REGISTRY = {
   imports: [
     CommonModule,
     JuliI18nModule,
-    RouterModule
+    RouterModule,
+    IconComponent
   ],
   providers: [
     { provide: JULI_CMS_COMPONENT_REGISTRY, useValue: CMS_COMPONENT_REGISTRY }

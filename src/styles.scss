@@ -24,3 +24,40 @@ img {
 a {
   color: inherit;
 }
+
+// ── Layout: feature-row de app-info-card ───────────────────────────────────
+// Quando múltiplos InfoCard aparecem lado-a-lado dentro de uma mesma slot do
+// page-builder, layoutamos em grid 2 col (mobile) / 4 col (≥ md). Sem isso
+// cada <app-info-card> é um bloco padrão e empilha vertical — cenário
+// reportado em K2 e demo. :has() cobre ≥ Chrome 105 / Safari 15.4 / FF 121.
+:where(cx-page-slot, [class*="page-section"], .pb-region, .juli-cms-host):has(app-info-card + app-info-card) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.5rem;
+  }
+}
+
+app-info-card {
+  display: block;
+  min-width: 0;
+}
+
+// ── Typography: hierarquia de seção ────────────────────────────────────────
+// Títulos de seção (ex.: "Peças de Motor em Destaque") ganham presença:
+// 4–6px maior que o default + margem extra no topo da seção pra aliviar o
+// peso visual dos cards adjacentes.
+.cms-product-grid__header,
+.cms-product-carousel__header {
+  margin-top: 3rem;
+
+  h2 {
+    font-size: clamp(1.5rem, 2.5vw, 1.875rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 0.25rem;
+  }
+}

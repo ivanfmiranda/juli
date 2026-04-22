@@ -23,10 +23,13 @@ import { ProductCardComponent } from './shared/components/product-card/product-c
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { WishlistPageComponent } from './pages/wishlist-page/wishlist-page.component';
+import { AccountAddressesPageComponent } from './pages/account-addresses-page/account-addresses-page.component';
+import { ReturnsPageComponent } from './pages/returns-page/returns-page.component';
 import { CmsComponentHostComponent } from './shared/cms-runtime/cms-component-host.component';
 import { SmartEditOverlayDirective } from './shared/cms-runtime/smartedit-overlay.directive';
 import { StrapiCmsModule } from './spartacus/strapi-cms.module';
 import { PageRendererModule } from './pages/page-renderer/page-renderer.module';
+import { IconComponent } from './shared/components/icon/icon.component';
 
 import { JuliFeatureService } from './core/services/juli-feature.service';
 import { JuliBrandingService } from './core/services/juli-branding.service';
@@ -69,7 +72,9 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         SiteHeaderComponent,
         SiteFooterComponent,
         ProductCardComponent,
-        WishlistPageComponent
+        WishlistPageComponent,
+        AccountAddressesPageComponent,
+        ReturnsPageComponent
     ],
     bootstrap: [AppComponent], imports: [BrowserModule,
         BrowserAnimationsModule,
@@ -79,7 +84,8 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         AppRoutingModule,
         CommerceModule.forRoot(),
         StrapiCmsModule,
-        PageRendererModule], providers: [
+        PageRendererModule,
+        IconComponent], providers: [
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,

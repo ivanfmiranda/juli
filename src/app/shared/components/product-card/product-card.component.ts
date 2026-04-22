@@ -29,6 +29,8 @@ export class ProductCardComponent implements OnChanges {
   @Input() product!: JuliProductSummary;
   @Input() showQuickAdd = true;
   @Input() layout: 'grid' | 'list' = 'grid';
+  /** How many installments to surface on the card ("ou 12x de R$ …"). */
+  @Input() installments = 12;
 
   @Output() addToCart = new EventEmitter<string>();
 
@@ -70,7 +72,7 @@ export class ProductCardComponent implements OnChanges {
   }
 
   /**
-   * Retorna mensagem de estoque
+   * Retorna mensagem de estoque (mantido para compatibilidade)
    */
   getStockMessage(): string {
     switch (this.product.stock.status) {
@@ -86,10 +88,83 @@ export class ProductCardComponent implements OnChanges {
   }
 
   /**
-   * Retorna classe CSS para estoque
+   * Retorna classe CSS para estoque (mantido para compatibilidade)
    */
   getStockClass(): string {
     return `stock-${this.product.stock.status.toLowerCase()}`;
+  }
+
+  /**
+   * Retorna objeto acessível para indicador de estoque.
+   * Usa ponto colorido via CSS + texto visível + ariaLabel para leitores de tela.
+   */
+  getStockStatus(): { label: string; cssClass: string; ariaLabel: string } {
+    switch (this.product.stock.status) {
+      case 'IN_STOCK':
+        return {
+          label: this.i18n.translate('productCard.stockInStock'),
+          cssClass: 'stock-indicator stock-available',
+          ariaLabel: this.i18n.translate('productCard.stockInStock'),
+        };
+      case 'LOW_STOCK':
+        return {
+          label: this.i18n.translate('productCard.stockLow', { quantity: this.product.stock.quantity }),
+          cssClass: 'stock-indicator stock-low',
+          ariaLabel: this.i18n.translate('productCard.stockLowAria'),
+        };
+      case 'OUT_OF_STOCK':
+        return {
+          label: this.i18n.translate('productCard.stockOut'),
+          cssClass: 'stock-indicator stock-out',
+          ariaLabel: this.i18n.translate('productCard.stockOut'),
+        };
+      default:
+        return {
+          label: this.i18n.translate('productCard.stockUnknown'),
+          cssClass: 'stock-indicator stock-out',
+          ariaLabel: this.i18n.translate('productCard.stockUnknown'),
+        };
+    }
+  }
+
+  /**
+   * Parcela sem juros exibida no card. Não substitui o PDP — é um hint
+   * comercial comum no varejo BR (cliente decide pela parcela, não pelo
+   * preço cheio). Null quando o preço ou parcelas for inválido, ou
+   * quando a parcela cai abaixo do piso mínimo (R$ 20) — regra comum
+   * entre adquirentes e também usada por Mercado Livre / Magalu.
+   */
+  getInstallment(): { count: number; amount: string } | null {
+    const price = this.product?.price;
+    if (!price || this.installments < 2) return null;
+    const total = price.value;
+    if (!total || total <= 0) return null;
+    const each = total / this.installments;
+    const minPerInstallment = 20;
+    if (each < minPerInstallment) {
+      // Retry with fewer installments so we still show something useful.
+      const maxCount = Math.max(2, Math.floor(total / minPerInstallment));
+      if (maxCount < 2) return null;
+      return {
+        count: maxCount,
+        amount: this.formatCurrency(total / maxCount, price.currencyIso),
+      };
+    }
+    return {
+      count: this.installments,
+      amount: this.formatCurrency(each, price.currencyIso),
+    };
+  }
+
+  private formatCurrency(value: number, currencyIso: string): string {
+    try {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: currencyIso || 'BRL',
+      }).format(value);
+    } catch {
+      return `R$ ${value.toFixed(2)}`;
+    }
   }
 
   /**
