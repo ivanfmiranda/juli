@@ -51,28 +51,58 @@
 
       <!-- Actions -->
       <div class="header-actions">
-        <a [routerLink]="(isLoggedIn$ | async) ? '/account/orders' : '/login'" class="action-btn" [attr.title]="(isLoggedIn$ | async) ? ('header.account' | juliTranslate) : ('header.signIn' | juliTranslate)">
-          <span class="icon">👤</span>
-          <span class="label desktop-only" *ngIf="isLoggedIn$ | async">{{ 'header.account' | juliTranslate }}</span>
-          <span class="label desktop-only" *ngIf="!(isLoggedIn$ | async)">{{ 'header.signIn' | juliTranslate }}</span>
-        </a>
-
-        <button
-          *ngIf="isLoggedIn$ | async"
-          class="action-btn logout-btn"
-          [attr.title]="'header.logout' | juliTranslate"
-          (click)="logout()">
-          <span class="icon">🚪</span>
-          <span class="label desktop-only">{{ 'header.logout' | juliTranslate }}</span>
-        </button>
-
-        <a *ngIf="isLoggedIn$ | async"
-           routerLink="/account/wishlist"
+        <!-- Guest: link direto para login -->
+        <a *ngIf="!(isLoggedIn$ | async)"
+           routerLink="/login"
            class="action-btn"
-           [attr.title]="'wishlist.title' | juliTranslate">
-          <span class="icon">🤍</span>
-          <span class="label desktop-only">{{ 'wishlist.title' | juliTranslate }}</span>
+           [attr.title]="'header.signIn' | juliTranslate">
+          <span class="icon">👤</span>
+          <span class="label desktop-only">{{ 'header.signIn' | juliTranslate }}</span>
         </a>
+
+        <!-- Logged in: dropdown de conta -->
+        <div *ngIf="isLoggedIn$ | async"
+             class="account-menu-wrapper">
+          <button class="action-btn account-menu-btn"
+                  [attr.aria-expanded]="accountMenuOpen"
+                  [attr.aria-label]="'header.account' | juliTranslate"
+                  (click)="toggleAccountMenu()">
+            <span class="icon">👤</span>
+            <span class="label desktop-only">{{ 'header.account' | juliTranslate }}</span>
+            <span class="account-menu-caret" [class.open]="accountMenuOpen">▾</span>
+          </button>
+
+          <div class="account-dropdown" [class.open]="accountMenuOpen" role="menu">
+            <a routerLink="/account/orders"
+               class="account-dropdown__item"
+               role="menuitem"
+               (click)="closeAccountMenu()">
+              <span class="account-dropdown__icon">📦</span>
+              {{ 'header.myOrders' | juliTranslate }}
+            </a>
+            <a routerLink="/account/addresses"
+               class="account-dropdown__item"
+               role="menuitem"
+               (click)="closeAccountMenu()">
+              <span class="account-dropdown__icon">📍</span>
+              {{ 'header.myAddresses' | juliTranslate }}
+            </a>
+            <a routerLink="/account/wishlist"
+               class="account-dropdown__item"
+               role="menuitem"
+               (click)="closeAccountMenu()">
+              <span class="account-dropdown__icon">🤍</span>
+              {{ 'header.myWishlist' | juliTranslate }}
+            </a>
+            <hr class="account-dropdown__divider">
+            <button class="account-dropdown__item account-dropdown__item--danger"
+                    role="menuitem"
+                    (click)="logout(); closeAccountMenu()">
+              <span class="account-dropdown__icon">🚪</span>
+              {{ 'header.logout' | juliTranslate }}
+            </button>
+          </div>
+        </div>
 
         <a routerLink="/cart" class="action-btn cart-btn" [attr.title]="'header.cart' | juliTranslate">
           <span class="icon">🛒</span>
@@ -84,18 +114,24 @@
   </div>
 
   <!-- Navigation -->
-  <nav class="main-nav" [class.open]="mobileMenuOpen">
+  <nav class="main-nav" [class.open]="mobileMenuOpen" aria-label="Navegação principal">
     <div class="container">
       <ul class="nav-list">
         <li *ngFor="let cat of categories">
-          <a [routerLink]="['/c', cat.code]" class="nav-link">
-            <span class="nav-icon">{{ cat.icon }}</span>
+          <a [routerLink]="categoryRouterLink(cat)"
+             [queryParams]="categoryQueryParams(cat)"
+             class="nav-link">
+            <span class="nav-icon">
+              <app-icon [name]="resolveNavIcon(cat.icon)" [size]="16"></app-icon>
+            </span>
             <span>{{ cat.label || ((cat.translationKey || '') | juliTranslate) }}</span>
           </a>
         </li>
         <li class="nav-highlight" *ngIf="!useTenantNav">
           <a routerLink="/c/promocoes" class="nav-link sale">
-            <span class="nav-icon">🏷️</span>
+            <span class="nav-icon">
+              <app-icon name="zap" [size]="16"></app-icon>
+            </span>
             <span>{{ 'header.sale' | juliTranslate }}</span>
           </a>
         </li>

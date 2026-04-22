@@ -5,7 +5,7 @@
  * Navigation categories and branding are fetched from the tenant-branding API.
  */
 
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
@@ -13,6 +13,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 import { JuliCartFacade } from '../../../core/commerce';
 import { JuliI18nService, JuliLocaleConfig } from '../../../core/i18n/i18n.service';
 import { TenantBrandingApiService, NavCategory } from '../../../core/services/tenant-branding-api.service';
+import { IconName } from '../icon/icon.component';
 
 @Component({
   selector: 'app-site-header',
@@ -38,6 +39,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
 
   searchQuery = '';
   mobileMenuOpen = false;
+  accountMenuOpen = false;
 
   private readonly destroy$ = new Subject<void>();
 
@@ -84,7 +86,74 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
 
+  toggleAccountMenu(): void {
+    this.accountMenuOpen = !this.accountMenuOpen;
+  }
+
+  closeAccountMenu(): void {
+    this.accountMenuOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.accountMenuOpen && !target.closest('.account-menu-wrapper')) {
+      this.closeAccountMenu();
+    }
+  }
+
   changeLocale(locale: string): void {
     this.i18n.setLocale(locale);
+  }
+
+  /**
+   * Resolves the Angular router link for a nav category. When the CMS
+   * provides an explicit {@code url} (e.g. {@code /search?q=renault} for
+   * vehicle-brand pills in K2), we use it verbatim; otherwise we fall
+   * back to the legacy {@code /c/{code}} taxonomy route.
+   */
+  categoryRouterLink(cat: NavCategory): any[] | string {
+    if (cat.url) {
+      const [path] = cat.url.split('?');
+      return path || ['/c', cat.code];
+    }
+    return ['/c', cat.code];
+  }
+
+  categoryQueryParams(cat: NavCategory): Record<string, string> | null {
+    if (!cat.url || !cat.url.includes('?')) return null;
+    const query = cat.url.substring(cat.url.indexOf('?') + 1);
+    const params: Record<string, string> = {};
+    for (const part of query.split('&')) {
+      const [k, v] = part.split('=');
+      if (k) params[decodeURIComponent(k)] = decodeURIComponent(v || '');
+    }
+    return params;
+  }
+
+  /**
+   * Accepts either a canonical Lucide name (preferred) or a legacy
+   * emoji glyph stored by older tenant-branding rows. Falls back to a
+   * neutral icon so a misconfigured nav never breaks the layout.
+   */
+  resolveNavIcon(raw: string | undefined): IconName {
+    if (!raw) return 'badge-check';
+    const trimmed = raw.trim().toLowerCase();
+    const validNames: IconName[] = [
+      'shopping-cart', 'x', 'heart', 'star', 'package', 'truck',
+      'shield-check', 'credit-card', 'wrench', 'headset', 'search',
+      'check', 'zap', 'lock', 'badge-check', 'arrow-right',
+    ];
+    if ((validNames as string[]).includes(trimmed)) return trimmed as IconName;
+    const emojiMap: Record<string, IconName> = {
+      '🛒': 'shopping-cart', '❤️': 'heart', '⭐': 'star',
+      '📦': 'package', '🚚': 'truck', '🛡️': 'shield-check',
+      '💳': 'credit-card', '🔧': 'wrench', '🛠️': 'wrench',
+      '🎧': 'headset', '🔍': 'search', '✅': 'check',
+      '⚡': 'zap', '🏷️': 'zap', '🔒': 'lock', '🔐': 'lock',
+      '🚀': 'zap', '✔️': 'badge-check',
+    };
+    return emojiMap[trimmed] ?? 'badge-check';
   }
 }

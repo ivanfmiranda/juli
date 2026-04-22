@@ -7,8 +7,17 @@ import { TenantHostService } from './tenant-host.service';
 export interface NavCategory {
   code: string;
   label: string;
+  /** Either a Lucide icon name (preferred) OR a legacy emoji glyph. */
   icon: string;
   translationKey?: string;
+  /** Overrides the default {@code /c/{code}} route. Useful for nav items
+   *  that should resolve to a search query ({@code /search?q=renault}) or
+   *  a landing page rather than a catalog taxonomy node. */
+  url?: string;
+  /** Optional grouping label rendered as a section header in the mega-menu.
+   *  When absent the item appears in the flat nav. Reserved for when the
+   *  header gets a dropdown (K2 vehicle-brand mega-menu). */
+  group?: string;
 }
 
 export interface FooterLinkSet {
