@@ -20,7 +20,7 @@ import { JuliI18nService } from '../../i18n/i18n.service';
   template: `
     <div class="juli-fallback error" role="alert" *ngIf="data$ | async as data">
       <div class="juli-fallback-content">
-        <div class="juli-fallback-icon">⚠️</div>
+        <div class="juli-fallback-icon" aria-hidden="true">⚠️</div>
         <div class="juli-fallback-text">
           <strong>{{ 'fallback.errorTitle' | juliTranslate }}</strong>
           <code class="juli-type-code" *ngIf="(data.originalType || data.typeCode) !== 'N/A'">{{ data.originalType || data.typeCode }}</code>
@@ -51,8 +51,8 @@ import { JuliI18nService } from '../../i18n/i18n.service';
     }
     
     .juli-fallback.error {
-      border: 2px solid #dc3545;
-      background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+      border: 2px solid var(--color-error, #dc3545);
+      background: var(--color-error-bg, #f8d7da);
     }
     
     .juli-fallback-content {
@@ -72,41 +72,41 @@ import { JuliI18nService } from '../../i18n/i18n.service';
     
     .juli-fallback-text strong {
       display: block;
-      color: #721c24;
+      color: var(--color-error-text, #721c24);
       font-size: 1.1rem;
       margin-bottom: 0.25rem;
     }
-    
+
     .juli-type-code {
       display: inline-block;
-      background: #fff;
+      background: var(--color-surface, #fff);
       padding: 0.25rem 0.5rem;
       border-radius: 4px;
       font-family: 'Courier New', monospace;
       font-size: 0.875rem;
-      color: #dc3545;
+      color: var(--color-error, #dc3545);
       margin: 0.25rem 0;
-      border: 1px solid #dc3545;
+      border: 1px solid var(--color-error, #dc3545);
     }
-    
+
     .juli-error-message {
       margin: 0.5rem 0 0 0;
       font-size: 0.875rem;
-      color: #721c24;
+      color: var(--color-error-text, #721c24);
       font-style: italic;
     }
-    
+
     .juli-fallback-hint {
       margin: 0.5rem 0 0 0;
       font-size: 0.875rem;
-      color: #721c24;
+      color: var(--color-error-text, #721c24);
       line-height: 1.5;
     }
-    
+
     .juli-retry-btn {
       margin-top: 1rem;
       padding: 0.5rem 1rem;
-      background: #dc3545;
+      background: var(--color-error, #dc3545);
       color: white;
       border: none;
       border-radius: 4px;
@@ -114,9 +114,9 @@ import { JuliI18nService } from '../../i18n/i18n.service';
       font-size: 0.9rem;
       transition: background 0.2s;
     }
-    
+
     .juli-retry-btn:hover {
-      background: #c82333;
+      background: var(--color-error-dark, #c82333);
     }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush

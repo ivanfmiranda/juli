@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-html-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pb-html">
       <div *ngIf="props?.html" [innerHTML]="props.html"></div>

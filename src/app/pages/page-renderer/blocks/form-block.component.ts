@@ -58,27 +58,27 @@ import { JuliI18nService } from '../../../core/i18n/i18n.service';
   `,
   styles: [`
     .pb-form { padding: 24px 0; margin-bottom: 16px; }
-    .pb-form__title { font-size: 22px; font-weight: 600; margin: 0 0 16px; color: #1a1a2e; }
+    .pb-form__title { font-size: 22px; font-weight: 600; margin: 0 0 16px; color: var(--color-text, #1a1a2e); }
     .pb-form__form { display: flex; flex-direction: column; gap: 16px; }
     .pb-form__field { display: flex; flex-direction: column; gap: 4px; }
-    .pb-form__label { font-size: 14px; font-weight: 500; color: #333; }
-    .pb-form__required { color: #e53e3e; }
+    .pb-form__label { font-size: 14px; font-weight: 500; color: var(--color-text, #333); }
+    .pb-form__required { color: var(--color-error, #e53e3e); }
     .pb-form__input, .pb-form__textarea, .pb-form__select {
-      padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 15px;
-      font-family: inherit; background: #fff; color: #333; transition: border-color 0.2s;
+      padding: 10px 12px; border: 1px solid var(--color-border, #d1d5db); border-radius: 6px; font-size: 15px;
+      font-family: inherit; background: var(--color-surface, #fff); color: var(--color-text, #333); transition: border-color 0.2s;
     }
     .pb-form__input:focus, .pb-form__textarea:focus, .pb-form__select:focus {
-      outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+      outline: none; border-color: var(--color-primary, #4f46e5); box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #4f46e5) 15%, transparent);
     }
     .pb-form__submit {
-      align-self: flex-start; padding: 10px 28px; background: #4f46e5; color: #fff;
+      align-self: flex-start; padding: 10px 28px; background: var(--color-primary, #4f46e5); color: #fff;
       border: none; border-radius: 6px; font-weight: 600; font-size: 15px; cursor: pointer;
       transition: background 0.2s;
     }
-    .pb-form__submit:hover { background: #4338ca; }
+    .pb-form__submit:hover { background: var(--color-primary-dark, #4338ca); }
     .pb-form__submit:disabled { opacity: 0.6; cursor: not-allowed; }
-    .pb-form__feedback { margin-top: 12px; padding: 10px 16px; border-radius: 6px; font-size: 14px; background: #d1fae5; color: #065f46; }
-    .pb-form__feedback--error { background: #fee2e2; color: #991b1b; }
+    .pb-form__feedback { margin-top: 12px; padding: 10px 16px; border-radius: 6px; font-size: 14px; background: var(--color-success-bg, #d1fae5); color: var(--color-success-text, #065f46); }
+    .pb-form__feedback--error { background: var(--color-error-bg, #fee2e2); color: var(--color-error-text, #991b1b); }
   `]
 })
 export class FormBlockComponent {

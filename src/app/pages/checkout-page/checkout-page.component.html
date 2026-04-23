@@ -65,7 +65,50 @@
               {{ 'checkout.shippingAddress' | juliTranslate }}
             </h2>
 
-            <form [formGroup]="form">
+            <!-- Saved address picker (shown when authenticated and addresses exist) -->
+            <div class="ub-address-picker" *ngIf="!addressesLoading && profileAddresses.length > 0">
+              <p class="ub-address-picker__label">{{ 'checkout.savedAddresses' | juliTranslate }}</p>
+              <div class="ub-address-picker__list">
+                <label
+                  class="ub-address-card"
+                  *ngFor="let addr of profileAddresses"
+                  [class.ub-address-card--selected]="selectedProfileAddressId === addr.id && !useNewAddress">
+                  <input
+                    type="radio"
+                    name="savedAddress"
+                    [value]="addr.id"
+                    [checked]="selectedProfileAddressId === addr.id && !useNewAddress"
+                    (change)="selectProfileAddress(addr.id)"
+                    class="ub-address-card__radio">
+                  <span class="ub-address-card__body">
+                    <strong>{{ addr.fullName }}</strong>
+                    <span *ngIf="addr.defaultShipping" class="ub-address-card__badge">{{ 'checkout.defaultBadge' | juliTranslate }}</span>
+                    <span class="ub-address-card__line">{{ addr.line1 }}<span *ngIf="addr.line2">, {{ addr.line2 }}</span></span>
+                    <span class="ub-address-card__line">{{ addr.city }}<span *ngIf="addr.region">, {{ addr.region }}</span> {{ addr.postalCode }}</span>
+                    <span class="ub-address-card__line">{{ addr.countryIso }}</span>
+                  </span>
+                </label>
+                <label
+                  class="ub-address-card"
+                  [class.ub-address-card--selected]="useNewAddress">
+                  <input
+                    type="radio"
+                    name="savedAddress"
+                    value="_new"
+                    [checked]="useNewAddress"
+                    (change)="activateNewAddress()"
+                    class="ub-address-card__radio">
+                  <span class="ub-address-card__body">
+                    <strong>{{ 'checkout.newAddress' | juliTranslate }}</strong>
+                  </span>
+                </label>
+              </div>
+            </div>
+            <div class="ub-address-picker ub-address-picker--loading" *ngIf="addressesLoading">
+              <span>{{ 'checkout.loadingAddresses' | juliTranslate }}</span>
+            </div>
+
+            <form [formGroup]="form" *ngIf="useNewAddress || profileAddresses.length === 0">
               <div class="ub-form-row">
                 <div class="ub-form-group">
                   <label class="ub-form-label" for="fullName">
@@ -191,7 +234,7 @@
                   type="button"
                   class="ub-btn ub-btn--primary ub-btn--lg"
                   (click)="saveAddressAndLoadDelivery()"
-                  [disabled]="loadingDelivery || reviewing || submitting || form.invalid">
+                  [disabled]="loadingDelivery || reviewing || submitting || ((useNewAddress || profileAddresses.length === 0) && form.invalid)">
                   <span *ngIf="loadingDelivery" class="btn-spinner"></span>
                   <span>{{ loadingDelivery ? ('checkout.processing' | juliTranslate) : ('checkout.continueToDelivery' | juliTranslate) }}</span>
                   <svg *ngIf="!loadingDelivery" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -200,6 +243,21 @@
                 </button>
               </div>
             </form>
+
+            <!-- Continue button when a saved address is selected (form hidden) -->
+            <div class="form-actions" *ngIf="!useNewAddress && profileAddresses.length > 0">
+              <button
+                type="button"
+                class="ub-btn ub-btn--primary ub-btn--lg"
+                (click)="saveAddressAndLoadDelivery()"
+                [disabled]="loadingDelivery || reviewing || submitting || !selectedProfileAddressId">
+                <span *ngIf="loadingDelivery" class="btn-spinner"></span>
+                <span>{{ loadingDelivery ? ('checkout.processing' | juliTranslate) : ('checkout.continueToDelivery' | juliTranslate) }}</span>
+                <svg *ngIf="!loadingDelivery" class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </button>
+            </div>
           </section>
 
           <!-- Step 2: Delivery -->

@@ -21,12 +21,12 @@ import { FallbackComponentData } from '../../models/cms.model';
       <div class="juli-fallback-content">
         <div class="juli-fallback-icon">❓</div>
         <div class="juli-fallback-text">
-          <strong>Componente Não Mapeado</strong>
+          <strong>{{ 'fallback.unknownTitle' | juliTranslate }}</strong>
           <code class="juli-type-code">{{ data.originalType || data.typeCode }}</code>
           <p class="juli-fallback-hint">
-            Este tipo de componente não possui um mapeamento no Angular.
+            {{ 'fallback.unknownHint' | juliTranslate }}
             <br>
-            Verifique o <code>StrapiCmsModule</code> e adicione o mapeamento necessário.
+            {{ 'fallback.unknownCheckModule' | juliTranslate }}: <code>StrapiCmsModule</code>
           </p>
         </div>
       </div>

@@ -15,10 +15,11 @@
  * @see JuliOrder - Modelo de dados
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { distinctUntilChanged, filter, map, takeUntil, tap } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { distinctUntilChanged, filter, map, tap } from 'rxjs/operators';
 import {
   JuliOrderService,
   JuliOrder,
@@ -44,7 +45,7 @@ interface OrderDetailViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrderDetailPageComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private orderCode: string | null = null;
 
   readonly order$: Observable<JuliOrder | null> = this.juliOrderService.detail$;
@@ -63,7 +64,7 @@ export class OrderDetailPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Observa mudanças no código do pedido na URL
     this.route.paramMap.pipe(
-      takeUntil(this.destroy$),
+      takeUntilDestroyed(this.destroyRef),
       map(params => params.get('code')),
       filter((code): code is string => !!code),
       distinctUntilChanged(),
@@ -75,8 +76,6 @@ export class OrderDetailPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.juliOrderService.clearOrderDetail();
   }
 

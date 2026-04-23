@@ -3,34 +3,11 @@
 // ========================================
 
 :host {
-  // Tokens do design system
-  --ubris-primary-50: #eef2ff;
-  --ubris-primary-100: #e0e7ff;
-  --ubris-primary-500: #6366f1;
-  --ubris-primary-600: #4f46e5;
-  --ubris-primary-700: #4338ca;
-  --ubris-success-500: #10b981;
-  --ubris-success-600: #059669;
-  --ubris-gray-100: #f1f5f9;
-  --ubris-gray-200: #e2e8f0;
-  --ubris-gray-300: #cbd5e1;
-  --ubris-gray-400: #94a3b8;
-  --ubris-gray-500: #64748b;
-  --ubris-gray-600: #475569;
-  
-  --color-primary: var(--ubris-primary-600);
-  --color-success: var(--ubris-success-500);
-  --color-text-primary: var(--ubris-gray-600);
-  --color-text-secondary: var(--ubris-gray-500);
-  --color-text-muted: var(--ubris-gray-400);
-  --color-border: var(--ubris-gray-200);
   --color-bg: #ffffff;
-  
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --radius-full: 9999px;
-  
-  --shadow-focus: 0 0 0 4px var(--ubris-primary-100);
+  --shadow-focus: 0 0 0 4px var(--ubris-primary-100, #e0e7ff);
   --duration-fast: 150ms;
   --ease-out: cubic-bezier(0, 0, 0.2, 1);
 }

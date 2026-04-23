@@ -53,6 +53,20 @@ export interface JuliCheckoutSubmission {
   paymentMethod: string;
 }
 
+export interface JuliSavedAddress {
+  id: string;
+  fullName: string;
+  line1: string;
+  line2?: string;
+  city: string;
+  region?: string;
+  postalCode: string;
+  countryIso: string;
+  phone?: string;
+  notes?: string;
+  defaultShipping: boolean;
+}
+
 export interface JuliCheckoutAddress {
   id?: string;
   fullName: string;

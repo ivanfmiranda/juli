@@ -1,8 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, NgZone, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { Subject } from 'rxjs';
-import { distinctUntilChanged, filter, switchMap, map, startWith, takeUntil } from 'rxjs/operators';
+import { distinctUntilChanged, filter, switchMap, map, startWith } from 'rxjs/operators';
 import { PageLayoutService } from './page-layout.service';
 import { PageLayout } from './page-block.model';
 import { TenantHostService } from '../../core/services/tenant-host.service';
@@ -44,11 +44,11 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageRendererComponent implements OnInit, OnDestroy {
+export class PageRendererComponent implements OnInit {
 
   layout: PageLayout | null = null;
   private siteName: string;
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     private route: ActivatedRoute,
@@ -77,7 +77,7 @@ export class PageRendererComponent implements OnInit, OnDestroy {
       switchMap(slug => this.pageLayoutService.getLayout(slug).pipe(
         map(layout => layout || { slug, title: '', tenantKey: '', layout: [] } as PageLayout)
       )),
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(layout => {
       this.ngZone.run(() => {
         this.layout = layout;
@@ -93,11 +93,6 @@ export class PageRendererComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       });
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   trackByBlock = (_index: number, block: { id: string }) => block.id;

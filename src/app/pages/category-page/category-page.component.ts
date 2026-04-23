@@ -10,11 +10,12 @@
  * - Breadcrumbs
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
-import { Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import {
   JuliProductService,
   JuliProductListing,
@@ -40,7 +41,7 @@ interface CategoryPageViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class CategoryPageComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private readonly defaultPageSize = 12;
 
   readonly vm$: Observable<CategoryPageViewModel> = this.juliProductService.listing$.pipe(
@@ -74,7 +75,7 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Observa mudanças nos parâmetros da rota
     this.route.paramMap.pipe(
-      takeUntil(this.destroy$),
+      takeUntilDestroyed(this.destroyRef),
       map(params => params.get('code') || '')
     ).subscribe(categoryCode => {
       if (categoryCode) {
@@ -84,7 +85,7 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
 
     // Observa query params (página, ordenação)
     this.route.queryParamMap.pipe(
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       const categoryCode = this.route.snapshot.paramMap.get('code') || '';
       if (categoryCode) {
@@ -94,7 +95,7 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
 
     // Set page title when listing loads
     this.juliProductService.listing$.pipe(
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe(listing => {
       if (listing?.name) {
         this.titleService.setTitle(`${listing.name} — ${this.siteName}`);
@@ -103,8 +104,6 @@ export class CategoryPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.juliProductService.clearListing();
   }
 

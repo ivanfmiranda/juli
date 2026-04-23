@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 
 @Component({
   selector: 'app-map-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pb-map" [style.height.px]="mapHeight">
       <iframe

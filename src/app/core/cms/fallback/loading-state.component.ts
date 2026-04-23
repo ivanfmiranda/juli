@@ -61,8 +61,8 @@ import { JuliI18nService } from '../../i18n/i18n.service';
       position: absolute;
       width: 100%;
       height: 100%;
-      border: 3px solid #e9ecef;
-      border-top-color: #0d6efd;
+      border: 3px solid var(--color-border, #e9ecef);
+      border-top-color: var(--color-primary, #0d6efd);
       border-radius: 50%;
       animation: juli-spin 1s linear infinite;
     }
@@ -77,7 +77,7 @@ import { JuliI18nService } from '../../i18n/i18n.service';
     .juli-pulse {
       width: 100%;
       height: 4px;
-      background: linear-gradient(90deg, #e9ecef 25%, #dee2e6 50%, #e9ecef 75%);
+      background: linear-gradient(90deg, var(--color-border, #e9ecef) 25%, var(--color-border-muted, #dee2e6) 50%, var(--color-border, #e9ecef) 75%);
       background-size: 200% 100%;
       border-radius: 2px;
       animation: juli-pulse 1.5s ease-in-out infinite;
@@ -95,7 +95,7 @@ import { JuliI18nService } from '../../i18n/i18n.service';
     .juli-loading-text {
       margin: 0;
       font-size: 0.875rem;
-      color: #6c757d;
+      color: var(--color-text-muted, #6c757d);
       text-align: center;
     }
   `],

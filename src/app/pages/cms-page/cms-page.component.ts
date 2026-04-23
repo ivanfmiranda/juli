@@ -1,7 +1,8 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subject, combineLatest } from 'rxjs';
-import { map, switchMap, takeUntil } from 'rxjs/operators';
+import { Observable, combineLatest } from 'rxjs';
+import { map, switchMap } from 'rxjs/operators';
 import { CmsPage, CmsComponentData } from '../../core/models/cms.model';
 import { CmsPageService } from '../../core/cms/services/cms-page.service';
 import { SmartEditBridgeService } from '../../core/cms/services/smartedit-bridge.service';
@@ -23,7 +24,8 @@ const SLOT_TO_REGION: Record<string, string> = {
   styleUrls: ['./cms-page.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CmsPageComponent implements OnInit, OnDestroy {
+export class CmsPageComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   readonly isPreview: boolean = this.route.snapshot.data['preview'] === true;
   readonly regionOrder: Array<'header' | 'main' | 'sidebar' | 'belowFold' | 'footer'> = ['header', 'main', 'sidebar', 'belowFold', 'footer'];
   readonly page$: Observable<CmsPage> = combineLatest([
@@ -34,7 +36,6 @@ export class CmsPageComponent implements OnInit, OnDestroy {
   );
 
   private currentPage: CmsPage | null = null;
-  private readonly destroy$ = new Subject<void>();
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -46,12 +47,12 @@ export class CmsPageComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     // Track current page for SmartEdit updates
-    this.page$.pipe(takeUntil(this.destroy$)).subscribe(page => {
+    this.page$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(page => {
       this.currentPage = page;
     });
 
     // Listen for SmartEdit component updates
-    this.smartEdit.update$.pipe(takeUntil(this.destroy$)).subscribe(update => {
+    this.smartEdit.update$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(update => {
       if (!this.currentPage) return;
       const regionName = SLOT_TO_REGION[update.slotName] || update.slotName;
       const region = this.currentPage.regions[regionName];
@@ -62,11 +63,6 @@ export class CmsPageComponent implements OnInit, OnDestroy {
       Object.assign(comp, update.component);
       this.cdr.markForCheck();
     });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /** Returns the Strapi slot name for a canonical region name (for SmartEdit) */

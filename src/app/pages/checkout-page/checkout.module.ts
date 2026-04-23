@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { CheckoutRoutingModule } from './checkout-routing.module';
 import { JuliI18nModule } from '../../core/i18n/i18n.module';
 import { CheckoutPageComponent } from './checkout-page.component';
@@ -19,7 +19,6 @@ import { SoftLoginPromptComponent } from '../../shared/components/soft-login-pro
   ],
   imports: [
     CommonModule,
-    FormsModule,
     ReactiveFormsModule,
     JuliI18nModule,
     CheckoutRoutingModule

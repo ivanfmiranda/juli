@@ -80,6 +80,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       searchPlaceholder: 'O que você está procurando?',
       searchAria: 'Buscar produtos',
       account: 'Minha Conta',
+      myOrders: 'Meus Pedidos',
+      myAddresses: 'Meus Endereços',
+      myWishlist: 'Lista de Desejos',
       signIn: 'Entrar',
       register: 'Cadastrar',
       logout: 'Sair',
@@ -138,6 +141,23 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockLow: 'Apenas {{quantity}} em estoque',
       stockOut: 'Indisponível',
       stockUnknown: 'Consultar'
+    },
+    addresses: {
+      account: 'Minha Conta',
+      title: 'Meus Endereços',
+      loading: 'Carregando endereços...',
+      loadFailed: 'Falha ao carregar endereços',
+      saveFailed: 'Falha ao salvar endereço',
+      deleteFailed: 'Falha ao excluir endereço',
+      setDefaultFailed: 'Falha ao definir endereço padrão',
+      empty: 'Você não tem endereços salvos.',
+      defaultBadge: 'Padrão',
+      setDefault: 'Definir como padrão',
+      delete: 'Excluir',
+      addNew: 'Adicionar endereço',
+      addTitle: 'Novo endereço',
+      save: 'Salvar',
+      cancel: 'Cancelar'
     },
     orders: {
       account: 'Minha Conta',
@@ -337,7 +357,13 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       total: 'Total',
       days: 'dias',
       readyToPlace: 'Pronto para finalizar',
-      reviewRequired: 'Revisão necessária'
+      reviewRequired: 'Revisão necessária',
+      savedAddresses: 'Endereços salvos',
+      newAddress: 'Novo endereço',
+      useSelectedAddress: 'Usar endereço selecionado',
+      defaultBadge: 'Padrão',
+      loadingAddresses: 'Carregando endereços...',
+      saveToProfile: 'Salvar endereço no perfil'
     },
     confirmation: {
       confirmedTitle: 'Pedido confirmado!',
@@ -456,7 +482,13 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       notFoundTitle: 'Página Não Encontrada',
       notFoundMessage: 'A página que você está procurando não existe ou foi movida.',
       backToHome: 'Voltar para Home',
-      goBack: 'Voltar'
+      goBack: 'Voltar',
+      emptyTitle: 'Conteúdo Vazio',
+      emptyHint: 'Este bloco não possui conteúdo configurado no CMS.',
+      emptyExpectedType: 'Tipo esperado',
+      unknownTitle: 'Componente Não Mapeado',
+      unknownHint: 'Este tipo de componente não possui um mapeamento no Angular.',
+      unknownCheckModule: 'Verifique o módulo e adicione o mapeamento necessário'
     },
     formBlock: {
       selectPlaceholder: 'Selecione...',
@@ -518,6 +550,23 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       addToCart: 'Adicionar ao carrinho',
       removeItem: 'Remover',
       browseCatalog: 'Explorar catálogo'
+    },
+    breadcrumb: {
+      home: 'Início'
+    },
+    common: {
+      cancel: 'Cancelar'
+    },
+    returns: {
+      title: 'Devoluções',
+      newRequest: 'Nova Solicitação',
+      noReturns: 'Nenhuma devolução solicitada.',
+      order: 'Pedido',
+      orderId: 'Número do Pedido',
+      orderIdPlaceholder: 'Ex: ORD-12345',
+      reason: 'Motivo',
+      reasonPlaceholder: 'Descreva o motivo da devolução...',
+      submit: 'Solicitar Devolução'
     }
   },
   'en-US': {
@@ -583,6 +632,9 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       searchPlaceholder: 'What are you looking for?',
       searchAria: 'Search products',
       account: 'My Account',
+      myOrders: 'My Orders',
+      myAddresses: 'My Addresses',
+      myWishlist: 'Wishlist',
       signIn: 'Sign in',
       register: 'Sign up',
       logout: 'Sign out',
@@ -641,6 +693,23 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockLow: 'Only {{quantity}} left',
       stockOut: 'Unavailable',
       stockUnknown: 'Check availability'
+    },
+    addresses: {
+      account: 'My Account',
+      title: 'My Addresses',
+      loading: 'Loading addresses...',
+      loadFailed: 'Failed to load addresses',
+      saveFailed: 'Failed to save address',
+      deleteFailed: 'Failed to delete address',
+      setDefaultFailed: 'Failed to set default address',
+      empty: 'You have no saved addresses.',
+      defaultBadge: 'Default',
+      setDefault: 'Set as default',
+      delete: 'Delete',
+      addNew: 'Add address',
+      addTitle: 'New address',
+      save: 'Save',
+      cancel: 'Cancel'
     },
     orders: {
       account: 'My Account',
@@ -840,7 +909,13 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       total: 'Total',
       days: 'days',
       readyToPlace: 'Ready to place order',
-      reviewRequired: 'Review required'
+      reviewRequired: 'Review required',
+      savedAddresses: 'Saved addresses',
+      newAddress: 'New address',
+      useSelectedAddress: 'Use selected address',
+      defaultBadge: 'Default',
+      loadingAddresses: 'Loading addresses...',
+      saveToProfile: 'Save address to profile'
     },
     confirmation: {
       confirmedTitle: 'Order Confirmed!',
@@ -959,7 +1034,13 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       notFoundTitle: 'Page Not Found',
       notFoundMessage: 'The page you are looking for does not exist or has been moved.',
       backToHome: 'Back to Home',
-      goBack: 'Go Back'
+      goBack: 'Go Back',
+      emptyTitle: 'Empty Content',
+      emptyHint: 'This block has no content configured in the CMS.',
+      emptyExpectedType: 'Expected type',
+      unknownTitle: 'Unmapped Component',
+      unknownHint: 'This component type has no mapping in Angular.',
+      unknownCheckModule: 'Check the module and add the required mapping'
     },
     formBlock: {
       selectPlaceholder: 'Select...',
@@ -1021,6 +1102,23 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       addToCart: 'Add to cart',
       removeItem: 'Remove',
       browseCatalog: 'Browse catalog'
+    },
+    breadcrumb: {
+      home: 'Home'
+    },
+    common: {
+      cancel: 'Cancel'
+    },
+    returns: {
+      title: 'Returns',
+      newRequest: 'New Request',
+      noReturns: 'No return requests yet.',
+      order: 'Order',
+      orderId: 'Order Number',
+      orderIdPlaceholder: 'e.g. ORD-12345',
+      reason: 'Reason',
+      reasonPlaceholder: 'Describe the reason for return...',
+      submit: 'Submit Return'
     }
   }
 };
@@ -1071,6 +1169,11 @@ export class JuliI18nService {
     }
     this.applyDomLocale(normalized);
     this.localeSubject.next(normalized);
+  }
+
+  /** Alias for {@link translate} — shorthand for template/component use. */
+  t(key: string, params?: Record<string, string | number | undefined>): string {
+    return this.translate(key, params);
   }
 
   translate(key: string, params?: Record<string, string | number | undefined>, locale: string = this.currentLocale): string {

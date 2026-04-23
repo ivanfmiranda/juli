@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-banner-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <!-- HERO mode: full-width background image with overlay -->
     <section *ngIf="props?.variant === 'hero'" class="pb-hero" [style.min-height.px]="props?.height || 420">
@@ -105,12 +106,12 @@ import { Component, Input } from '@angular/core';
     .pb-banner__subtitle { font-size: 15px; color: #475569; margin: 0 0 18px; line-height: 1.5; }
     .pb-banner__cta {
       display: inline-block; padding: 11px 26px;
-      background: #4f46e5; color: #fff;
+      background: var(--color-primary, #4f46e5); color: #fff;
       text-decoration: none; border-radius: 8px;
       font-weight: 600; font-size: 14px;
       transition: all 0.15s;
     }
-    .pb-banner__cta:hover { background: #4338ca; transform: translateY(-1px); }
+    .pb-banner__cta:hover { background: var(--color-primary-hover, #4338ca); transform: translateY(-1px); }
     .pb-banner__image { max-width: 38%; max-height: 250px; object-fit: cover; border-radius: 12px; }
 
     @media (max-width: 768px) {

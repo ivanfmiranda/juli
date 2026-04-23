@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-text-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pb-text" [style.text-align]="props?.alignment || 'left'">
       <div *ngIf="props?.content" [innerHTML]="props.content"></div>

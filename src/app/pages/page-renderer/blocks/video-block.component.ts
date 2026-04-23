@@ -1,7 +1,8 @@
-import { Component, Input, OnChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input, OnChanges } from '@angular/core';
 
 @Component({
   selector: 'app-video-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pb-video" *ngIf="embedUrl">
       <div class="pb-video__wrapper" [style.padding-top]="aspectPadding">

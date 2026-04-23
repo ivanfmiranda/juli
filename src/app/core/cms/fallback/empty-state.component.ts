@@ -10,6 +10,7 @@
 
 import { Component, ChangeDetectionStrategy, Input } from '@angular/core';
 import { isDevMode } from '@angular/core';
+import { JuliI18nService } from '../../i18n/i18n.service';
 
 @Component({
   selector: 'app-empty-state',
@@ -19,13 +20,13 @@ import { isDevMode } from '@angular/core';
         <div class="juli-fallback-icon" *ngIf="isDevMode">📭</div>
         <div class="juli-fallback-text">
           <ng-container *ngIf="isDevMode">
-            <strong>Conteúdo Vazio</strong>
+            <strong>{{ 'fallback.emptyTitle' | juliTranslate }}</strong>
             <code class="juli-slot-code" *ngIf="slotName">{{ slotName }}</code>
             <p class="juli-fallback-hint">
-              Este bloco não possui conteúdo configurado no CMS.
+              {{ 'fallback.emptyHint' | juliTranslate }}
               <span *ngIf="contentType">
                 <br>
-                Tipo esperado: <code>{{ contentType }}</code>
+                {{ 'fallback.emptyExpectedType' | juliTranslate }}: <code>{{ contentType }}</code>
               </span>
             </p>
           </ng-container>
@@ -114,6 +115,8 @@ export class EmptyStateComponent {
   @Input() contentType?: string;
   @Input() showInProduction: boolean = false;
   @Input() showPlaceholder: boolean = true;
-  
+
   isDevMode = isDevMode();
+
+  constructor(private readonly i18n: JuliI18nService) {}
 }

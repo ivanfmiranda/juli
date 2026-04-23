@@ -1,7 +1,8 @@
-import { Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-carousel-block',
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="pb-carousel">
       <div *ngIf="slides.length === 0" class="pb-carousel__placeholder">Carrossel sem slides</div>
@@ -31,7 +32,7 @@ import { Component, Input } from '@angular/core';
     .pb-carousel__slide img { width: 100%; height: auto; display: block; border-radius: 8px; }
     .pb-carousel__dots { display: flex; justify-content: center; gap: 8px; padding: 12px 0; }
     .pb-carousel__dot { width: 10px; height: 10px; border-radius: 50%; border: none; background: #ddd; cursor: pointer; padding: 0; }
-    .pb-carousel__dot.active { background: #4f46e5; }
+    .pb-carousel__dot.active { background: var(--color-primary, #4f46e5); }
   `]
 })
 export class CarouselBlockComponent {

@@ -1,13 +1,13 @@
 <div class="product-detail-page">
   <!-- Loading State -->
-  <div class="loading-state" *ngIf="loading$ | async">
-    <div class="spinner"></div>
+  <div class="loading-state" *ngIf="loading$ | async" role="status" aria-live="polite">
+    <div class="spinner" aria-hidden="true"></div>
     <p>{{ 'pdp.loading' | juliTranslate }}</p>
   </div>
 
   <!-- Error State -->
-  <div class="error-state" *ngIf="error$ | async as error">
-    <div class="error-icon">⚠️</div>
+  <div class="error-state" *ngIf="error$ | async as error" role="alert">
+    <div class="error-icon" aria-hidden="true">⚠️</div>
     <h3>{{ 'pdp.errorTitle' | juliTranslate }}</h3>
     <p>{{ error }}</p>
     <div class="error-actions">
@@ -47,7 +47,7 @@
                  [alt]="product.gallery![selectedImageIndex].altText || product.name">
 
             <div class="image-placeholder" *ngIf="!product.gallery?.length">
-              <span>📦</span>
+              <span aria-hidden="true">📦</span>
             </div>
 
             <button class="nav-btn next" *ngIf="product.gallery && product.gallery.length > 1"
@@ -170,11 +170,11 @@
           <!-- Delivery Info -->
           <div class="delivery-info" *ngIf="product.deliveryInfo">
             <div class="delivery-item">
-              <span class="icon">🚚</span>
+              <span class="icon" aria-hidden="true">🚚</span>
               <span>{{ product.deliveryInfo.message }}</span>
             </div>
             <div class="delivery-item" *ngIf="product.deliveryInfo.freeShipping">
-              <span class="icon">✓</span>
+              <span class="icon" aria-hidden="true">✓</span>
               <span>{{ 'pdp.freeShipping' | juliTranslate }}</span>
             </div>
           </div>

@@ -1,0 +1,122 @@
+<div class="addresses-page">
+  <header class="page-header">
+    <p class="eyebrow">{{ 'addresses.account' | juliTranslate }}</p>
+    <h1>{{ 'addresses.title' | juliTranslate }}</h1>
+  </header>
+
+  <div class="loading-state" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>{{ 'addresses.loading' | juliTranslate }}</p>
+  </div>
+
+  <div class="error-state" *ngIf="errorMessage && !loading">
+    <p>{{ errorMessage }}</p>
+  </div>
+
+  <ng-container *ngIf="!loading">
+    <!-- Address list -->
+    <div class="addresses-list" *ngIf="addresses.length > 0; else emptyState">
+      <div class="address-card" *ngFor="let addr of addresses">
+        <div class="address-card__body">
+          <strong class="address-card__name">{{ addr.fullName }}</strong>
+          <span class="address-card__badge" *ngIf="addr.defaultShipping">{{ 'addresses.defaultBadge' | juliTranslate }}</span>
+          <p class="address-card__line">{{ addr.line1 }}<span *ngIf="addr.line2">, {{ addr.line2 }}</span></p>
+          <p class="address-card__line">{{ addr.city }}<span *ngIf="addr.region">, {{ addr.region }}</span> {{ addr.postalCode }}</p>
+          <p class="address-card__line">{{ addr.countryIso }}</p>
+          <p class="address-card__line" *ngIf="addr.phone">{{ addr.phone }}</p>
+        </div>
+        <div class="address-card__actions">
+          <button
+            class="btn-secondary btn-sm"
+            *ngIf="!addr.defaultShipping"
+            (click)="setDefault(addr.id)">
+            {{ 'addresses.setDefault' | juliTranslate }}
+          </button>
+          <button
+            class="btn-danger btn-sm"
+            (click)="deleteAddress(addr.id)">
+            {{ 'addresses.delete' | juliTranslate }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #emptyState>
+      <div class="empty-state" *ngIf="!showAddForm">
+        <p>{{ 'addresses.empty' | juliTranslate }}</p>
+      </div>
+    </ng-template>
+
+    <!-- Add address form -->
+    <div class="address-form-section" *ngIf="showAddForm">
+      <h2>{{ 'addresses.addTitle' | juliTranslate }}</h2>
+      <form [formGroup]="form">
+        <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-fullName">
+              {{ 'checkout.fullName' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-fullName" formControlName="fullName" type="text" class="ub-input"
+              [class.ub-input--error]="form.get('fullName')?.invalid && form.get('fullName')?.touched">
+          </div>
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-phone">{{ 'checkout.phone' | juliTranslate }}</label>
+            <input id="addr-phone" formControlName="phone" type="tel" class="ub-input">
+          </div>
+        </div>
+        <div class="ub-form-group ub-form-group--full">
+          <label class="ub-form-label" for="addr-line1">
+            {{ 'checkout.addressLine1' | juliTranslate }} <span class="ub-form-label__required">*</span>
+          </label>
+          <input id="addr-line1" formControlName="line1" type="text" class="ub-input"
+            [class.ub-input--error]="form.get('line1')?.invalid && form.get('line1')?.touched">
+        </div>
+        <div class="ub-form-group ub-form-group--full">
+          <label class="ub-form-label" for="addr-line2">{{ 'checkout.addressLine2' | juliTranslate }}</label>
+          <input id="addr-line2" formControlName="line2" type="text" class="ub-input">
+        </div>
+        <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-city">
+              {{ 'checkout.city' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-city" formControlName="city" type="text" class="ub-input"
+              [class.ub-input--error]="form.get('city')?.invalid && form.get('city')?.touched">
+          </div>
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-region">{{ 'checkout.region' | juliTranslate }}</label>
+            <input id="addr-region" formControlName="region" type="text" class="ub-input">
+          </div>
+        </div>
+        <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-postalCode">
+              {{ 'checkout.postalCode' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-postalCode" formControlName="postalCode" type="text" class="ub-input"
+              [class.ub-input--error]="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
+          </div>
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-countryIso">{{ 'checkout.country' | juliTranslate }}</label>
+            <input id="addr-countryIso" formControlName="countryIso" type="text" class="ub-input">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-secondary" (click)="cancelAdd()" [disabled]="saving">
+            {{ 'addresses.cancel' | juliTranslate }}
+          </button>
+          <button type="button" class="btn-primary" (click)="saveAddress()" [disabled]="saving || form.invalid">
+            <span *ngIf="saving" class="btn-spinner"></span>
+            {{ 'addresses.save' | juliTranslate }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="add-address-action" *ngIf="!showAddForm">
+      <button class="btn-primary" (click)="openAddForm()">
+        + {{ 'addresses.addNew' | juliTranslate }}
+      </button>
+    </div>
+  </ng-container>
+</div>

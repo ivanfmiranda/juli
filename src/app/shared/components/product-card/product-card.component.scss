@@ -1,7 +1,7 @@
 // Product Card Styles - Premium Design
 
-$color-primary: #274060;
-$color-accent: #3d5a80;
+$color-primary: var(--header-primary, #274060);
+$color-accent: var(--header-accent, #3d5a80);
 $color-white: #ffffff;
 $color-gray-100: #f7f9fc;
 $color-gray-200: #e5e9f0;
@@ -222,7 +222,7 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   }
 }
 
-// Stock
+// Stock (legado — mantido para compatibilidade com outros usos)
 .product-stock {
   font-size: 0.75rem;
   font-weight: 500;
@@ -241,6 +241,39 @@ $shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 
   &.stock-unknown {
     color: $color-gray-600;
+  }
+}
+
+// Stock acessível — ponto colorido + texto, sem emojis
+.stock-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  &.stock-available {
+    color: $color-success;
+    &::before { background: $color-success; }
+  }
+
+  &.stock-low {
+    color: $color-warning;
+    &::before { background: $color-warning; }
+  }
+
+  &.stock-out {
+    color: $color-danger;
+    &::before { background: $color-danger; }
   }
 }
 

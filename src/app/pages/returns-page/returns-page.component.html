@@ -1,0 +1,50 @@
+<div class="returns-page">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a routerLink="/">{{ 'breadcrumb.home' | juliTranslate }}</a>
+      <span>›</span>
+      <a routerLink="/account">{{ 'header.account' | juliTranslate }}</a>
+      <span>›</span>
+      <span>{{ 'returns.title' | juliTranslate }}</span>
+    </nav>
+
+    <h1 class="page-title">{{ 'returns.title' | juliTranslate }}</h1>
+
+    <div *ngIf="!showForm">
+      <button class="btn-primary" (click)="openForm()">
+        {{ 'returns.newRequest' | juliTranslate }}
+      </button>
+
+      <div *ngIf="returnRequests.length === 0" class="empty-state">
+        <p>{{ 'returns.noReturns' | juliTranslate }}</p>
+      </div>
+
+      <div *ngFor="let req of returnRequests" class="return-card">
+        <div class="return-header">
+          <span class="order-id">{{ 'returns.order' | juliTranslate }}: #{{ req.orderId }}</span>
+          <span class="status" [attr.data-status]="req.status">{{ req.status }}</span>
+        </div>
+        <p class="reason">{{ req.reason }}</p>
+        <p class="date">{{ req.createdAt | date:'shortDate' }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="showForm" class="return-form">
+      <h2>{{ 'returns.newRequest' | juliTranslate }}</h2>
+      <div class="form-group">
+        <label for="orderId">{{ 'returns.orderId' | juliTranslate }}</label>
+        <input id="orderId" type="text" [(ngModel)]="orderId" [placeholder]="'returns.orderIdPlaceholder' | juliTranslate">
+      </div>
+      <div class="form-group">
+        <label for="reason">{{ 'returns.reason' | juliTranslate }}</label>
+        <textarea id="reason" [(ngModel)]="reason" rows="4" [placeholder]="'returns.reasonPlaceholder' | juliTranslate"></textarea>
+      </div>
+      <div class="form-actions">
+        <button class="btn-secondary" (click)="cancelForm()">{{ 'common.cancel' | juliTranslate }}</button>
+        <button class="btn-primary" (click)="submitReturn()" [disabled]="!orderId.trim()">
+          {{ 'returns.submit' | juliTranslate }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

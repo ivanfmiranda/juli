@@ -11,6 +11,8 @@ import { CartPageComponent } from './pages/cart-page/cart-page.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { WishlistPageComponent } from './pages/wishlist-page/wishlist-page.component';
+import { AccountAddressesPageComponent } from './pages/account-addresses-page/account-addresses-page.component';
+import { ReturnsPageComponent } from './pages/returns-page/returns-page.component';
 import { NotFoundPageComponent } from './core/cms/fallback';
 import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
 import { PageRendererComponent } from './pages/page-renderer/page-renderer.component';
@@ -34,6 +36,8 @@ const routes: Routes = [
   { path: 'account/orders/:code', component: OrderDetailPageComponent, canActivate: [AuthGuard] },
   { path: 'account/orders', component: OrdersPageComponent, canActivate: [AuthGuard] },
   { path: 'account/wishlist', component: WishlistPageComponent, canActivate: [AuthGuard] },
+  { path: 'account/addresses', component: AccountAddressesPageComponent, canActivate: [AuthGuard] },
+  { path: 'account/returns', component: ReturnsPageComponent, canActivate: [AuthGuard] },
 
   // CMS Preview
   { path: 'preview', component: PreviewEntryComponent },

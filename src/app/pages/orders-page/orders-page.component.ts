@@ -15,10 +15,11 @@
  * @see JuliOrderHistoryList - Modelo de dados
  */
 
-import { ChangeDetectionStrategy, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnDestroy, OnInit } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subject } from 'rxjs';
-import { map, takeUntil } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { 
   JuliOrderService, 
   JuliOrderHistoryList, 
@@ -43,7 +44,7 @@ interface OrdersPageViewModel {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class OrdersPageComponent implements OnInit, OnDestroy {
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   readonly pageSize = 10;
 
   readonly vm$: Observable<OrdersPageViewModel> = this.juliOrderService.list$.pipe(
@@ -79,7 +80,7 @@ export class OrdersPageComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Observa query params e carrega pedidos
     this.route.queryParamMap.pipe(
-      takeUntil(this.destroy$),
+      takeUntilDestroyed(this.destroyRef),
       map(params => ({
         page: Math.max(Number(params.get('page') ?? '0') || 0, 0),
         sort: params.get('sort') || 'byDateDesc'
@@ -90,8 +91,6 @@ export class OrdersPageComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.juliOrderService.clearOrderList();
   }
 

@@ -2,8 +2,8 @@
 // Design System JULI - Ubris-inspired
 
 // Variables (should match orders-page)
-$color-primary: #274060;
-$color-primary-light: #3d5a80;
+$color-primary: var(--header-primary, #274060);
+$color-primary-light: var(--header-accent, #3d5a80);
 $color-text: #1a1a1a;
 $color-text-muted: #526075;
 $color-border: #d8dee8;

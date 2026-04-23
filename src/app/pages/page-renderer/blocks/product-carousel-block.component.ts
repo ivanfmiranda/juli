@@ -57,7 +57,7 @@ import { environment } from '../../../../environments/environment';
     }
     .pc__title { font-size: 22px; font-weight: 700; margin: 0; color: #0f172a; }
     .pc__nav { display: flex; align-items: center; gap: 10px; }
-    .pc__viewall { font-size: 14px; color: #4f46e5; text-decoration: none; font-weight: 500; margin-right: 4px; }
+    .pc__viewall { font-size: 14px; color: var(--color-primary, #4f46e5); text-decoration: none; font-weight: 500; margin-right: 4px; }
     .pc__viewall:hover { text-decoration: underline; }
 
     .pc__arrow {
@@ -67,7 +67,7 @@ import { environment } from '../../../../environments/environment';
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: all 0.15s;
     }
-    .pc__arrow:hover:not(:disabled) { border-color: #4f46e5; color: #4f46e5; background: #eef2ff; }
+    .pc__arrow:hover:not(:disabled) { border-color: var(--color-primary, #4f46e5); color: var(--color-primary, #4f46e5); background: var(--color-primary-light, #eef2ff); }
     .pc__arrow:disabled { opacity: 0.3; cursor: default; }
 
     .pc__track {
@@ -100,7 +100,7 @@ import { environment } from '../../../../environments/environment';
       width: 100%; height: 100%;
       display: flex; align-items: center; justify-content: center;
       background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-      font-size: 42px; font-weight: 700; color: #4f46e5; opacity: 0.5;
+      font-size: 42px; font-weight: 700; color: var(--color-primary, #4f46e5); opacity: 0.5;
     }
 
     .pc__body { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
@@ -115,7 +115,7 @@ import { environment } from '../../../../environments/environment';
       font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.04em;
       padding: 3px 10px; border-radius: 4px;
-      background: #4f46e5; color: #fff;
+      background: var(--color-primary, #4f46e5); color: #fff;
     }
     .pc__badge--sale { background: #dc2626; }
 

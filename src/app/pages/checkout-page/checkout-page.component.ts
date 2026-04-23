@@ -3,18 +3,23 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  DestroyRef,
   ElementRef,
+  inject,
   OnDestroy,
   ViewChild
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { firstValueFrom, forkJoin, of, Subject, Subscription, timer } from 'rxjs';
-import { catchError, finalize, map, switchMap, takeUntil } from 'rxjs/operators';
+import { firstValueFrom, forkJoin, of, Subscription, timer } from 'rxjs';
+import { catchError, finalize, map, switchMap } from 'rxjs/operators';
 import type { Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-js';
 import { AuthService } from '../../core/auth/auth.service';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
+import { ProfileAddressService } from '../../core/commerce/services/profile-address.service';
+import { JuliSavedAddress } from '../../core/commerce/models/ubris-commerce.models';
 import { SoftLoginPromptComponent } from '../../shared/components/soft-login-prompt/soft-login-prompt.component';
 import {
   JuliCartFacade,
@@ -70,7 +75,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     paymentMethod: ['CARD', Validators.required]
   });
 
-  private readonly destroy$ = new Subject<void>();
+  private readonly destroyRef = inject(DestroyRef);
   private paymentStatusPolling?: Subscription;
   private stripe?: Stripe | null;
   private stripeElements?: StripeElements;
@@ -95,7 +100,13 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   submitting = false;
   errorMessage?: string;
   statusMessage?: string;
-  
+
+  // Saved address picker
+  profileAddresses: JuliSavedAddress[] = [];
+  selectedProfileAddressId?: string;
+  useNewAddress = false;
+  addressesLoading = false;
+
   // UI State
   currentStepId = 'address';
   summaryExpanded = false;
@@ -114,14 +125,16 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     private readonly authService: AuthService,
     private readonly cartFacade: JuliCartFacade,
     private readonly checkoutFacade: JuliCheckoutFacade,
+    private readonly profileAddressService: ProfileAddressService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     private readonly i18n: JuliI18nService
   ) {
-    this.form.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+    this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.resetPaymentState();
       this.invalidateReview('Checkout data changed. Re-apply payment before reviewing again.');
     });
+    this.loadProfileAddresses();
   }
 
   ngAfterViewChecked(): void {
@@ -137,6 +150,24 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     if (!this.authService.isAuthenticated) {
       this.showSoftLoginPrompt = true;
       return;
+    }
+
+    // If a saved address is selected, pre-fill form then proceed without validation errors
+    if (!this.useNewAddress && this.selectedProfileAddressId) {
+      const saved = this.profileAddresses.find(a => a.id === this.selectedProfileAddressId);
+      if (saved) {
+        this.form.patchValue({
+          fullName: saved.fullName,
+          line1: saved.line1,
+          line2: saved.line2 ?? '',
+          city: saved.city,
+          region: saved.region ?? '',
+          postalCode: saved.postalCode,
+          countryIso: saved.countryIso,
+          phone: saved.phone ?? '',
+          notes: saved.notes ?? ''
+        }, { emitEvent: false });
+      }
     }
 
     const session = this.authService.currentSession;
@@ -523,8 +554,44 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   ngOnDestroy(): void {
     this.stopPaymentStatusPolling();
     this.unmountStripeCardElement();
-    this.destroy$.next();
-    this.destroy$.complete();
+  }
+
+  private loadProfileAddresses(): void {
+    if (!this.authService.isAuthenticated) {
+      return;
+    }
+    this.addressesLoading = true;
+    this.profileAddressService.listAddresses().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
+      next: addresses => {
+        this.profileAddresses = addresses;
+        const defaultAddr = addresses.find(a => a.defaultShipping) ?? addresses[0];
+        if (defaultAddr) {
+          this.selectedProfileAddressId = defaultAddr.id;
+          this.useNewAddress = false;
+        } else {
+          this.useNewAddress = true;
+        }
+        this.addressesLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.addressesLoading = false;
+        this.useNewAddress = true;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  selectProfileAddress(id: string): void {
+    this.selectedProfileAddressId = id;
+    this.useNewAddress = false;
+  }
+
+  activateNewAddress(): void {
+    this.selectedProfileAddressId = undefined;
+    this.useNewAddress = true;
   }
 
   private loadCheckoutOptions(checkoutId: string): void {
@@ -611,7 +678,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     this.stopPaymentStatusPolling();
     this.paymentStatusPolling = timer(3000, 3000).pipe(
       switchMap(() => this.checkoutFacade.paymentStatus(this.checkoutId!)),
-      takeUntil(this.destroy$)
+      takeUntilDestroyed(this.destroyRef)
     ).subscribe({
       next: status => {
         this.paymentStatus = status;
