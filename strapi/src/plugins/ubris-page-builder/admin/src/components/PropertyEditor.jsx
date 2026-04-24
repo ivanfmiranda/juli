@@ -1,5 +1,5 @@
 import React from 'react';
-import { BLOCK_SCHEMAS } from './blockSchemas';
+import { BLOCK_SCHEMAS as DEFAULT_SCHEMAS } from './blockSchemas';
 
 const FORM_FIELD_TYPES = ['text', 'email', 'tel', 'textarea', 'select'];
 
@@ -102,7 +102,7 @@ function CarouselItemsEditor({ items = [], onChange }) {
   );
 }
 
-export default function PropertyEditor({ block, onUpdate }) {
+export default function PropertyEditor({ block, onUpdate, schemas = DEFAULT_SCHEMAS }) {
   if (!block) {
     return (
       <div style={{
@@ -122,7 +122,7 @@ export default function PropertyEditor({ block, onUpdate }) {
     );
   }
 
-  const schema = BLOCK_SCHEMAS[block.type];
+  const schema = schemas[block.type];
   if (!schema) return null;
 
   const updateProp = (key, value) => {

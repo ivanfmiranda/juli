@@ -2,10 +2,10 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { BLOCK_SCHEMAS } from './blockSchemas';
+import { BLOCK_SCHEMAS as DEFAULT_SCHEMAS } from './blockSchemas';
 
-function SortableBlock({ block, isSelected, onSelect, onRemove }) {
-  const schema = BLOCK_SCHEMAS[block.type] || { label: block.type, icon: '❓' };
+function SortableBlock({ block, isSelected, onSelect, onRemove, schemas }) {
+  const schema = schemas[block.type] || { label: block.type, icon: '❓' };
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
 
   const style = {
@@ -50,7 +50,7 @@ function SortableBlock({ block, isSelected, onSelect, onRemove }) {
   );
 }
 
-export default function Canvas({ blocks, selectedBlockId, onSelect, onRemove }) {
+export default function Canvas({ blocks, selectedBlockId, onSelect, onRemove, schemas = DEFAULT_SCHEMAS, emptyLabel }) {
   const { setNodeRef, isOver } = useDroppable({ id: 'canvas-droppable' });
 
   return (
@@ -72,7 +72,7 @@ export default function Canvas({ blocks, selectedBlockId, onSelect, onRemove }) 
             color: '#999',
             fontSize: 14,
           }}>
-            Arraste blocos do painel esquerdo para começar a montar sua página
+            {emptyLabel || 'Arraste blocos do painel esquerdo para começar a montar sua página'}
           </div>
         )}
         <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
@@ -83,6 +83,7 @@ export default function Canvas({ blocks, selectedBlockId, onSelect, onRemove }) 
               isSelected={selectedBlockId === block.id}
               onSelect={onSelect}
               onRemove={onRemove}
+              schemas={schemas}
             />
           ))}
         </SortableContext>

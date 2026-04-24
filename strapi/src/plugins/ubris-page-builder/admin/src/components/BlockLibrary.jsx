@@ -1,9 +1,9 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { BLOCK_SCHEMAS, BLOCK_TYPES } from './blockSchemas';
+import { BLOCK_SCHEMAS as DEFAULT_SCHEMAS, BLOCK_TYPES as DEFAULT_TYPES } from './blockSchemas';
 
-function DraggableBlock({ type }) {
-  const schema = BLOCK_SCHEMAS[type];
+function DraggableBlock({ type, schemas }) {
+  const schema = schemas[type];
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `library-${type}`,
     data: { type, fromLibrary: true },
@@ -35,7 +35,7 @@ function DraggableBlock({ type }) {
   );
 }
 
-export default function BlockLibrary() {
+export default function BlockLibrary({ schemas = DEFAULT_SCHEMAS, blockTypes = DEFAULT_TYPES, title = 'Blocos' }) {
   return (
     <div style={{
       width: 220,
@@ -46,10 +46,10 @@ export default function BlockLibrary() {
       background: '#fafafa',
     }}>
       <h3 style={{ margin: '0 0 16px', fontSize: 14, fontWeight: 600, color: '#555', textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        Blocos
+        {title}
       </h3>
-      {BLOCK_TYPES.map(type => (
-        <DraggableBlock key={type} type={type} />
+      {blockTypes.map(type => (
+        <DraggableBlock key={type} type={type} schemas={schemas} />
       ))}
     </div>
   );

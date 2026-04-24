@@ -16,6 +16,19 @@ export default {
       },
       permissions: [],
     });
+    app.addMenuLink({
+      to: `/plugins/${pluginId}/email-templates`,
+      icon: () => '✉️',
+      intlLabel: {
+        id: `${pluginId}.emailTemplates.name`,
+        defaultMessage: 'Email Templates',
+      },
+      Component: async () => {
+        const component = await import('./pages/EmailTemplatesPage');
+        return component;
+      },
+      permissions: [],
+    });
     app.registerPlugin({
       id: pluginId,
       name: pluginId,
