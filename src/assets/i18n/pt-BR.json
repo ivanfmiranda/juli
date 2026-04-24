@@ -10,7 +10,45 @@
     "invalidCredentials": "Usuário ou senha inválidos.",
     "cartPromotionWarning": "Login concluído, mas não foi possível recuperar o carrinho anterior.",
     "usernameRequired": "Usuário é obrigatório",
-    "passwordRequired": "Senha é obrigatória"
+    "passwordRequired": "Senha é obrigatória",
+    "forgotLink": "Esqueci minha senha"
+  },
+  "auth": {
+    "forgotPassword": {
+      "title": "Esqueci minha senha",
+      "description": "Informe seu e-mail e enviaremos um link para você redefinir a senha.",
+      "emailLabel": "E-mail",
+      "emailPlaceholder": "seu@email.com",
+      "emailRequired": "E-mail é obrigatório",
+      "emailInvalid": "E-mail inválido",
+      "submitButton": "Enviar link",
+      "sending": "Enviando...",
+      "checkInboxTitle": "Verifique seu e-mail",
+      "checkInboxDescription": "Se o endereço informado estiver cadastrado, você receberá um link para redefinir sua senha em instantes. Verifique também a caixa de spam.",
+      "backToLogin": "Voltar ao login",
+      "genericError": "Não foi possível enviar o link agora. Tente novamente em instantes."
+    },
+    "resetPassword": {
+      "title": "Redefinir senha",
+      "description": "Escolha uma nova senha para sua conta.",
+      "newPasswordLabel": "Nova senha",
+      "confirmPasswordLabel": "Confirmar senha",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "confirmPasswordPlaceholder": "Repita a nova senha",
+      "passwordRequired": "Senha é obrigatória",
+      "confirmPasswordRequired": "Confirme a nova senha",
+      "passwordMinLength": "Mínimo de 8 caracteres",
+      "passwordsDoNotMatch": "As senhas não conferem",
+      "submitButton": "Redefinir senha",
+      "submitting": "Redefinindo...",
+      "tokenMissingTitle": "Link inválido",
+      "tokenMissing": "O link está incompleto ou não contém um token. Solicite um novo link para redefinir sua senha.",
+      "invalidToken": "Token inválido ou expirado. Solicite um novo link para redefinir sua senha.",
+      "genericError": "Não foi possível redefinir a senha agora. Tente novamente em instantes.",
+      "requestNewLink": "Solicitar novo link",
+      "backToLogin": "Voltar ao login",
+      "success": "Senha redefinida com sucesso. Faça login com sua nova senha."
+    }
   },
   "register": {
     "subtitle": "Crie sua conta",

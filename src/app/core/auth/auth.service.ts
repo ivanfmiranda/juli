@@ -93,6 +93,31 @@ export class AuthService {
     );
   }
 
+  /**
+   * Kick off a password-reset email. Backend (ubris-tenant-identity) always
+   * replies 204 — even when the email is unknown — so callers MUST NOT try
+   * to surface "user not found" to the UI. The void Observable just tells
+   * the caller the request round-tripped successfully.
+   */
+  requestPasswordReset(email: string): Observable<void> {
+    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/auth/password-reset/request`, {
+      email,
+      tenantId: this.tenantHost.currentTenantId()
+    });
+  }
+
+  /**
+   * Consume the opaque token that was emailed and set a new password. A
+   * 4xx from the backend (generic INVALID_TOKEN) surfaces as an RxJS error
+   * so the UI can show the "invalid or expired" message.
+   */
+  confirmPasswordReset(token: string, newPassword: string): Observable<void> {
+    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/auth/password-reset/confirm`, {
+      token,
+      newPassword
+    });
+  }
+
   logout(): void {
     localStorage.removeItem(this.storageKey('juli.session'));
     this.sessionSubject.next(null);

@@ -26,6 +26,10 @@
       <button type="submit" [disabled]="submitting">
         {{ submitting ? ('login.signingIn' | juliTranslate) : ('login.signIn' | juliTranslate) }}
       </button>
+
+      <p class="forgot-link">
+        <a routerLink="/recuperar-senha">{{ 'login.forgotLink' | juliTranslate }}</a>
+      </p>
     </form>
 
     <p class="register-link">

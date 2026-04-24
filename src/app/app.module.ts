@@ -13,6 +13,8 @@ import { CmsPageComponent } from './pages/cms-page/cms-page.component';
 import { PreviewEntryComponent } from './pages/preview-entry/preview-entry.component';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
+import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
 import { CategoryPageComponent } from './pages/category-page/category-page.component';
 import { SearchPageComponent } from './pages/search-page/search-page.component';
@@ -59,6 +61,8 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         AppComponent,
         LoginComponent,
         RegisterComponent,
+        ForgotPasswordComponent,
+        ResetPasswordComponent,
         CmsPageComponent,
         ProductDetailComponent,
         CategoryPageComponent,

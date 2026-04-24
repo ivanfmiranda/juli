@@ -29,7 +29,45 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       invalidCredentials: 'Usuário ou senha inválidos.',
       cartPromotionWarning: 'Login concluído, mas não foi possível recuperar o carrinho anterior.',
       usernameRequired: 'Usuário é obrigatório',
-      passwordRequired: 'Senha é obrigatória'
+      passwordRequired: 'Senha é obrigatória',
+      forgotLink: 'Esqueci minha senha'
+    },
+    auth: {
+      forgotPassword: {
+        title: 'Esqueci minha senha',
+        description: 'Informe seu e-mail e enviaremos um link para você redefinir a senha.',
+        emailLabel: 'E-mail',
+        emailPlaceholder: 'seu@email.com',
+        emailRequired: 'E-mail é obrigatório',
+        emailInvalid: 'E-mail inválido',
+        submitButton: 'Enviar link',
+        sending: 'Enviando...',
+        checkInboxTitle: 'Verifique seu e-mail',
+        checkInboxDescription: 'Se o endereço informado estiver cadastrado, você receberá um link para redefinir sua senha em instantes. Verifique também a caixa de spam.',
+        backToLogin: 'Voltar ao login',
+        genericError: 'Não foi possível enviar o link agora. Tente novamente em instantes.'
+      },
+      resetPassword: {
+        title: 'Redefinir senha',
+        description: 'Escolha uma nova senha para sua conta.',
+        newPasswordLabel: 'Nova senha',
+        confirmPasswordLabel: 'Confirmar senha',
+        passwordPlaceholder: 'Mínimo 8 caracteres',
+        confirmPasswordPlaceholder: 'Repita a nova senha',
+        passwordRequired: 'Senha é obrigatória',
+        confirmPasswordRequired: 'Confirme a nova senha',
+        passwordMinLength: 'Mínimo de 8 caracteres',
+        passwordsDoNotMatch: 'As senhas não conferem',
+        submitButton: 'Redefinir senha',
+        submitting: 'Redefinindo...',
+        tokenMissingTitle: 'Link inválido',
+        tokenMissing: 'O link está incompleto ou não contém um token. Solicite um novo link para redefinir sua senha.',
+        invalidToken: 'Token inválido ou expirado. Solicite um novo link para redefinir sua senha.',
+        genericError: 'Não foi possível redefinir a senha agora. Tente novamente em instantes.',
+        requestNewLink: 'Solicitar novo link',
+        backToLogin: 'Voltar ao login',
+        success: 'Senha redefinida com sucesso. Faça login com sua nova senha.'
+      }
     },
     register: {
       subtitle: 'Crie sua conta',
@@ -581,7 +619,45 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       invalidCredentials: 'Invalid username or password.',
       cartPromotionWarning: 'Login completed, but we could not recover your previous cart.',
       usernameRequired: 'Username is required',
-      passwordRequired: 'Password is required'
+      passwordRequired: 'Password is required',
+      forgotLink: 'Forgot your password?'
+    },
+    auth: {
+      forgotPassword: {
+        title: 'Forgot your password?',
+        description: 'Enter your email and we will send you a link to reset your password.',
+        emailLabel: 'Email',
+        emailPlaceholder: 'you@example.com',
+        emailRequired: 'Email is required',
+        emailInvalid: 'Invalid email address',
+        submitButton: 'Send link',
+        sending: 'Sending...',
+        checkInboxTitle: 'Check your inbox',
+        checkInboxDescription: 'If the address you provided is registered, a link to reset your password will arrive shortly. Please check your spam folder as well.',
+        backToLogin: 'Back to login',
+        genericError: 'Could not send the link right now. Please try again shortly.'
+      },
+      resetPassword: {
+        title: 'Reset password',
+        description: 'Choose a new password for your account.',
+        newPasswordLabel: 'New password',
+        confirmPasswordLabel: 'Confirm password',
+        passwordPlaceholder: 'At least 8 characters',
+        confirmPasswordPlaceholder: 'Repeat the new password',
+        passwordRequired: 'Password is required',
+        confirmPasswordRequired: 'Please confirm the new password',
+        passwordMinLength: 'At least 8 characters',
+        passwordsDoNotMatch: 'Passwords do not match',
+        submitButton: 'Reset password',
+        submitting: 'Resetting...',
+        tokenMissingTitle: 'Invalid link',
+        tokenMissing: 'This link is incomplete or missing a token. Please request a new password-reset link.',
+        invalidToken: 'Invalid or expired token. Please request a new password-reset link.',
+        genericError: 'Could not reset your password right now. Please try again shortly.',
+        requestNewLink: 'Request a new link',
+        backToLogin: 'Back to login',
+        success: 'Password reset successfully. Sign in with your new password.'
+      }
     },
     register: {
       subtitle: 'Create your account',

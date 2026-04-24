@@ -10,7 +10,45 @@
     "invalidCredentials": "Invalid username or password.",
     "cartPromotionWarning": "Login completed, but we could not recover your previous cart.",
     "usernameRequired": "Username is required",
-    "passwordRequired": "Password is required"
+    "passwordRequired": "Password is required",
+    "forgotLink": "Forgot your password?"
+  },
+  "auth": {
+    "forgotPassword": {
+      "title": "Forgot your password?",
+      "description": "Enter your email and we will send you a link to reset your password.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@example.com",
+      "emailRequired": "Email is required",
+      "emailInvalid": "Invalid email address",
+      "submitButton": "Send link",
+      "sending": "Sending...",
+      "checkInboxTitle": "Check your inbox",
+      "checkInboxDescription": "If the address you provided is registered, a link to reset your password will arrive shortly. Please check your spam folder as well.",
+      "backToLogin": "Back to login",
+      "genericError": "Could not send the link right now. Please try again shortly."
+    },
+    "resetPassword": {
+      "title": "Reset password",
+      "description": "Choose a new password for your account.",
+      "newPasswordLabel": "New password",
+      "confirmPasswordLabel": "Confirm password",
+      "passwordPlaceholder": "At least 8 characters",
+      "confirmPasswordPlaceholder": "Repeat the new password",
+      "passwordRequired": "Password is required",
+      "confirmPasswordRequired": "Please confirm the new password",
+      "passwordMinLength": "At least 8 characters",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "submitButton": "Reset password",
+      "submitting": "Resetting...",
+      "tokenMissingTitle": "Invalid link",
+      "tokenMissing": "This link is incomplete or missing a token. Please request a new password-reset link.",
+      "invalidToken": "Invalid or expired token. Please request a new password-reset link.",
+      "genericError": "Could not reset your password right now. Please try again shortly.",
+      "requestNewLink": "Request a new link",
+      "backToLogin": "Back to login",
+      "success": "Password reset successfully. Sign in with your new password."
+    }
   },
   "register": {
     "subtitle": "Create your account",

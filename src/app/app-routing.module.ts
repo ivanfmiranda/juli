@@ -3,6 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './core/auth/auth.guard';
 import { LoginComponent } from './pages/login/login.component';
 import { RegisterComponent } from './pages/register/register.component';
+import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
 import { CmsPageComponent } from './pages/cms-page/cms-page.component';
 import { ProductDetailComponent } from './pages/product-detail/product-detail.component';
 import { CategoryPageComponent } from './pages/category-page/category-page.component';
@@ -21,6 +23,13 @@ const routes: Routes = [
   // Auth
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  { path: 'recuperar-senha', component: ForgotPasswordComponent },
+  { path: 'redefinir-senha', component: ResetPasswordComponent },
+  // English/legacy aliases — the password-reset email link sent by the
+  // backend (PasswordResetService.buildResetLink) points at /reset-password,
+  // so both paths must render the same component.
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password', component: ResetPasswordComponent },
 
   // Homepage (PageRenderer with slug='home')
   { path: '', pathMatch: 'full', component: PageRendererComponent },
