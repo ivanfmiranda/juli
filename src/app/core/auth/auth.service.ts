@@ -100,7 +100,7 @@ export class AuthService {
    * the caller the request round-tripped successfully.
    */
   requestPasswordReset(email: string): Observable<void> {
-    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/auth/password-reset/request`, {
+    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/bff/auth/password-reset/request`, {
       email,
       tenantId: this.tenantHost.currentTenantId()
     });
@@ -112,9 +112,10 @@ export class AuthService {
    * so the UI can show the "invalid or expired" message.
    */
   confirmPasswordReset(token: string, newPassword: string): Observable<void> {
-    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/auth/password-reset/confirm`, {
+    return this.http.post<void>(`${environment.ubrisApiBaseUrl}/api/bff/auth/password-reset/confirm`, {
       token,
-      newPassword
+      newPassword,
+      tenantId: this.tenantHost.currentTenantId()
     });
   }
 
