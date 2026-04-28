@@ -388,8 +388,14 @@ function fetchBranding(tenantId) {
 
 function buildBrandingStyle(branding) {
   if (!branding || !branding.theme || Object.keys(branding.theme).length === 0) return '';
+  // The Angular bundle's main stylesheet (styles.<hash>.css) is loaded
+  // asynchronously via <link rel="stylesheet" media="print" onload="...">,
+  // so it lands AFTER our injected <style id="ssr-branding"> and would
+  // otherwise win the cascade for the same :root custom properties.
+  // !important on the merchant override keeps the SSR-injected colours
+  // applied throughout the page lifecycle.
   const vars = Object.entries(branding.theme)
-    .map(([k, v]) => `  ${k}: ${v};`)
+    .map(([k, v]) => `  ${k}: ${v} !important;`)
     .join('\n');
   return `<style id="ssr-branding">:root {\n${vars}\n}</style>`;
 }
