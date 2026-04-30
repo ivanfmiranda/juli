@@ -1,0 +1,81 @@
+<main class="quote-detail">
+  <a routerLink="/account/quotes" class="quote-detail__back">
+    <i class="fas fa-arrow-left"></i> Voltar para minhas cotações
+  </a>
+
+  <div *ngIf="loading" class="quote-detail__loading">Carregando cotação...</div>
+  <div *ngIf="error" class="quote-detail__error">{{ error }}</div>
+
+  <article *ngIf="quote && !loading" class="quote-detail__card">
+    <header class="quote-detail__header">
+      <div>
+        <h1>Cotação <span class="quote-code">{{ quote.quoteCode || quote.id }}</span></h1>
+        <p class="quote-detail__meta" *ngIf="quote.createdAt">
+          Aberta em {{ quote.createdAt }}
+        </p>
+      </div>
+      <span class="quote-status quote-status--{{ (quote.status || 'DRAFT').toLowerCase() }}">
+        {{ quote.status || 'DRAFT' }}
+      </span>
+    </header>
+
+    <section class="quote-detail__section">
+      <h2>Linha do tempo</h2>
+      <ol class="quote-timeline">
+        <li *ngFor="let step of timeline()"
+            class="quote-timeline__item"
+            [class.quote-timeline__item--done]="step.state === 'done'"
+            [class.quote-timeline__item--current]="step.state === 'current'"
+            [class.quote-timeline__item--failed]="step.state === 'failed'">
+          <span class="quote-timeline__marker"></span>
+          <div class="quote-timeline__body">
+            <span class="quote-timeline__label">{{ step.label }}</span>
+            <span class="quote-timeline__at" *ngIf="step.at">{{ step.at }}</span>
+          </div>
+        </li>
+      </ol>
+      <p *ngIf="quote.approvalRequestId" class="quote-detail__approval-id">
+        Pedido de aprovação: <code>{{ quote.approvalRequestId }}</code>
+      </p>
+      <p *ngIf="quote.convertedOrderId" class="quote-detail__converted-order">
+        Pedido gerado:
+        <a [routerLink]="['/account/orders', quote.convertedOrderId]">{{ quote.convertedOrderId }}</a>
+      </p>
+    </section>
+
+    <section class="quote-detail__section">
+      <h2>Itens ({{ (quote.items || []).length }})</h2>
+      <table class="quote-detail__items" *ngIf="(quote.items || []).length > 0">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th class="num">Quantidade</th>
+            <th class="num">Preço unit.</th>
+            <th class="num">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of quote.items">
+            <td><span class="quote-detail__sku">{{ item.sku }}</span></td>
+            <td class="num">{{ item.quantity }}</td>
+            <td class="num">{{ item.unitPrice }}</td>
+            <td class="num">{{ itemTotal(item) | number:'1.2-2' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <p *ngIf="(quote.items || []).length === 0">Nenhum item nesta cotação.</p>
+    </section>
+
+    <section class="quote-detail__section" *ngIf="quote.totalAmount != null">
+      <div class="quote-detail__totals">
+        <span>Total estimado</span>
+        <strong>{{ quote.totalAmount }} {{ quote.currency }}</strong>
+      </div>
+    </section>
+
+    <section class="quote-detail__section" *ngIf="quote.notes">
+      <h2>Observações</h2>
+      <p>{{ quote.notes }}</p>
+    </section>
+  </article>
+</main>

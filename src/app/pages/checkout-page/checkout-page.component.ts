@@ -20,7 +20,9 @@ import { AuthService } from '../../core/auth/auth.service';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
 import { ProfileAddressService } from '../../core/commerce/services/profile-address.service';
 import { JuliSavedAddress } from '../../core/commerce/models/ubris-commerce.models';
-import { SoftLoginPromptComponent } from '../../shared/components/soft-login-prompt/soft-login-prompt.component';
+// SoftLoginPromptComponent intentionally not imported here — guest
+// checkout removed the modal trigger from this page. The component
+// stays in SharedComponentsModule for other surfaces.
 import {
   JuliCartFacade,
   JuliCheckoutAddressState,
@@ -33,6 +35,8 @@ import {
 } from '../../core/commerce';
 import { JuliDeliveryOption } from '../../core/commerce/models/ubris-commerce.models';
 import { CheckoutStep } from '../../shared/components/checkout-stepper/checkout-stepper.component';
+import { B2bAssignment, B2bContextService } from '../../core/user/b2b-context.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-checkout-page',
@@ -62,6 +66,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   stripeCardElementHost?: ElementRef<HTMLDivElement>;
 
   readonly cart$ = this.cartFacade.cart$;
+  // Guest fields (email + cpf) ficam vazios e sem validators até a
+  // primeira interação no caminho não-logado; ativamos os validators em
+  // ngOnInit quando detectamos que não há sessão.
   readonly form = this.fb.group({
     fullName: ['', Validators.required],
     line1: ['', Validators.required],
@@ -72,7 +79,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     countryIso: ['BR', Validators.required],
     phone: [''],
     notes: [''],
-    paymentMethod: ['CARD', Validators.required]
+    paymentMethod: ['CARD', Validators.required],
+    guestEmail: [''],
+    guestCpf: ['']
   });
 
   private readonly destroyRef = inject(DestroyRef);
@@ -111,7 +120,16 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   currentStepId = 'address';
   summaryExpanded = false;
   showCopyToast = false;
-  showSoftLoginPrompt = false;
+  usingUnitAddress = false;
+
+  // B2B context — quando preenchido, o banner sobre as opções de entrega
+  // explica que o catálogo logístico vem do contrato corporativo.
+  readonly b2bContext$: Observable<B2bAssignment | null>;
+
+  /** Convenience getter for the template — keeps *ngIf concise. */
+  get isAuthenticated(): boolean {
+    return this.authService.isAuthenticated;
+  }
 
   readonly checkoutSteps: CheckoutStep[] = [
     { id: 'address', label: '', completed: false, active: true },
@@ -128,13 +146,65 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     private readonly profileAddressService: ProfileAddressService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
-    private readonly i18n: JuliI18nService
+    private readonly i18n: JuliI18nService,
+    private readonly b2bContext: B2bContextService
   ) {
+    this.b2bContext$ = this.b2bContext.context$;
     this.form.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.resetPaymentState();
       this.invalidateReview('Checkout data changed. Re-apply payment before reviewing again.');
     });
+    this.applyGuestValidators();
     this.loadProfileAddresses();
+    this.applyB2bUnitAddress();
+  }
+
+  /**
+   * Pre-fill the address form from the buyer's B2B unit when present.
+   * Runs once at construction; if the unit carries no {@code line1}
+   * (admin registered the legal entity but skipped the geocoding step)
+   * we fall through and let {@code loadProfileAddresses} pick the
+   * personal default. The form values are emitted silently so the
+   * dirty-state listeners don't re-trigger payment resets.
+   */
+  private applyB2bUnitAddress(): void {
+    if (!this.authService.isAuthenticated) return;
+    const assignment = this.b2bContext.current();
+    if (!assignment || !assignment.companyId || !assignment.unitLine1) return;
+    this.form.patchValue({
+      fullName: assignment.unitName || this.form.value.fullName,
+      line1: assignment.unitLine1,
+      line2: assignment.unitLine2 ?? '',
+      city: assignment.unitCity ?? '',
+      region: assignment.unitRegion ?? '',
+      postalCode: assignment.unitPostalCode ?? '',
+      countryIso: assignment.unitCountryIso ?? 'BR'
+    }, { emitEvent: false });
+    // Skip the saved-address picker UI — the unit address takes priority.
+    this.useNewAddress = true;
+    this.usingUnitAddress = true;
+  }
+
+  /**
+   * Toggle validators on {@code guestEmail} / {@code guestCpf} based on
+   * the current auth state. Logged-in checkouts ignore those fields and
+   * keep them validator-free; anonymous checkouts require both. Called
+   * once from the constructor — the storefront forces a re-render
+   * (login/logout) before flipping between modes, so we don't need to
+   * re-subscribe to {@code session$}.
+   */
+  private applyGuestValidators(): void {
+    const emailControl = this.form.get('guestEmail');
+    const cpfControl = this.form.get('guestCpf');
+    if (!this.authService.isAuthenticated) {
+      emailControl?.setValidators([Validators.required, Validators.email]);
+      cpfControl?.setValidators([Validators.required, Validators.minLength(11), Validators.maxLength(14)]);
+    } else {
+      emailControl?.clearValidators();
+      cpfControl?.clearValidators();
+    }
+    emailControl?.updateValueAndValidity({ emitEvent: false });
+    cpfControl?.updateValueAndValidity({ emitEvent: false });
   }
 
   ngAfterViewChecked(): void {
@@ -146,14 +216,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   }
 
   saveAddressAndLoadDelivery(): void {
-    // Check if user is authenticated
-    if (!this.authService.isAuthenticated) {
-      this.showSoftLoginPrompt = true;
-      return;
-    }
-
-    // If a saved address is selected, pre-fill form then proceed without validation errors
-    if (!this.useNewAddress && this.selectedProfileAddressId) {
+    // Logado com endereço salvo selecionado: pré-preenche pra não falhar validators
+    const session = this.authService.currentSession;
+    if (session && !this.useNewAddress && this.selectedProfileAddressId) {
       const saved = this.profileAddresses.find(a => a.id === this.selectedProfileAddressId);
       if (saved) {
         this.form.patchValue({
@@ -170,8 +235,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
       }
     }
 
-    const session = this.authService.currentSession;
-    if (!session || this.form.invalid || this.loadingDelivery || this.reviewing || this.submitting) {
+    if (this.form.invalid || this.loadingDelivery || this.reviewing || this.submitting) {
       this.form.markAllAsTouched();
       return;
     }
@@ -187,11 +251,14 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
 
     cartReady$.pipe(
       switchMap(cartId => {
+        const isGuest = !session;
         const request: JuliCheckoutAddressUpsertRequest = {
           checkoutId: this.checkoutId,
           cartId,
-          customerId: session.username,
-          userType: session.userType || 'B2C',
+          // Logado: customerId vem da sessão. Guest: o BFF aceita email/cpf
+          // como identidade alternativa (validador valida XOR no DTO).
+          customerId: isGuest ? undefined : session.username,
+          userType: session?.userType || 'B2C',
           paymentMethod: this.form.value.paymentMethod || 'CARD',
           address: {
             fullName: this.form.value.fullName || '',
@@ -203,7 +270,9 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
             countryIso: this.form.value.countryIso || 'BR',
             phone: this.form.value.phone || undefined,
             notes: this.form.value.notes || undefined
-          }
+          },
+          guestEmail: isGuest ? (this.form.value.guestEmail || undefined) : undefined,
+          guestCpf: isGuest ? (this.form.value.guestCpf || undefined) : undefined
         };
         return this.checkoutFacade.saveAddress(request);
       }),
@@ -575,6 +644,11 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         }
         this.addressesLoading = false;
         this.cdr.markForCheck();
+        // Logado com endereço default → pula a address-step automaticamente.
+        // O usuário pode voltar via "Trocar endereço" se quiser editar.
+        if (defaultAddr && this.currentStepId === 'address' && !this.savedAddress) {
+          this.saveAddressAndLoadDelivery();
+        }
       },
       error: () => {
         this.addressesLoading = false;
@@ -764,17 +838,4 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     return typeof value === 'string' && value.trim() ? value : undefined;
   }
 
-  onSoftLogin(): void {
-    this.showSoftLoginPrompt = false;
-    // Navigate to login page with returnUrl
-    this.router.navigate(['/login'], { 
-      queryParams: { returnUrl: '/checkout' }
-    });
-  }
-
-  onContinueBrowsing(): void {
-    this.showSoftLoginPrompt = false;
-    // Navigate to cart page
-    this.router.navigate(['/cart']);
-  }
 }

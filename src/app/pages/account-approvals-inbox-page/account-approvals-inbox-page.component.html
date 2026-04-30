@@ -1,0 +1,57 @@
+<main class="approvals-inbox">
+  <header class="approvals-inbox__header">
+    <h1>Aprovações pendentes</h1>
+    <p class="approvals-inbox__subtitle">
+      Solicitações da sua empresa aguardando sua decisão.
+    </p>
+  </header>
+
+  <div *ngIf="flash" class="approvals-inbox__flash"
+       [class.approvals-inbox__flash--ok]="flash.kind === 'ok'"
+       [class.approvals-inbox__flash--err]="flash.kind === 'err'">
+    {{ flash.text }}
+  </div>
+
+  <div *ngIf="loading" class="approvals-inbox__loading">Carregando...</div>
+  <div *ngIf="error" class="approvals-inbox__error">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && rows.length === 0" class="approvals-inbox__empty">
+    <i class="fas fa-check-circle"></i>
+    <h2>Nada pendente</h2>
+    <p>Quando alguém da sua empresa solicitar uma cotação que precise da sua aprovação, ela aparecerá aqui.</p>
+  </div>
+
+  <table *ngIf="!loading && !error && rows.length > 0" class="approvals-inbox__table">
+    <thead>
+      <tr>
+        <th>Referência</th>
+        <th>Solicitante</th>
+        <th class="num">Valor</th>
+        <th>Nível</th>
+        <th>Aberta em</th>
+        <th class="actions">Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let row of rows">
+        <td><span class="ref">{{ row.resourceType }} / {{ row.resourceId || row.checkoutId }}</span></td>
+        <td>{{ row.requesterUsername || '—' }}</td>
+        <td class="num">{{ row.amount ?? '—' }}</td>
+        <td>{{ row.currentLevel }}{{ row.totalLevels ? ' / ' + row.totalLevels : '' }}</td>
+        <td class="muted">{{ row.createdAt || '—' }}</td>
+        <td class="actions">
+          <button class="ub-btn ub-btn--sm ub-btn--success"
+                  (click)="approve(row)" [disabled]="busy(row) === 'approve'">
+            <i class="fas fa-check"></i>
+            <span>{{ busy(row) === 'approve' ? '...' : 'Aprovar' }}</span>
+          </button>
+          <button class="ub-btn ub-btn--sm ub-btn--ghost"
+                  (click)="reject(row)" [disabled]="busy(row) === 'reject'">
+            <i class="fas fa-times"></i>
+            <span>{{ busy(row) === 'reject' ? '...' : 'Rejeitar' }}</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>

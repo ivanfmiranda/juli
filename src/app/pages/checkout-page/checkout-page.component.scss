@@ -451,10 +451,105 @@
   .step-navigation {
     flex-direction: column;
     gap: var(--space-3);
-    
+
     .ub-btn {
       width: 100%;
       justify-content: center;
     }
+  }
+}
+
+/* ── B2B unit address badge (address step) ── */
+.ub-unit-address-badge {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 10px;
+  color: #312e81;
+
+  &__icon {
+    font-size: 22px;
+    line-height: 1;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #3730a3;
+  }
+}
+
+/* ── Guest checkout block (address step) ── */
+.ub-guest-block {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 10px;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #0f172a;
+  }
+
+  &__login-hint {
+    font-size: 13px;
+    color: #4338ca;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+}
+
+/* ── B2B Banner (delivery step) ── */
+.ub-b2b-banner {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border: 1px solid #c7d2fe;
+  border-radius: 12px;
+  color: #312e81;
+
+  &:empty { display: none; }
+
+  &__icon {
+    font-size: 22px;
+    line-height: 1;
+    padding-top: 2px;
+    flex-shrink: 0;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+
+  &__text {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #3730a3;
   }
 }

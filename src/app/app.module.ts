@@ -24,6 +24,9 @@ import { SiteFooterComponent } from './shared/components/site-footer/site-footer
 import { ProductCardComponent } from './shared/components/product-card/product-card.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
+import { AccountQuotesPageComponent } from './pages/account-quotes-page/account-quotes-page.component';
+import { AccountQuoteDetailPageComponent } from './pages/account-quote-detail-page/account-quote-detail-page.component';
+import { AccountApprovalsInboxPageComponent } from './pages/account-approvals-inbox-page/account-approvals-inbox-page.component';
 import { WishlistPageComponent } from './pages/wishlist-page/wishlist-page.component';
 import { AccountAddressesPageComponent } from './pages/account-addresses-page/account-addresses-page.component';
 import { ReturnsPageComponent } from './pages/returns-page/returns-page.component';
@@ -35,6 +38,7 @@ import { IconComponent } from './shared/components/icon/icon.component';
 
 import { JuliFeatureService } from './core/services/juli-feature.service';
 import { JuliBrandingService } from './core/services/juli-branding.service';
+import { SiteChannelService } from './core/services/site-channel.service';
 import { tap, catchError } from 'rxjs/operators';
 import { firstValueFrom, of } from 'rxjs';
 import { JuliI18nService } from './core/i18n/i18n.service';
@@ -48,6 +52,17 @@ function initializeSaaSContext(featureService: JuliFeatureService, brandingServi
       catchError(err => {
         console.warn('[Juli] Tenant init failed, continuing:', err?.message ?? err);
         return of(null);
+      })
+    )
+  );
+}
+
+function initializeSiteChannel(siteChannel: SiteChannelService): () => Promise<any> {
+  return () => firstValueFrom(
+    siteChannel.init().pipe(
+      catchError(err => {
+        console.warn('[Juli] Site channel init failed, defaulting to B2C:', err?.message ?? err);
+        return of('B2C' as const);
       })
     )
   );
@@ -70,6 +85,9 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         CartPageComponent,
         OrdersPageComponent,
         OrderDetailPageComponent,
+        AccountQuotesPageComponent,
+        AccountQuoteDetailPageComponent,
+        AccountApprovalsInboxPageComponent,
         CmsComponentHostComponent,
         SmartEditOverlayDirective,
         PreviewEntryComponent,
@@ -114,6 +132,12 @@ function initializeLocale(i18n: JuliI18nService): () => void {
             provide: APP_INITIALIZER,
             useFactory: initializeSaaSContext,
             deps: [JuliFeatureService, JuliBrandingService],
+            multi: true
+        },
+        {
+            provide: APP_INITIALIZER,
+            useFactory: initializeSiteChannel,
+            deps: [SiteChannelService],
             multi: true
         },
         {

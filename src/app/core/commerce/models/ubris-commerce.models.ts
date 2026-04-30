@@ -83,10 +83,14 @@ export interface JuliCheckoutAddress {
 export interface JuliCheckoutAddressUpsertRequest {
   checkoutId?: string;
   cartId: string;
-  customerId: string;
+  // Optional: omitido no fluxo guest. O BFF/fulfillment exige customerId
+  // OU (guestEmail + guestCpf) — XOR validado no DTO Java.
+  customerId?: string;
   userType: string;
   paymentMethod: string;
   address: JuliCheckoutAddress;
+  guestEmail?: string;
+  guestCpf?: string;
 }
 
 export interface JuliCheckoutAddressState {

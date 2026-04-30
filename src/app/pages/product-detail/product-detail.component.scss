@@ -432,6 +432,46 @@
   }
 }
 
+/* ── B2B: Solicitar Cotação ── */
+.b2b-actions {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+
+  .btn-request-quote {
+    width: 100%;
+    padding: 12px 20px;
+    border: none;
+    background: #4338ca;
+    color: #fff;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+
+    &:hover:not(:disabled) {
+      background: #3730a3;
+      transform: translateY(-1px);
+    }
+
+    &:disabled,
+    &.loading {
+      opacity: 0.7;
+      cursor: progress;
+    }
+  }
+
+  .b2b-hint {
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #3730a3;
+    line-height: 1.5;
+  }
+}
+
 /* ── Cart Feedback ── */
 .cart-feedback {
   margin-top: 8px;

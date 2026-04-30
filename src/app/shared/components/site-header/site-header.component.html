@@ -60,6 +60,15 @@
           <span class="label desktop-only">{{ 'header.signIn' | juliTranslate }}</span>
         </a>
 
+        <!-- B2B context badge — empresa/unidade do comprador corporativo -->
+        <span *ngIf="(b2bContext$ | async) as b2b"
+              class="b2b-context-badge desktop-only"
+              [attr.title]="(b2b.companyName || b2b.companyId) + (b2b.unitName ? ' • ' + b2b.unitName : '')">
+          <span class="b2b-context-badge__icon" aria-hidden="true">🏢</span>
+          <span class="b2b-context-badge__company">{{ b2b.companyName || b2b.companyId }}</span>
+          <span *ngIf="b2b.unitName" class="b2b-context-badge__unit">{{ b2b.unitName }}</span>
+        </span>
+
         <!-- Logged in: dropdown de conta -->
         <div *ngIf="isLoggedIn$ | async"
              class="account-menu-wrapper">
@@ -79,6 +88,26 @@
                (click)="closeAccountMenu()">
               <span class="account-dropdown__icon">📦</span>
               {{ 'header.myOrders' | juliTranslate }}
+            </a>
+            <a *ngIf="b2bContext$ | async"
+               routerLink="/account/quotes"
+               class="account-dropdown__item"
+               role="menuitem"
+               (click)="closeAccountMenu()">
+              <span class="account-dropdown__icon">🧾</span>
+              Minhas Cotações
+            </a>
+            <!-- Inbox de aprovação aparece só pra quem tem role aprovador
+                 no assignment B2B (B2B_APPROVER, B2B_ADMIN ou B2B_MANAGER);
+                 buyers comuns não veem. -->
+            <a *ngIf="(b2bContext$ | async) as b2b"
+               [hidden]="!(b2b.role === 'B2B_APPROVER' || b2b.role === 'B2B_ADMIN' || b2b.role === 'B2B_MANAGER')"
+               routerLink="/account/inbox-aprovacoes"
+               class="account-dropdown__item"
+               role="menuitem"
+               (click)="closeAccountMenu()">
+              <span class="account-dropdown__icon">✅</span>
+              Aprovações pendentes
             </a>
             <a routerLink="/account/addresses"
                class="account-dropdown__item"

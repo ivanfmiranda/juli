@@ -15,6 +15,10 @@ export interface JuliCartEntry {
   totalPrice?: { value?: number; currencyIso?: string; formattedValue?: string };
   updateable?: boolean;
   customizations?: unknown;
+  // True when this SKU is unit-scoped (visible only to specific B2B
+  // units). The BFF cart enrichment annotates the entry so the storefront
+  // can warn / gate without re-querying the catalog.
+  b2bOnly?: boolean;
   [key: string]: unknown;
 }
 
@@ -28,6 +32,10 @@ export interface JuliCart {
   totalDiscounts?: { value?: number; currencyIso?: string; formattedValue?: string };
   totalItems?: number;
   totalUnitCount?: number;
+  // True when at least one entry is unit-scoped — drives the
+  // B2bCheckoutGuard: anonymous buyers get redirected to /login before
+  // entering /checkout when this flag is set.
+  hasB2bOnlyEntries?: boolean;
   [key: string]: unknown;
 }
 

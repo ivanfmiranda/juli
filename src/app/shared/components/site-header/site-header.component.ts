@@ -10,6 +10,7 @@ import { Observable, Subject } from 'rxjs';
 import { map, takeUntil } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth.service';
+import { B2bContextService, B2bAssignment } from '../../../core/user/b2b-context.service';
 import { JuliCartFacade } from '../../../core/commerce';
 import { JuliI18nService, JuliLocaleConfig } from '../../../core/i18n/i18n.service';
 import { TenantBrandingApiService, NavCategory } from '../../../core/services/tenant-branding-api.service';
@@ -25,6 +26,8 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
   readonly isLoggedIn$: Observable<boolean> = this.authService.session$.pipe(
     map(session => !!session)
   );
+
+  readonly b2bContext$: Observable<B2bAssignment | null> = this.b2bContextService.context$;
 
   readonly cartTotal$: Observable<number> = this.cartFacade.itemCount$;
   readonly activeLocale$: Observable<JuliLocaleConfig> = this.i18n.activeLocale$;
@@ -50,6 +53,7 @@ export class SiteHeaderComponent implements OnInit, OnDestroy {
     private readonly i18n: JuliI18nService,
     private readonly brandingApi: TenantBrandingApiService,
     private readonly cdr: ChangeDetectorRef,
+    private readonly b2bContextService: B2bContextService,
   ) {}
 
   ngOnInit(): void {

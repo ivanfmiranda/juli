@@ -27,6 +27,8 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
 import { ReviewService } from '../../core/commerce/services/review.service';
 import { WishlistService } from '../../core/commerce/services/wishlist.service';
 import { AuthService } from '../../core/auth/auth.service';
+import { JuliQuoteService, QuoteItemPayload } from '../../core/commerce/services/juli-quote.service';
+import { B2bAssignment, B2bContextService } from '../../core/user/b2b-context.service';
 
 @Component({
   selector: 'app-product-detail',
@@ -55,6 +57,12 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
   quantity = 1;
   addingToCart = false;
   addToCartError?: string;
+  requestingQuote = false;
+  quoteError: string | null = null;
+
+  // B2B context — quando o comprador tem assignment ativo, exibimos
+  // "Solicitar Cotação" como ação alternativa ao "Adicionar ao carrinho".
+  readonly b2bContext$: Observable<B2bAssignment | null>;
 
   // Estado de wishlist para o produto atual
   isSaved$: Observable<boolean> | null = null;
@@ -78,6 +86,8 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     private readonly tenantHost: TenantHostService,
     private readonly cdr: ChangeDetectorRef,
     private readonly i18n: JuliI18nService,
+    private readonly quoteService: JuliQuoteService,
+    private readonly b2bContext: B2bContextService,
     readonly reviewService: ReviewService,
     readonly wishlistService: WishlistService,
     readonly auth: AuthService,
@@ -86,6 +96,7 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
     this.siteName = tenantId && tenantId !== 'default'
       ? tenantId.charAt(0).toUpperCase() + tenantId.slice(1)
       : 'Juli Store';
+    this.b2bContext$ = this.b2bContext.context$;
   }
 
   ngOnInit(): void {
@@ -223,6 +234,55 @@ export class ProductDetailComponent implements OnInit, OnDestroy {
       error: (err) => {
         this.addingToCart = false;
         this.addToCartError = err?.error?.message || err?.message || this.i18n.translate('pdp.addToCartError');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /**
+   * Solicita cotação corporativa para o produto que está sendo visualizado.
+   * Manda apenas a linha atual (SKU + qty + preço da vitrine) para
+   * {@code POST /b2b/quotes}; o comprador completa o pedido na tela de
+   * detalhe da cotação. {@code priceSource: STOREFRONT} sinaliza ao
+   * b2b-platform que o preço veio do catálogo público (não negociado).
+   */
+  requestQuote(product: JuliProductDetail, selection: JuliProductVariantSelection): void {
+    if (this.requestingQuote) return;
+    const assignment = this.b2bContext.current();
+    if (!assignment || !assignment.companyId) {
+      this.quoteError = 'Conta sem vínculo com empresa B2B.';
+      this.cdr.markForCheck();
+      return;
+    }
+    const sku = selection.variantCode || product.code;
+    if (!sku) {
+      this.quoteError = 'Produto sem SKU disponível para cotação.';
+      this.cdr.markForCheck();
+      return;
+    }
+    const productAny = product as unknown as Record<string, any>;
+    const priceValue = productAny?.price?.value;
+    const unitPrice = typeof priceValue === 'number' ? priceValue : 0;
+    const currency = productAny?.price?.currencyIso || 'BRL';
+    const items: QuoteItemPayload[] = [
+      { sku, quantity: this.quantity, unitPrice, priceSource: 'STOREFRONT' }
+    ];
+    this.requestingQuote = true;
+    this.quoteError = null;
+    this.cdr.markForCheck();
+    this.quoteService.create({
+      companyId: assignment.companyId,
+      unitId: assignment.unitId ?? null,
+      currency,
+      items
+    }).subscribe({
+      next: created => {
+        this.requestingQuote = false;
+        this.router.navigate(['/account/quotes', created.id]);
+      },
+      error: err => {
+        this.requestingQuote = false;
+        this.quoteError = (err?.error?.message || err?.message) ?? 'Falha ao solicitar cotação.';
         this.cdr.markForCheck();
       }
     });

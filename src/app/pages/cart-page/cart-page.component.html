@@ -119,6 +119,15 @@
                   <span>{{ 'cart.proceedToCheckout' | juliTranslate }}</span>
                   <i class="fas fa-arrow-right"></i>
                 </a>
+                <button *ngIf="(b2bContext$ | async) as b2b"
+                        type="button"
+                        class="ub-btn ub-btn--secondary ub-btn--full"
+                        (click)="requestQuote()"
+                        [disabled]="requestingQuote || (itemCount$ | async) === 0">
+                  <i class="fas fa-file-invoice"></i>
+                  <span>{{ requestingQuote ? 'Solicitando...' : 'Solicitar Cotação' }}</span>
+                </button>
+                <p *ngIf="quoteError" class="cart-quote-error">{{ quoteError }}</p>
                 <a routerLink="/search" class="ub-btn ub-btn--secondary ub-btn--full">
                   <i class="fas fa-arrow-left"></i>
                   <span>{{ 'cart.continueShopping' | juliTranslate }}</span>

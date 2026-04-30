@@ -161,10 +161,34 @@
             </button>
           </div>
 
+          <!-- B2B: Solicitar cotação corporativa. Renderiza só para
+               compradores com assignment ativo numa empresa. -->
+          <div class="b2b-actions" *ngIf="(b2bContext$ | async) as assignment">
+            <ng-container *ngIf="assignment?.companyId">
+              <button class="btn-request-quote"
+                      [class.loading]="requestingQuote"
+                      [disabled]="requestingQuote"
+                      (click)="requestQuote(product, selection)">
+                <span *ngIf="!requestingQuote">Solicitar Cotação</span>
+                <span *ngIf="requestingQuote">Enviando…</span>
+              </button>
+              <p class="b2b-hint">
+                Sua compra será registrada como pedido corporativo de
+                <strong>{{ assignment.companyName || 'sua empresa' }}</strong>
+                <ng-container *ngIf="assignment.unitName"> (unidade <strong>{{ assignment.unitName }}</strong>)</ng-container>
+                e seguirá o fluxo de aprovação interno.
+              </p>
+            </ng-container>
+          </div>
+
           <!-- Add to Cart Feedback -->
           <div class="cart-feedback cart-error" *ngIf="addToCartError">
             {{ addToCartError }}
             <button class="btn-link" (click)="addToCartError = undefined">&times;</button>
+          </div>
+          <div class="cart-feedback cart-error" *ngIf="quoteError">
+            {{ quoteError }}
+            <button class="btn-link" (click)="quoteError = null">&times;</button>
           </div>
 
           <!-- Delivery Info -->

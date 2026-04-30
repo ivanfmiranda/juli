@@ -20,6 +20,16 @@
       "type": "string",
       "required": true
     },
+    "channel": {
+      "type": "enumeration",
+      "enum": [
+        "ALL",
+        "B2C",
+        "B2B"
+      ],
+      "default": "ALL",
+      "required": true
+    },
     "title": {
       "type": "string",
       "required": true,

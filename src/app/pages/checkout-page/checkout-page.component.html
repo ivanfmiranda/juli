@@ -109,6 +109,67 @@
             </div>
 
             <form [formGroup]="form" *ngIf="useNewAddress || profileAddresses.length === 0">
+              <!-- B2B: badge sinaliza que o form veio pré-preenchido com
+                   o endereço da unidade do comprador. Editável manualmente
+                   pra cobrir casos de entrega numa filial diferente. -->
+              <div class="ub-unit-address-badge" *ngIf="usingUnitAddress && (b2bContext$ | async) as assignment">
+                <span class="ub-unit-address-badge__icon" aria-hidden="true">🏢</span>
+                <div>
+                  <strong>Endereço da unidade</strong>
+                  <p>
+                    Pré-preenchido com o endereço de
+                    <strong>{{ assignment.unitName || assignment.companyName }}</strong>.
+                    Edite os campos abaixo se a entrega deve ir pra outro local.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Guest checkout: anônimo informa apenas e-mail e CPF
+                   pra que o pedido tenha identidade no NF-e e nas
+                   notificações. Quem está logado pula este bloco. -->
+              <div class="ub-guest-block" *ngIf="!isAuthenticated">
+                <div class="ub-guest-block__head">
+                  <strong>Continuar como visitante</strong>
+                  <a routerLink="/login" [queryParams]="{returnUrl: '/checkout'}" class="ub-guest-block__login-hint">
+                    Já tem conta? Entrar
+                  </a>
+                </div>
+                <div class="ub-form-row">
+                  <div class="ub-form-group">
+                    <label class="ub-form-label" for="guestEmail">
+                      E-mail <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
+                    </label>
+                    <input
+                      id="guestEmail"
+                      formControlName="guestEmail"
+                      type="email"
+                      autocomplete="email"
+                      placeholder="seu@email.com"
+                      class="ub-input"
+                      [class.ub-input--error]="form.get('guestEmail')?.invalid && form.get('guestEmail')?.touched">
+                    <span class="ub-form-error" *ngIf="form.get('guestEmail')?.invalid && form.get('guestEmail')?.touched">
+                      Informe um e-mail válido — usaremos para enviar a confirmação do pedido.
+                    </span>
+                  </div>
+                  <div class="ub-form-group">
+                    <label class="ub-form-label" for="guestCpf">
+                      CPF <span class="ub-form-label__required">{{ 'checkout.required' | juliTranslate }}</span>
+                    </label>
+                    <input
+                      id="guestCpf"
+                      formControlName="guestCpf"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="000.000.000-00"
+                      class="ub-input"
+                      [class.ub-input--error]="form.get('guestCpf')?.invalid && form.get('guestCpf')?.touched">
+                    <span class="ub-form-error" *ngIf="form.get('guestCpf')?.invalid && form.get('guestCpf')?.touched">
+                      CPF é obrigatório para a emissão da nota fiscal.
+                    </span>
+                  </div>
+                </div>
+              </div>
+
               <div class="ub-form-row">
                 <div class="ub-form-group">
                   <label class="ub-form-label" for="fullName">
@@ -266,6 +327,24 @@
               <span class="ub-checkout__section-number">2</span>
               {{ 'checkout.deliveryMethod' | juliTranslate }}
             </h2>
+
+            <!-- B2B: quando o comprador tem assignment ativo, deixamos
+                 explícito que o catálogo logístico abaixo é o do contrato
+                 corporativo (frete e prazos vêm do acordo, não da tabela
+                 de varejo). Aparece só na step de delivery. -->
+            <div class="ub-b2b-banner" *ngIf="(b2bContext$ | async) as assignment">
+              <ng-container *ngIf="assignment?.companyId">
+                <div class="ub-b2b-banner__icon">🏢</div>
+                <div class="ub-b2b-banner__body">
+                  <div class="ub-b2b-banner__title">Pedido corporativo</div>
+                  <div class="ub-b2b-banner__text">
+                    Suas opções de entrega são as do contrato corporativo de
+                    <strong>{{ assignment.companyName || 'sua empresa' }}</strong><ng-container *ngIf="assignment.unitName">, unidade <strong>{{ assignment.unitName }}</strong></ng-container>.
+                    Prazos e custos podem variar dos exibidos no varejo.
+                  </div>
+                </div>
+              </ng-container>
+            </div>
 
             <div class="ub-payment-methods" *ngIf="deliveryOptions.length; else noDelivery">
               <div
@@ -637,9 +716,7 @@
   <span>{{ 'checkout.copied' | juliTranslate }}</span>
 </div>
 
-<!-- Soft Login Prompt -->
-<app-soft-login-prompt
-  [isOpen]="showSoftLoginPrompt"
-  (login)="onSoftLogin()"
-  (continueBrowsing)="onContinueBrowsing()">
-</app-soft-login-prompt>
+<!-- O modal de soft-login segue disponível em outras páginas via
+     SharedComponentsModule; o checkout passou a aceitar guest então
+     não dispara mais o prompt aqui. -->
+

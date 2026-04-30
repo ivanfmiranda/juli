@@ -1,0 +1,50 @@
+<main class="quotes-page">
+  <header class="quotes-page__header">
+    <h1>Minhas Cotações</h1>
+    <p class="quotes-page__subtitle">
+      Acompanhe o status das suas solicitações de cotação. Cotações aprovadas podem
+      ser convertidas em pedido pelo administrador.
+    </p>
+  </header>
+
+  <div *ngIf="loading" class="quotes-page__loading">Carregando cotações...</div>
+
+  <div *ngIf="error" class="quotes-page__error">{{ error }}</div>
+
+  <div *ngIf="!loading && !error && quotes.length === 0" class="quotes-page__empty">
+    <i class="fas fa-file-invoice"></i>
+    <h2>Nenhuma cotação ainda</h2>
+    <p>Adicione produtos ao carrinho e clique em "Solicitar Cotação" para abrir uma nova.</p>
+    <a routerLink="/search" class="ub-btn ub-btn--primary">Explorar produtos</a>
+  </div>
+
+  <table *ngIf="!loading && !error && quotes.length > 0" class="quotes-page__table">
+    <thead>
+      <tr>
+        <th>Código</th>
+        <th>Status</th>
+        <th>Aprovação</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let q of quotes">
+        <td><span class="quote-code">{{ q.quoteCode || q.id }}</span></td>
+        <td>
+          <span class="quote-status quote-status--{{ (q.status || 'DRAFT').toLowerCase() }}">
+            {{ q.status || 'DRAFT' }}
+          </span>
+        </td>
+        <td class="quote-approval">
+          <span *ngIf="q.approvalRequestId">Em aprovação</span>
+          <span *ngIf="!q.approvalRequestId" class="muted">—</span>
+        </td>
+        <td>
+          <a [routerLink]="['/account/quotes', q.id]" class="ub-btn ub-btn--ghost ub-btn--sm">
+            Detalhes
+          </a>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</main>
