@@ -53,7 +53,13 @@ export class LoginComponent implements OnInit {
 
     const username = this.form.value.username ?? '';
     const password = this.form.value.password ?? '';
-    const redirect = this.route.snapshot.queryParams['redirect'] || '/';
+    // Accept both `returnUrl` (used by guards and the checkout "já tenho conta"
+    // link) and the legacy `redirect` param. Without this, logging in from
+    // /login?returnUrl=/checkout fell back to '/' and dropped the buyer on
+    // the home page mid-flow.
+    const redirect = this.route.snapshot.queryParams['returnUrl']
+      || this.route.snapshot.queryParams['redirect']
+      || '/';
 
     this.submitting = true;
     this.errorMessage = undefined;
