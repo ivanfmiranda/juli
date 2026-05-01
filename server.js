@@ -150,6 +150,128 @@ function ssrPageBuilder(slug, tenantId, req, res) {
   });
 }
 
+function fetchUbrisJson(apiPath, tenantHost) {
+  const target = process.env.UBRIS_API_TARGET || 'http://127.0.0.1:8088';
+  const url = new URL(target + apiPath);
+  const opts = {
+    hostname: url.hostname,
+    port: url.port || (url.protocol === 'https:' ? 443 : 80),
+    path: url.pathname + url.search,
+    method: 'GET',
+    headers: tenantHost ? { Host: tenantHost } : {},
+  };
+  return new Promise((resolve) => {
+    const req = http.request(opts, (apiRes) => {
+      let body = '';
+      apiRes.on('data', chunk => body += chunk);
+      apiRes.on('end', () => {
+        if (apiRes.statusCode >= 400) return resolve(null);
+        try { resolve(JSON.parse(body)); } catch { resolve(null); }
+      });
+    });
+    req.on('error', () => resolve(null));
+    req.end();
+  });
+}
+
+function injectSeoTags(html, { title, description, image, jsonLd, h1Block, brandTitle }) {
+  const safeTitle = escapeHtml(title || '');
+  const safeDesc = escapeHtml(description || '');
+  const safeImage = image ? escapeAttr(image) : '';
+  const finalTitle = brandTitle ? `${safeTitle} | ${escapeHtml(brandTitle)}` : safeTitle;
+
+  let head = '';
+  if (title) head += `<meta property="og:title" content="${safeTitle}">\n`;
+  if (description) {
+    head += `<meta property="og:description" content="${safeDesc}">\n`;
+  }
+  if (safeImage) head += `<meta property="og:image" content="${safeImage}">\n`;
+  head += `<meta property="og:type" content="website">\n`;
+  if (jsonLd) {
+    head += `<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>\n`;
+  }
+
+  if (title) {
+    html = html.replace(/<title>[^<]*<\/title>/, `<title>${finalTitle}</title>`);
+  }
+  if (description) {
+    if (/<meta\s+name="description"[^>]*>/i.test(html)) {
+      html = html.replace(/<meta\s+name="description"[^>]*>/i, `<meta name="description" content="${safeDesc}">`);
+    } else {
+      head = `<meta name="description" content="${safeDesc}">\n` + head;
+    }
+  }
+  html = html.replace('</head>', head + '</head>');
+
+  if (h1Block) {
+    html = html.replace('</body>', `<div id="ssr-seo-content" style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">${h1Block}</div></body>`);
+  }
+  return html;
+}
+
+function ssrProductPage(code, tenantHost, tenantId, req, res) {
+  const apiPath = `/api/storefront/product/${encodeURIComponent(code)}`;
+  Promise.all([fetchUbrisJson(apiPath, tenantHost), fetchBranding(tenantId)]).then(([json, branding]) => {
+    if (!fs.existsSync(indexFile)) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' }); res.end('index.html not found'); return;
+    }
+    let html = fs.readFileSync(indexFile, 'utf-8');
+    html = injectBranding(html, branding);
+    const data = json && json.data ? json.data : null;
+    if (data) {
+      const name = data.name || data.productName || code;
+      const desc = (data.description || data.summary || '').toString().slice(0, 280);
+      const img = Array.isArray(data.images) && data.images[0] ? data.images[0].url : '';
+      const priceVal = typeof data.price === 'object' && data.price ? (data.price.value || data.price.amount || data.price.raw) : data.price;
+      const jsonLd = {
+        '@context': 'https://schema.org/', '@type': 'Product',
+        name, description: desc, sku: data.sku || data.code || code,
+      };
+      if (img) jsonLd.image = img;
+      if (priceVal) {
+        jsonLd.offers = { '@type': 'Offer', price: priceVal, priceCurrency: data.currency || 'BRL', availability: 'https://schema.org/InStock' };
+      }
+      const h1 = `<h1>${escapeHtml(name)}</h1>${desc ? `<p>${escapeHtml(desc)}</p>` : ''}`;
+      html = injectSeoTags(html, {
+        title: name, description: desc, image: img, jsonLd, h1Block: h1,
+        brandTitle: branding && branding.brandName,
+      });
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(html);
+  });
+}
+
+function ssrCategoryPage(code, tenantHost, tenantId, req, res) {
+  const apiPath = `/api/storefront/category/${encodeURIComponent(code)}?size=20`;
+  Promise.all([fetchUbrisJson(apiPath, tenantHost), fetchBranding(tenantId)]).then(([json, branding]) => {
+    if (!fs.existsSync(indexFile)) {
+      res.writeHead(500, { 'Content-Type': 'text/plain' }); res.end('index.html not found'); return;
+    }
+    let html = fs.readFileSync(indexFile, 'utf-8');
+    html = injectBranding(html, branding);
+    const data = json && json.data ? json.data : null;
+    if (data) {
+      const cat = data.category || {};
+      const name = cat.name || code;
+      const items = Array.isArray(data.items) ? data.items : [];
+      const desc = `${items.length} ${items.length === 1 ? 'produto' : 'produtos'} em ${name}.`;
+      const list = items.slice(0, 10).map(it => {
+        const itName = it.name || it.productName || it.code || '';
+        const itImg = Array.isArray(it.images) && it.images[0] ? it.images[0].url : '';
+        return `<li>${itImg ? `<img src="${escapeAttr(itImg)}" alt="${escapeAttr(itName)}" loading="lazy">` : ''}<a href="/product/${escapeAttr(it.code || it.sku || '')}">${escapeHtml(itName)}</a></li>`;
+      }).join('');
+      const h1 = `<h1>${escapeHtml(name)}</h1><p>${escapeHtml(desc)}</p>${list ? `<ul>${list}</ul>` : ''}`;
+      html = injectSeoTags(html, {
+        title: name, description: desc, h1Block: h1,
+        brandTitle: branding && branding.brandName,
+      });
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
+    res.end(html);
+  });
+}
+
 function resolveTenantFromHost(host) {
   if (!host) return '';
   const hostname = host.split(':')[0].trim().toLowerCase();
@@ -494,6 +616,25 @@ const server = http.createServer((req, res) => {
   if (pathname === '/' && (req.method === 'GET' || req.method === 'HEAD')) {
     ssrPageBuilder('home', tenantId, req, res);
     return;
+  }
+
+  // SSR for product detail: /product/:code (Tech-debt #1 — minimum-viable SEO).
+  // The SPA still re-hydrates on the client; the server-side HTML carries
+  // <title>, OG tags, JSON-LD Product and an off-screen <h1>+description so
+  // crawlers and link previews get a real page instead of an empty shell.
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/product/')) {
+    const code = decodeURIComponent(pathname.replace('/product/', ''));
+    if (code && !code.includes('/') && !code.includes('?')) {
+      ssrProductPage(code, req.headers.host || '', tenantId, req, res);
+      return;
+    }
+  }
+  if ((req.method === 'GET' || req.method === 'HEAD') && pathname.startsWith('/c/')) {
+    const code = decodeURIComponent(pathname.replace('/c/', ''));
+    if (code && !code.includes('/') && !code.includes('?')) {
+      ssrCategoryPage(code, req.headers.host || '', tenantId, req, res);
+      return;
+    }
   }
 
   const assetPath = resolveAssetPath(pathname === '/' ? '/index.html' : pathname);
