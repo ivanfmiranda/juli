@@ -19,7 +19,11 @@ import {
   JuliProductListing,
   JuliProductLoadingState,
   JuliProductVariantSelection,
+  JuliProductVariant,
   JuliMedia,
+  JuliPrice,
+  JuliStock,
+  JuliStockStatus,
 } from '../models/juli-product.model';
 import { UbrisProductConnector } from '../connectors/product.connector';
 import { UbrisCategoryConnector } from '../connectors/category.connector';
@@ -497,7 +501,7 @@ export class JuliProductService implements OnDestroy {
         }))
       ),
       featuredAttributes: [],
-      variants: [], // TODO: Mapear variantes se disponíveis
+      variants: this.mapSpartacusVariants(product),
       relatedProducts: [],
       similarProducts: [],
       brand: product.baseOptions?.[0]?.options?.[0]?.variantOptionQualifiers?.find(
@@ -505,6 +509,62 @@ export class JuliProductService implements OnDestroy {
       )?.value,
       tags: [],
     };
+  }
+
+  /**
+   * Mapeia variantes do Spartacus → JuliProductVariant[].
+   *
+   * Spartacus expõe variantes via `baseOptions[].options[].variantOption-
+   * Qualifiers[]` — um array de pares {qualifier, value} por variante.
+   * O `selected` flag dentro de baseOptions identifica a variante atual
+   * do produto carregado (vira a `default`).
+   */
+  private mapSpartacusVariants(product: any): JuliProductVariant[] {
+    const baseOptions = Array.isArray(product?.baseOptions) ? product.baseOptions : [];
+    if (baseOptions.length === 0) return [];
+    const variants: JuliProductVariant[] = [];
+    const selectedCode = baseOptions[0]?.selected?.code as string | undefined;
+    for (const baseOption of baseOptions) {
+      const options = Array.isArray(baseOption?.options) ? baseOption.options : [];
+      for (const opt of options) {
+        if (!opt?.code) continue;
+        const qualifiers = Array.isArray(opt.variantOptionQualifiers)
+          ? opt.variantOptionQualifiers : [];
+        const attributes: Record<string, string> = {};
+        for (const q of qualifiers) {
+          if (q?.qualifier && q?.value) attributes[String(q.qualifier)] = String(q.value);
+        }
+        const stock: JuliStock | undefined = opt.stock?.stockLevel != null
+          ? {
+              status: (opt.stock.stockLevelStatus || 'inStock') as JuliStockStatus,
+              quantity: Number(opt.stock.stockLevel),
+            }
+          : undefined;
+        const price: JuliPrice | undefined = opt.priceData?.value != null
+          ? {
+              value: Number(opt.priceData.value),
+              formattedValue: String(opt.priceData.formattedValue ?? ''),
+              currencyIso: String(opt.priceData.currencyIso ?? 'BRL'),
+            }
+          : undefined;
+        variants.push({
+          code: String(opt.code),
+          name: this.deriveVariantName(attributes, opt.code),
+          attributes,
+          price,
+          stock,
+          imageUrl: opt.url || undefined,
+          available: opt.stock?.stockLevelStatus !== 'outOfStock',
+          default: selectedCode === opt.code,
+        });
+      }
+    }
+    return variants;
+  }
+
+  private deriveVariantName(attributes: Record<string, string>, fallback: string): string {
+    const values = Object.values(attributes).filter(Boolean);
+    return values.length > 0 ? values.join(' / ') : String(fallback);
   }
 
   /**

@@ -82,6 +82,16 @@ jobs:
         run: npm run e2e:standalone
         env:
           CI: 'true'
+          # Storefront fixtures — set as repo secrets to ramp coverage on
+          # category/product/login flows. Empty values keep test.skip
+          # active (build still passes), populated values run them.
+          JULI_E2E_CATEGORY_CODE: ${{ secrets.JULI_E2E_CATEGORY_CODE }}
+          JULI_E2E_PRODUCT_CODE: ${{ secrets.JULI_E2E_PRODUCT_CODE }}
+          JULI_E2E_USERNAME: ${{ secrets.JULI_E2E_USERNAME }}
+          JULI_E2E_PASSWORD: ${{ secrets.JULI_E2E_PASSWORD }}
+          # B2B journey fixtures — additional secrets for the b2b suite.
+          JULI_E2E_B2B_COMPANY: ${{ secrets.JULI_E2E_B2B_COMPANY }}
+          JULI_E2E_B2B_APPROVER: ${{ secrets.JULI_E2E_B2B_APPROVER }}
 
       - name: Upload Playwright report
         if: always()
