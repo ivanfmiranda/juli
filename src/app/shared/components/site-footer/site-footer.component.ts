@@ -9,7 +9,12 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnDestroy, OnIni
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { JuliI18nService } from '../../../core/i18n/i18n.service';
-import { TenantBrandingApiService, FooterLinkSet } from '../../../core/services/tenant-branding-api.service';
+import {
+  TenantBrandingApiService,
+  FooterLinkSet,
+  PaymentMethod,
+  SocialLink,
+} from '../../../core/services/tenant-branding-api.service';
 
 @Component({
   selector: 'app-site-footer',
@@ -35,13 +40,11 @@ export class SiteFooterComponent implements OnInit, OnDestroy {
     company: [],
   };
 
-  readonly paymentMethods = ['💳 Visa', '💳 Mastercard', '💳 Elo', '📱 Pix'];
-
-  readonly socialLinks = [
-    { name: 'Instagram', icon: '📷', url: '#' },
-    { name: 'Facebook', icon: '👍', url: '#' },
-    { name: 'YouTube', icon: '▶️', url: '#' },
-  ];
+  contactPhone: string | null = null;
+  contactEmail: string | null = null;
+  supportHours: string | null = null;
+  paymentMethods: PaymentMethod[] = [];
+  socialLinks: SocialLink[] = [];
 
   private readonly destroy$ = new Subject<void>();
 
@@ -57,6 +60,11 @@ export class SiteFooterComponent implements OnInit, OnDestroy {
       this.brandIcon = config.brandIcon;
       this.logoUrl = config.logoUrl;
       this.footerLinks = config.footerLinks;
+      this.contactPhone = config.contactPhone;
+      this.contactEmail = config.contactEmail;
+      this.supportHours = config.supportHours;
+      this.paymentMethods = config.paymentMethods;
+      this.socialLinks = config.socialLinks;
       this.cdr.markForCheck();
     });
   }

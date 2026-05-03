@@ -26,6 +26,34 @@ export interface FooterLinkSet {
   company: Array<{ name: string; url: string }>;
 }
 
+export interface LegalInfo {
+  cnpj?: string;
+  razaoSocial?: string;
+  inscricaoEstadual?: string;
+}
+
+export interface AddressInfo {
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+}
+
+export interface PaymentMethod {
+  name: string;
+  icon: string;
+}
+
+export interface SocialLink {
+  name: string;
+  icon: string;
+  url: string;
+}
+
 export interface TenantBrandingConfig {
   tenantKey: string;
   brandName: string;
@@ -35,6 +63,13 @@ export interface TenantBrandingConfig {
   navCategories: NavCategory[];
   footerLinks: FooterLinkSet;
   promoText: string | null;
+  contactPhone: string | null;
+  contactEmail: string | null;
+  supportHours: string | null;
+  legal: LegalInfo;
+  address: AddressInfo;
+  paymentMethods: PaymentMethod[];
+  socialLinks: SocialLink[];
 }
 
 const DEFAULT_BRANDING: TenantBrandingConfig = {
@@ -71,6 +106,22 @@ const DEFAULT_BRANDING: TenantBrandingConfig = {
     ],
   },
   promoText: null,
+  contactPhone: null,
+  contactEmail: null,
+  supportHours: null,
+  legal: {},
+  address: {},
+  paymentMethods: [
+    { name: 'Visa', icon: '💳' },
+    { name: 'Mastercard', icon: '💳' },
+    { name: 'Elo', icon: '💳' },
+    { name: 'Pix', icon: '📱' },
+  ],
+  socialLinks: [
+    { name: 'Instagram', icon: '📷', url: '#' },
+    { name: 'Facebook', icon: '👍', url: '#' },
+    { name: 'YouTube', icon: '▶️', url: '#' },
+  ],
 };
 
 /**
@@ -91,6 +142,13 @@ function getInitialBranding(): TenantBrandingConfig {
         navCategories: Array.isArray(ssrData.navCategories) ? ssrData.navCategories : DEFAULT_BRANDING.navCategories,
         footerLinks: ssrData.footerLinks || DEFAULT_BRANDING.footerLinks,
         promoText: ssrData.promoText || null,
+        contactPhone: ssrData.contactPhone || null,
+        contactEmail: ssrData.contactEmail || null,
+        supportHours: ssrData.supportHours || null,
+        legal: ssrData.legal || {},
+        address: ssrData.address || {},
+        paymentMethods: Array.isArray(ssrData.paymentMethods) ? ssrData.paymentMethods : DEFAULT_BRANDING.paymentMethods,
+        socialLinks: Array.isArray(ssrData.socialLinks) ? ssrData.socialLinks : DEFAULT_BRANDING.socialLinks,
       };
     }
   } catch { /* noop */ }
@@ -137,6 +195,13 @@ export class TenantBrandingApiService {
             navCategories: attrs.navCategories || DEFAULT_BRANDING.navCategories,
             footerLinks: attrs.footerLinks || DEFAULT_BRANDING.footerLinks,
             promoText: attrs.promoText || null,
+            contactPhone: attrs.contactPhone || null,
+            contactEmail: attrs.contactEmail || null,
+            supportHours: attrs.supportHours || null,
+            legal: attrs.legal || {},
+            address: attrs.address || {},
+            paymentMethods: Array.isArray(attrs.paymentMethods) ? attrs.paymentMethods : DEFAULT_BRANDING.paymentMethods,
+            socialLinks: Array.isArray(attrs.socialLinks) ? attrs.socialLinks : DEFAULT_BRANDING.socialLinks,
           } as TenantBrandingConfig;
         }),
         catchError(() => of(DEFAULT_BRANDING)),

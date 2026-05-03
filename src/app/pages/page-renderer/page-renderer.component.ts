@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, inject, NgZone, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, Input, inject, NgZone, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Title } from '@angular/platform-browser';
@@ -12,7 +12,7 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
   selector: 'app-page-renderer',
   template: `
     <ng-container *ngIf="layout; else loading">
-      <div *ngIf="layout.layout?.length" class="pb-page">
+      <div *ngIf="layout.layout?.length" class="pb-page" [class.pb-page--bare]="bare">
         <ng-container *ngFor="let block of layout.layout; trackBy: trackByBlock">
           <app-banner-block *ngIf="block.type === 'Banner'" [props]="block.props"></app-banner-block>
           <app-text-block *ngIf="block.type === 'TextBlock'" [props]="block.props"></app-text-block>
@@ -24,6 +24,12 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
           <app-form-block *ngIf="block.type === 'FormBlock'" [props]="block.props"></app-form-block>
           <app-map-block *ngIf="block.type === 'MapBlock'" [props]="block.props"></app-map-block>
           <app-product-carousel-block *ngIf="block.type === 'ProductCarousel'" [props]="block.props"></app-product-carousel-block>
+          <app-category-header-block *ngIf="block.type === 'CategoryHeader'" [props]="block.props"></app-category-header-block>
+          <app-product-listing-block *ngIf="block.type === 'ProductListing'" [props]="block.props"></app-product-listing-block>
+          <app-product-detail-block *ngIf="block.type === 'ProductDetail'" [props]="block.props"></app-product-detail-block>
+          <app-product-related-block *ngIf="block.type === 'ProductRelated'" [props]="block.props"></app-product-related-block>
+          <app-product-reviews-block *ngIf="block.type === 'ProductReviews'" [props]="block.props"></app-product-reviews-block>
+          <app-search-header-block *ngIf="block.type === 'SearchHeader'" [props]="block.props"></app-search-header-block>
         </ng-container>
       </div>
       <div *ngIf="!layout.layout?.length" class="pb-not-found">
@@ -37,6 +43,7 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
   `,
   styles: [`
     .pb-page { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    .pb-page--bare { max-width: none; margin: 0; padding: 0; }
     .pb-not-found { text-align: center; padding: 80px 16px; }
     .pb-not-found h2 { font-size: 24px; color: #333; margin-bottom: 8px; }
     .pb-not-found p { color: #666; }
@@ -44,7 +51,18 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PageRendererComponent implements OnInit {
+export class PageRendererComponent implements OnInit, OnChanges {
+
+  /** When provided, fetches the layout for this slug instead of reading
+   *  the {@code :slug} route param. Set by the dedicated shells
+   *  (CategoryPage, ProductDetail, SearchPage) that own dynamic data
+   *  fetched outside the CMS but want the visual scaffolding driven by
+   *  Strapi templates ({@code __category-template} et al). */
+  @Input() slug: string | null = null;
+
+  /** When the renderer is embedded inside another shell ({@code bare=true})
+   *  the inner padding/max-width is dropped so the host page controls layout. */
+  @Input() bare = false;
 
   layout: PageLayout | null = null;
   private siteName: string;
@@ -66,6 +84,10 @@ export class PageRendererComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    if (this.slug) {
+      this.loadSlug(this.slug);
+      return;
+    }
     // Use Router.events to reliably detect navigation to this component,
     // combined with ActivatedRoute snapshot to extract slug.
     // This avoids issues where paramMap may not re-emit for the '' route.
@@ -90,6 +112,25 @@ export class PageRendererComponent implements OnInit {
           const ssr = document.getElementById('ssr-page-content');
           if (ssr) { ssr.remove(); }
         }
+        this.cdr.markForCheck();
+      });
+    });
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['slug'] && !changes['slug'].firstChange && this.slug) {
+      this.loadSlug(this.slug);
+    }
+  }
+
+  private loadSlug(slug: string): void {
+    this.pageLayoutService.getLayout(slug).pipe(
+      map(layout => layout || { slug, title: '', tenantKey: '', layout: [] } as PageLayout),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(layout => {
+      this.ngZone.run(() => {
+        this.layout = layout;
+        // Title is owned by the host shell when slug is set externally.
         this.cdr.markForCheck();
       });
     });

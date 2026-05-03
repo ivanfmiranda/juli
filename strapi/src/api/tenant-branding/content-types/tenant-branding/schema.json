@@ -5,7 +5,7 @@
     "singularName": "tenant-branding",
     "pluralName": "tenant-brandings",
     "displayName": "Tenant Branding",
-    "description": "Per-tenant storefront configuration: colors, navigation categories, footer links, and brand identity."
+    "description": "Per-tenant storefront configuration: colors, navigation, footer links, brand identity, contact, legal and payment info."
   },
   "options": {
     "draftAndPublish": false
@@ -40,6 +40,27 @@
     },
     "promoText": {
       "type": "string"
+    },
+    "contactPhone": {
+      "type": "string"
+    },
+    "contactEmail": {
+      "type": "string"
+    },
+    "supportHours": {
+      "type": "string"
+    },
+    "legal": {
+      "type": "json"
+    },
+    "address": {
+      "type": "json"
+    },
+    "paymentMethods": {
+      "type": "json"
+    },
+    "socialLinks": {
+      "type": "json"
     }
   }
 }

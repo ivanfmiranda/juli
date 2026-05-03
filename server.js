@@ -489,6 +489,15 @@ function fetchBranding(tenantId) {
           if (typeof navCategories === 'string') { try { navCategories = JSON.parse(navCategories); } catch { navCategories = []; } }
           let footerLinks = attrs.footerLinks;
           if (typeof footerLinks === 'string') { try { footerLinks = JSON.parse(footerLinks); } catch { footerLinks = null; } }
+          const parseJson = (v, fallback) => {
+            if (v == null) return fallback;
+            if (typeof v === 'string') { try { return JSON.parse(v); } catch { return fallback; } }
+            return v;
+          };
+          const legal = parseJson(attrs.legal, {}) || {};
+          const address = parseJson(attrs.address, {}) || {};
+          const paymentMethods = parseJson(attrs.paymentMethods, []);
+          const socialLinks = parseJson(attrs.socialLinks, []);
           const result = {
             tenantKey: attrs.tenantKey || tenantId,
             theme,
@@ -498,6 +507,13 @@ function fetchBranding(tenantId) {
             navCategories: Array.isArray(navCategories) ? navCategories : [],
             footerLinks: footerLinks || null,
             promoText: attrs.promoText || '',
+            contactPhone: attrs.contactPhone || '',
+            contactEmail: attrs.contactEmail || '',
+            supportHours: attrs.supportHours || '',
+            legal: typeof legal === 'object' ? legal : {},
+            address: typeof address === 'object' ? address : {},
+            paymentMethods: Array.isArray(paymentMethods) ? paymentMethods : [],
+            socialLinks: Array.isArray(socialLinks) ? socialLinks : [],
             ts: Date.now()
           };
           brandingCache.set(tenantId, result);
@@ -534,10 +550,150 @@ function injectBranding(html, branding) {
     navCategories: branding.navCategories || [],
     footerLinks: branding.footerLinks || null,
     promoText: branding.promoText || '',
+    contactPhone: branding.contactPhone || '',
+    contactEmail: branding.contactEmail || '',
+    supportHours: branding.supportHours || '',
+    legal: branding.legal || {},
+    address: branding.address || {},
+    paymentMethods: branding.paymentMethods || [],
+    socialLinks: branding.socialLinks || [],
   };
   const script = `<script>window.__TENANT_BRANDING__=${JSON.stringify(transferData)};</script>`;
   const inject = (style ? style + '\n' : '') + script + '\n';
   return html.replace('</head>', inject + '</head>');
+}
+
+const SITEMAP_TTL = 5 * 60 * 1000; // 5 min — cache to spare Strapi/commerce-core on crawler bursts
+const sitemapCache = new Map();
+
+/**
+ * Lists every page slug published in Strapi for the given tenant. Skips
+ * the {@code __*} reserved slugs (storefront shell templates loaded by
+ * CategoryPage/ProductDetail/SearchPage — not real navigable URLs).
+ */
+function fetchStrapiPageSlugs(tenantId) {
+  return new Promise((resolve) => {
+    const strapiTarget = process.env.STRAPI_API_TARGET || 'http://127.0.0.1:1337';
+    const url = `${strapiTarget}/api/pages?filters[tenantKey][$eq]=${encodeURIComponent(tenantId)}&fields[0]=slug&fields[1]=updatedAt&pagination[pageSize]=200`;
+    http.get(url, (res) => {
+      let body = '';
+      res.on('data', c => body += c);
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(body);
+          const items = Array.isArray(json?.data) ? json.data : [];
+          const slugs = items.map(it => {
+            const a = it.attributes || it;
+            return { slug: a.slug, updatedAt: a.updatedAt };
+          }).filter(s => s.slug && !s.slug.startsWith('__'));
+          resolve(slugs);
+        } catch { resolve([]); }
+      });
+    }).on('error', () => resolve([]));
+  });
+}
+
+/**
+ * Lists categories and product SKUs for the tenant via commerce-core
+ * query endpoint. {@code Host} header is propagated so the gateway can
+ * resolve the tenant the same way it does for SSR pages.
+ */
+function fetchCatalogIndex(tenantId, tenantHost) {
+  const tasks = [
+    fetchUbrisJson(`/api/query/categories?tenantId=${encodeURIComponent(tenantId)}`, tenantHost),
+    fetchUbrisJson(`/api/query/products?tenantId=${encodeURIComponent(tenantId)}`, tenantHost),
+  ];
+  return Promise.all(tasks).then(([catRes, prodRes]) => {
+    const cats = Array.isArray(catRes?.data) ? catRes.data : [];
+    const prods = Array.isArray(prodRes?.data) ? prodRes.data : [];
+    return {
+      categories: cats.map(c => ({ code: c.code, updatedAt: c.updatedAt || c.lastModified })).filter(c => c.code),
+      products: prods.map(p => ({ code: p.sku || p.code, updatedAt: p.updatedAt || p.lastModified })).filter(p => p.code),
+    };
+  });
+}
+
+function buildSitemapXml(host, pageSlugs, catalog) {
+  const proto = 'https';
+  const base = `${proto}://${host}`;
+  const urls = [];
+  const fmt = (d) => {
+    if (!d) return '';
+    const dt = new Date(d);
+    return isNaN(dt.getTime()) ? '' : `<lastmod>${dt.toISOString()}</lastmod>`;
+  };
+  // Root + canonical static routes that always exist (legacy Strapi seeds).
+  urls.push(`<url><loc>${base}/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>`);
+
+  for (const p of pageSlugs) {
+    if (p.slug === 'home') continue; // already emitted as root
+    urls.push(`<url><loc>${base}/page/${encodeURIComponent(p.slug)}</loc>${fmt(p.updatedAt)}<changefreq>weekly</changefreq></url>`);
+  }
+  for (const c of catalog.categories) {
+    urls.push(`<url><loc>${base}/c/${encodeURIComponent(c.code)}</loc>${fmt(c.updatedAt)}<changefreq>daily</changefreq><priority>0.8</priority></url>`);
+  }
+  for (const p of catalog.products) {
+    urls.push(`<url><loc>${base}/product/${encodeURIComponent(p.code)}</loc>${fmt(p.updatedAt)}<changefreq>weekly</changefreq><priority>0.7</priority></url>`);
+  }
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.join('\n')}\n</urlset>\n`;
+}
+
+/**
+ * Drops cached entries for a tenant: branding (FOUC prevention) and the
+ * generated sitemap. Authenticated by the same shared secret UCP uses
+ * for service-to-service calls (UBRIS_INTERNAL_API_KEY). Wizard calls
+ * this after upserting branding/pages so the storefront picks up new
+ * content immediately instead of waiting on TTL.
+ */
+function serveCacheFlush(req, res, tenantId, query) {
+  const expected = process.env.UBRIS_INTERNAL_API_KEY || '';
+  const got = req.headers['x-ubris-internal-api-key'] || '';
+  if (!expected || got !== expected) {
+    res.writeHead(401, { 'Content-Type': 'text/plain' });
+    res.end('unauthorized');
+    return;
+  }
+  const tenantKey = (query.get('tenantKey') || tenantId || '').trim();
+  if (!tenantKey) {
+    res.writeHead(400, { 'Content-Type': 'text/plain' });
+    res.end('tenantKey required');
+    return;
+  }
+  brandingCache.delete(tenantKey);
+  for (const key of Array.from(sitemapCache.keys())) {
+    if (key.startsWith(tenantKey + '|')) sitemapCache.delete(key);
+  }
+  res.writeHead(200, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ flushed: tenantKey }));
+}
+
+function serveSitemap(req, res, tenantId) {
+  if (!tenantId) {
+    // No tenant resolution: serve a minimal sitemap so crawlers don't 404.
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8' });
+    res.end('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n');
+    return;
+  }
+  const host = (req.headers.host || '').toString().split(',')[0].trim();
+  const cacheKey = `${tenantId}|${host}`;
+  const cached = sitemapCache.get(cacheKey);
+  if (cached && Date.now() - cached.ts < SITEMAP_TTL) {
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8' });
+    res.end(cached.xml);
+    return;
+  }
+  Promise.all([
+    fetchStrapiPageSlugs(tenantId),
+    fetchCatalogIndex(tenantId, host),
+  ]).then(([pageSlugs, catalog]) => {
+    const xml = buildSitemapXml(host, pageSlugs, catalog);
+    sitemapCache.set(cacheKey, { xml, ts: Date.now() });
+    res.writeHead(200, { 'Content-Type': 'application/xml; charset=utf-8' });
+    res.end(xml);
+  }).catch(() => {
+    res.writeHead(500, { 'Content-Type': 'text/plain' });
+    res.end('sitemap generation failed');
+  });
 }
 
 const server = http.createServer((req, res) => {
@@ -603,8 +759,24 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  // Static root files (robots.txt, sitemap.xml, etc.) – serve before SPA fallback
-  if (pathname === '/robots.txt' || pathname === '/sitemap.xml') {
+  // Dynamic sitemap.xml — enumerates Strapi pages + commerce-core categories
+  // and products for the resolved tenant. Crawlers fetch this per-host so
+  // every subdomain gets its own canonical URL set.
+  if (pathname === '/sitemap.xml' && (req.method === 'GET' || req.method === 'HEAD')) {
+    serveSitemap(req, res, tenantId);
+    return;
+  }
+
+  // Internal cache-flush endpoint. Called by UCP wizard right after
+  // re-seeding so storefront caches pick up the new content without
+  // waiting on TTL.
+  if (pathname === '/internal/cache-flush' && req.method === 'POST') {
+    serveCacheFlush(req, res, tenantId, requestUrl.searchParams);
+    return;
+  }
+
+  // Static root files (robots.txt, etc.) – serve before SPA fallback
+  if (pathname === '/robots.txt') {
     const staticPath = resolveAssetPath(pathname);
     if (staticPath.startsWith(distDir) && fs.existsSync(staticPath)) {
       sendFile(staticPath, res);

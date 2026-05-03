@@ -34,7 +34,7 @@
         <p class="brand-tagline">{{ 'footer.tagline' | juliTranslate }}</p>
 
         <!-- Social -->
-        <div class="social-links">
+        <div class="social-links" *ngIf="socialLinks.length">
           <a *ngFor="let social of socialLinks" [href]="social.url" [attr.aria-label]="social.name">
             <span>{{ social.icon }}</span>
           </a>
@@ -70,12 +70,12 @@
           </ul>
         </div>
 
-        <div class="link-column">
+        <div class="link-column" *ngIf="contactPhone || contactEmail || supportHours">
           <h4>{{ 'footer.contact' | juliTranslate }}</h4>
           <ul class="contact-list">
-            <li>📞 0800 123 4567</li>
-            <li>✉️ contato&#64;juli.com.br</li>
-            <li>🕐 {{ 'footer.support24h' | juliTranslate }}</li>
+            <li *ngIf="contactPhone">📞 {{ contactPhone }}</li>
+            <li *ngIf="contactEmail">✉️ {{ contactEmail }}</li>
+            <li *ngIf="supportHours">🕐 {{ supportHours }}</li>
           </ul>
         </div>
       </div>
@@ -89,8 +89,8 @@
         © {{ currentYear }} {{ brandName }}. {{ 'footer.rights' | juliTranslate }}
       </p>
 
-      <div class="payment-methods">
-        <span *ngFor="let method of paymentMethods">{{ method }}</span>
+      <div class="payment-methods" *ngIf="paymentMethods.length">
+        <span *ngFor="let method of paymentMethods">{{ method.icon }} {{ method.name }}</span>
       </div>
 
       <div class="legal-links">

@@ -21,7 +21,7 @@ import { SearchPageComponent } from './pages/search-page/search-page.component';
 import { CartPageComponent } from './pages/cart-page/cart-page.component';
 import { SiteHeaderComponent } from './shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from './shared/components/site-footer/site-footer.component';
-import { ProductCardComponent } from './shared/components/product-card/product-card.component';
+import { ProductCardModule } from './shared/components/product-card/product-card.module';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { AccountQuotesPageComponent } from './pages/account-quotes-page/account-quotes-page.component';
@@ -93,7 +93,6 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         PreviewEntryComponent,
         SiteHeaderComponent,
         SiteFooterComponent,
-        ProductCardComponent,
         WishlistPageComponent,
         AccountAddressesPageComponent,
         ReturnsPageComponent
@@ -107,7 +106,8 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         CommerceModule.forRoot(),
         StrapiCmsModule,
         PageRendererModule,
-        IconComponent], providers: [
+        IconComponent,
+        ProductCardModule], providers: [
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,
