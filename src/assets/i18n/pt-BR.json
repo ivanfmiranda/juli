@@ -375,7 +375,16 @@
     "alreadyReviewed": "Você já avaliou este produto.",
     "editReview": "Editar avaliação",
     "successMessage": "Avaliação enviada com sucesso!",
-    "errorMessage": "Não foi possível enviar a avaliação. Tente novamente."
+    "successPendingMessage": "Avaliação enviada! Está em moderação e aparece aqui assim que for aprovada.",
+    "errorMessage": "Não foi possível enviar a avaliação. Tente novamente.",
+    "statusPending": "Em moderação",
+    "statusRejected": "Reprovada",
+    "helpful": "Útil",
+    "photosLabel": "Fotos (até 5)",
+    "photosHint": "JPG, PNG ou WebP — até 5 MB cada.",
+    "photoLimitReached": "Você já adicionou 5 fotos.",
+    "photoInvalidType": "Formato não suportado. Use JPG, PNG ou WebP.",
+    "photoTooLarge": "Foto acima de 5 MB. Reduza o tamanho e tente novamente."
   },
   "wishlist": {
     "title": "Minha Lista de Desejos",

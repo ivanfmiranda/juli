@@ -375,7 +375,16 @@
     "alreadyReviewed": "You have already reviewed this product.",
     "editReview": "Edit review",
     "successMessage": "Review submitted successfully!",
-    "errorMessage": "Could not submit review. Please try again."
+    "successPendingMessage": "Review submitted! It is pending moderation and will appear here once approved.",
+    "errorMessage": "Could not submit review. Please try again.",
+    "statusPending": "Pending moderation",
+    "statusRejected": "Rejected",
+    "helpful": "Helpful",
+    "photosLabel": "Photos (up to 5)",
+    "photosHint": "JPG, PNG or WebP — up to 5 MB each.",
+    "photoLimitReached": "You already added 5 photos.",
+    "photoInvalidType": "Unsupported format. Use JPG, PNG or WebP.",
+    "photoTooLarge": "Photo larger than 5 MB. Please reduce the file size."
   },
   "wishlist": {
     "title": "My Wishlist",

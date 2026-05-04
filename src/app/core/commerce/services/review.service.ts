@@ -10,6 +10,9 @@ export interface Review {
   rating: number;
   title?: string;
   body?: string;
+  photoUrls?: string[];
+  helpfulCount?: number;
+  votedHelpful?: boolean;
   createdAt: string;
 }
 
@@ -25,6 +28,8 @@ export interface MyReviewStatus {
   rating?: number;
   title?: string;
   body?: string;
+  status?: 'PENDING' | 'APPROVED' | 'REJECTED';
+  photoUrls?: string[];
 }
 
 export interface ReviewRequest {
@@ -32,6 +37,13 @@ export interface ReviewRequest {
   rating: number;
   title?: string;
   body?: string;
+}
+
+export interface ReviewSubmitResponse {
+  id: string;
+  sku: string;
+  rating: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 @Injectable({ providedIn: 'root' })
@@ -66,15 +78,45 @@ export class ReviewService {
     ).subscribe(status => this.myReviewSubject.next(status));
   }
 
-  submitReview(req: ReviewRequest): Observable<unknown> {
+  submitReview(req: ReviewRequest): Observable<ReviewSubmitResponse> {
     this.submitErrorSubject.next(null);
-    return this.http.post(this.baseUrl, req).pipe(
+    return this.http.post<ReviewSubmitResponse>(this.baseUrl, req).pipe(
       tap(() => this.loadReviews(req.sku)),
       catchError(err => {
         this.submitErrorSubject.next(err?.error?.message ?? 'error');
         throw err;
       })
     );
+  }
+
+  uploadPhoto(reviewId: string, file: File): Observable<{ id: string; photoUrls: string[] }> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<{ id: string; photoUrls: string[] }>(
+      `${this.baseUrl}/${reviewId}/photos`, form);
+  }
+
+  toggleHelpful(reviewId: string, voted: boolean):
+      Observable<{ helpfulCount: number; votedHelpful: boolean }> {
+    return this.http.post<{ helpfulCount: number; votedHelpful: boolean; id: string }>(
+      `${this.baseUrl}/${reviewId}/helpful`, { voted });
+  }
+
+  /**
+   * Optimistic local mutation of the cached summary so the helpful button
+   * reflects the click instantly. The HTTP call still fires; if it fails
+   * we re-fetch to roll back. Avoids the round-trip flicker that comes
+   * from waiting for the BehaviorSubject to update.
+   */
+  patchHelpfulLocally(reviewId: string, voted: boolean, count: number): void {
+    const current = this.summarySubject.getValue();
+    if (!current) return;
+    this.summarySubject.next({
+      ...current,
+      reviews: current.reviews.map(r => r.id === reviewId
+        ? { ...r, votedHelpful: voted, helpfulCount: count }
+        : r),
+    });
   }
 
   clear(): void {
