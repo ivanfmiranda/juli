@@ -22,6 +22,7 @@ import { CartPageComponent } from './pages/cart-page/cart-page.component';
 import { SiteHeaderComponent } from './shared/components/site-header/site-header.component';
 import { SiteFooterComponent } from './shared/components/site-footer/site-footer.component';
 import { ProductCardModule } from './shared/components/product-card/product-card.module';
+import { NavCategoriesComponent } from './shared/components/nav-categories/nav-categories.component';
 import { OrdersPageComponent } from './pages/orders-page/orders-page.component';
 import { OrderDetailPageComponent } from './pages/order-detail-page/order-detail-page.component';
 import { AccountQuotesPageComponent } from './pages/account-quotes-page/account-quotes-page.component';
@@ -107,7 +108,8 @@ function initializeLocale(i18n: JuliI18nService): () => void {
         StrapiCmsModule,
         PageRendererModule,
         IconComponent,
-        ProductCardModule], providers: [
+        ProductCardModule,
+        NavCategoriesComponent], providers: [
         {
             provide: HTTP_INTERCEPTORS,
             useClass: AuthInterceptor,

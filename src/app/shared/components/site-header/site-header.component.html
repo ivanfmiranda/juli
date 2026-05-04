@@ -145,26 +145,10 @@
   <!-- Navigation -->
   <nav class="main-nav" [class.open]="mobileMenuOpen" aria-label="Navegação principal">
     <div class="container">
-      <ul class="nav-list">
-        <li *ngFor="let cat of categories">
-          <a [routerLink]="categoryRouterLink(cat)"
-             [queryParams]="categoryQueryParams(cat)"
-             class="nav-link">
-            <span class="nav-icon">
-              <app-icon [name]="resolveNavIcon(cat.icon)" [size]="16"></app-icon>
-            </span>
-            <span>{{ cat.label || ((cat.translationKey || '') | juliTranslate) }}</span>
-          </a>
-        </li>
-        <li class="nav-highlight" *ngIf="!useTenantNav">
-          <a routerLink="/c/promocoes" class="nav-link sale">
-            <span class="nav-icon">
-              <app-icon name="zap" [size]="16"></app-icon>
-            </span>
-            <span>{{ 'header.sale' | juliTranslate }}</span>
-          </a>
-        </li>
-      </ul>
+      <app-nav-categories class="header-nav-categories"
+                          [categories]="categories"
+                          [showSale]="!useTenantNav">
+      </app-nav-categories>
     </div>
   </nav>
 </header>

@@ -5,6 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { JuliI18nModule } from '../../core/i18n/i18n.module';
 import { ProductCardModule } from '../../shared/components/product-card/product-card.module';
+import { IconComponent } from '../../shared/components/icon/icon.component';
+import { NavCategoriesComponent } from '../../shared/components/nav-categories/nav-categories.component';
 import { PageRendererComponent } from './page-renderer.component';
 import { BannerBlockComponent } from './blocks/banner-block.component';
 import { TextBlockComponent } from './blocks/text-block.component';
@@ -22,6 +24,8 @@ import { ProductDetailBlockComponent } from './blocks/product-detail-block.compo
 import { ProductRelatedBlockComponent } from './blocks/product-related-block.component';
 import { ProductReviewsBlockComponent } from './blocks/product-reviews-block.component';
 import { SearchHeaderBlockComponent } from './blocks/search-header-block.component';
+import { CategoryTeasersBlockComponent } from './blocks/category-teasers-block.component';
+import { NavCategoriesBlockComponent } from './blocks/nav-categories-block.component';
 
 @NgModule({
   declarations: [
@@ -42,9 +46,11 @@ import { SearchHeaderBlockComponent } from './blocks/search-header-block.compone
     ProductRelatedBlockComponent,
     ProductReviewsBlockComponent,
     SearchHeaderBlockComponent,
+    CategoryTeasersBlockComponent,
+    NavCategoriesBlockComponent,
   ],
   exports: [PageRendererComponent],
-  imports: [CommonModule, FormsModule, RouterModule, JuliI18nModule, ProductCardModule],
+  imports: [CommonModule, FormsModule, RouterModule, JuliI18nModule, ProductCardModule, IconComponent, NavCategoriesComponent],
   providers: [provideHttpClient(withInterceptorsFromDi())],
 })
 export class PageRendererModule {}

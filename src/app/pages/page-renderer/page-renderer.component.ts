@@ -30,6 +30,8 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
           <app-product-related-block *ngIf="block.type === 'ProductRelated'" [props]="block.props"></app-product-related-block>
           <app-product-reviews-block *ngIf="block.type === 'ProductReviews'" [props]="block.props"></app-product-reviews-block>
           <app-search-header-block *ngIf="block.type === 'SearchHeader'" [props]="block.props"></app-search-header-block>
+          <app-category-teasers-block *ngIf="block.type === 'CategoryTeasers'" [props]="block.props"></app-category-teasers-block>
+          <app-nav-categories-block *ngIf="block.type === 'NavCategories'" [props]="block.props"></app-nav-categories-block>
         </ng-container>
       </div>
       <div *ngIf="!layout.layout?.length" class="pb-not-found">
@@ -43,7 +45,11 @@ import { JuliI18nService } from '../../core/i18n/i18n.service';
   `,
   styles: [`
     .pb-page { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
-    .pb-page--bare { max-width: none; margin: 0; padding: 0; }
+    /* Shell mode used by CategoryPage/ProductDetail/SearchPage. The legacy
+       per-page wrappers (.category-page, .product-detail-page, .search-page)
+       used max-width 1400 + 1.5rem inline padding; preserve that so the
+       grid/galleria don't bleed to the viewport edge on wide screens. */
+    .pb-page--bare { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
     .pb-not-found { text-align: center; padding: 80px 16px; }
     .pb-not-found h2 { font-size: 24px; color: #333; margin-bottom: 8px; }
     .pb-not-found p { color: #666; }
