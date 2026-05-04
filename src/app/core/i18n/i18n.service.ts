@@ -180,6 +180,10 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockOut: 'Indisponível',
       stockUnknown: 'Consultar'
     },
+    categoryTeasers: {
+      see: 'Ver categoria',
+      empty: 'Configure as categorias da sua loja em CMS → Tenant Branding para que apareçam aqui.'
+    },
     addresses: {
       account: 'Minha Conta',
       title: 'Meus Endereços',
@@ -769,6 +773,10 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockLow: 'Only {{quantity}} left',
       stockOut: 'Unavailable',
       stockUnknown: 'Check availability'
+    },
+    categoryTeasers: {
+      see: 'Browse',
+      empty: 'Configure your store categories in CMS → Tenant Branding so they show up here.'
     },
     addresses: {
       account: 'My Account',
