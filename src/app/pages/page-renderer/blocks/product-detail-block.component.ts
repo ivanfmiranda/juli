@@ -154,14 +154,14 @@ import { WishlistService } from '../../../core/commerce/services/wishlist.servic
                         [class.loading]="requestingQuote"
                         [disabled]="requestingQuote"
                         (click)="requestQuote(product, selection)">
-                  <span *ngIf="!requestingQuote">Solicitar Cotação</span>
-                  <span *ngIf="requestingQuote">Enviando…</span>
+                  <span *ngIf="!requestingQuote">{{ 'pdp.requestQuote' | juliTranslate }}</span>
+                  <span *ngIf="requestingQuote">{{ 'pdp.sending' | juliTranslate }}</span>
                 </button>
                 <p class="b2b-hint">
-                  Sua compra será registrada como pedido corporativo de
-                  <strong>{{ assignment.companyName || 'sua empresa' }}</strong>
-                  <ng-container *ngIf="assignment.unitName"> (unidade <strong>{{ assignment.unitName }}</strong>)</ng-container>
-                  e seguirá o fluxo de aprovação interno.
+                  {{ 'pdp.quoteHint.prefix' | juliTranslate }}
+                  <strong>{{ assignment.companyName || ('pdp.yourCompany' | juliTranslate) }}</strong>
+                  <ng-container *ngIf="assignment.unitName"> {{ 'pdp.quoteHint.unit' | juliTranslate:{ unit: assignment.unitName } }}</ng-container>
+                  {{ 'pdp.quoteHint.suffix' | juliTranslate }}
                 </p>
               </ng-container>
             </div>
@@ -187,8 +187,8 @@ import { WishlistService } from '../../../core/commerce/services/wishlist.servic
             </div>
 
             <div class="product-sku" *ngIf="product.manufacturerSku || product.ean">
-              <span *ngIf="product.manufacturerSku">SKU: {{ product.manufacturerSku }}</span>
-              <span *ngIf="product.ean">EAN: {{ product.ean }}</span>
+              <span *ngIf="product.manufacturerSku">{{ 'pdp.sku' | juliTranslate }}: {{ product.manufacturerSku }}</span>
+              <span *ngIf="product.ean">{{ 'pdp.ean' | juliTranslate }}: {{ product.ean }}</span>
             </div>
           </section>
         </div>
@@ -308,9 +308,9 @@ export class ProductDetailBlockComponent implements OnInit {
   requestQuote(product: JuliProductDetail, selection: JuliProductVariantSelection): void {
     if (this.requestingQuote) return;
     const a = this.b2bContext.current();
-    if (!a || !a.companyId) { this.quoteError = 'Conta sem vínculo com empresa B2B.'; this.cdr.markForCheck(); return; }
+    if (!a || !a.companyId) { this.quoteError = this.i18n.translate('pdp.quoteError.noB2B'); this.cdr.markForCheck(); return; }
     const sku = selection.variantCode || product.code;
-    if (!sku) { this.quoteError = 'Produto sem SKU disponível para cotação.'; this.cdr.markForCheck(); return; }
+    if (!sku) { this.quoteError = this.i18n.translate('pdp.quoteError.noSku'); this.cdr.markForCheck(); return; }
     const p = product as unknown as Record<string, any>;
     const unitPrice = typeof p?.price?.value === 'number' ? p.price.value : 0;
     const currency = p?.price?.currencyIso || 'BRL';
@@ -322,7 +322,7 @@ export class ProductDetailBlockComponent implements OnInit {
       next: created => { this.requestingQuote = false; this.router.navigate(['/account/quotes', created.id]); },
       error: err => {
         this.requestingQuote = false;
-        this.quoteError = (err?.error?.message || err?.message) ?? 'Falha ao solicitar cotação.';
+        this.quoteError = (err?.error?.message || err?.message) ?? this.i18n.translate('pdp.quoteError.failed');
         this.cdr.markForCheck();
       },
     });

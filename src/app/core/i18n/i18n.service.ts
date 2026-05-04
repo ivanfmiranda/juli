@@ -135,7 +135,7 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       newsletterButton: 'Cadastrar',
       newsletterSuccess: 'E-mail cadastrado com sucesso!',
       newsletterError: 'Não foi possível cadastrar. Tente novamente.',
-      tagline: 'Sua loja online de confiança. Os melhores produtos com entrega rápida.',
+      tagline: 'Sua loja online — produtos selecionados com entrega rápida.',
       shop: 'Loja',
       help: 'Ajuda',
       company: 'Empresa',
@@ -145,6 +145,26 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       privacy: 'Privacidade',
       terms: 'Termos',
       cookies: 'Cookies'
+    },
+    footerLinks: {
+      shop: {
+        featured: 'Destaques',
+        new: 'Novidades',
+        sale: 'Promoções',
+        all: 'Todos os produtos'
+      },
+      support: {
+        faq: 'Perguntas frequentes',
+        returns: 'Trocas e devoluções',
+        privacy: 'Política de privacidade',
+        contact: 'Fale conosco'
+      },
+      company: {
+        about: 'Sobre nós',
+        contact: 'Contato',
+        terms: 'Termos de uso',
+        cookies: 'Política de cookies'
+      }
     },
     commerce: {
       viewProduct: 'Ver produto',
@@ -479,7 +499,22 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockUnknown: 'Consultar disponibilidade',
       addToCartError: 'Erro ao adicionar ao carrinho. Tente novamente.',
       galleryPrev: 'Imagem anterior',
-      galleryNext: 'Próxima imagem'
+      galleryNext: 'Próxima imagem',
+      sku: 'SKU',
+      ean: 'EAN',
+      requestQuote: 'Solicitar Cotação',
+      sending: 'Enviando…',
+      yourCompany: 'sua empresa',
+      quoteHint: {
+        prefix: 'Sua compra será registrada como pedido corporativo de',
+        unit: '(unidade {{unit}})',
+        suffix: 'e seguirá o fluxo de aprovação interno.'
+      },
+      quoteError: {
+        noB2B: 'Conta sem vínculo com empresa B2B.',
+        noSku: 'Produto sem SKU disponível para cotação.',
+        failed: 'Falha ao solicitar cotação.'
+      }
     },
     productCard: {
       badgeNew: 'Novo',
@@ -729,7 +764,7 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       newsletterButton: 'Subscribe',
       newsletterSuccess: 'Successfully subscribed!',
       newsletterError: 'Could not subscribe. Please try again.',
-      tagline: 'Your trusted online store. Great products with fast delivery.',
+      tagline: 'Your online store — curated products with fast delivery.',
       shop: 'Shop',
       help: 'Help',
       company: 'Company',
@@ -739,6 +774,26 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       privacy: 'Privacy',
       terms: 'Terms',
       cookies: 'Cookies'
+    },
+    footerLinks: {
+      shop: {
+        featured: 'Featured',
+        new: 'New arrivals',
+        sale: 'Deals',
+        all: 'All products'
+      },
+      support: {
+        faq: 'FAQ',
+        returns: 'Returns & exchanges',
+        privacy: 'Privacy policy',
+        contact: 'Contact us'
+      },
+      company: {
+        about: 'About us',
+        contact: 'Contact',
+        terms: 'Terms of service',
+        cookies: 'Cookie policy'
+      }
     },
     commerce: {
       viewProduct: 'View product',
@@ -1073,7 +1128,22 @@ const TRANSLATIONS: Record<string, TranslationTree> = {
       stockUnknown: 'Check availability',
       addToCartError: 'Error adding to cart. Please try again.',
       galleryPrev: 'Previous image',
-      galleryNext: 'Next image'
+      galleryNext: 'Next image',
+      sku: 'SKU',
+      ean: 'EAN',
+      requestQuote: 'Request Quote',
+      sending: 'Sending…',
+      yourCompany: 'your company',
+      quoteHint: {
+        prefix: 'This purchase will be logged as a corporate order for',
+        unit: '(unit {{unit}})',
+        suffix: 'and will follow the internal approval flow.'
+      },
+      quoteError: {
+        noB2B: 'Your account is not linked to a B2B company.',
+        noSku: 'Product has no SKU available for quoting.',
+        failed: 'Could not submit quote request.'
+      }
     },
     productCard: {
       badgeNew: 'New',

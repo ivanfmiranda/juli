@@ -56,7 +56,7 @@
           <h4>{{ 'footer.help' | juliTranslate }}</h4>
           <ul>
             <li *ngFor="let link of footerLinks.support">
-              <a [routerLink]="link.url">{{ link.name }}</a>
+              <a [routerLink]="link.url">{{ link.name | juliTranslate }}</a>
             </li>
           </ul>
         </div>
@@ -65,7 +65,7 @@
           <h4>{{ 'footer.company' | juliTranslate }}</h4>
           <ul>
             <li *ngFor="let link of footerLinks.company">
-              <a [routerLink]="link.url">{{ link.name }}</a>
+              <a [routerLink]="link.url">{{ link.name | juliTranslate }}</a>
             </li>
           </ul>
         </div>
