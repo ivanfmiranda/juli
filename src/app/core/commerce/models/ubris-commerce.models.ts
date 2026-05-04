@@ -55,9 +55,19 @@ export interface JuliCheckoutSubmission {
 
 export interface JuliSavedAddress {
   id: string;
+  /** Nome legível ("Casa", "Trabalho"). Auto-gerado server-side se omitido. */
+  label?: string;
   fullName: string;
   line1: string;
   line2?: string;
+  /** Campos BR — separados de line1 para NF-e e cálculo de frete. */
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  referencePoint?: string;
+  /** Identidade do destinatário (pode ser diferente do customer) — NF-e. */
+  recipientCpfCnpj?: string;
+  recipientEmail?: string;
   city: string;
   region?: string;
   postalCode: string;
@@ -65,6 +75,7 @@ export interface JuliSavedAddress {
   phone?: string;
   notes?: string;
   defaultShipping: boolean;
+  defaultBilling?: boolean;
 }
 
 export interface JuliCheckoutAddress {
@@ -72,6 +83,12 @@ export interface JuliCheckoutAddress {
   fullName: string;
   line1: string;
   line2?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  referencePoint?: string;
+  recipientCpfCnpj?: string;
+  recipientEmail?: string;
   city: string;
   region?: string;
   postalCode: string;

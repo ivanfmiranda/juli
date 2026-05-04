@@ -51,29 +51,88 @@
     <div class="address-form-section" *ngIf="showAddForm">
       <h2>{{ 'addresses.addTitle' | juliTranslate }}</h2>
       <form [formGroup]="form">
+        <!-- Identificação -->
         <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-label">
+              {{ 'addresses.labelField' | juliTranslate }}
+            </label>
+            <input id="addr-label" formControlName="label" type="text" class="ub-input"
+              [placeholder]="'addresses.labelPlaceholder' | juliTranslate"
+              autocomplete="off">
+          </div>
           <div class="ub-form-group">
             <label class="ub-form-label" for="addr-fullName">
               {{ 'checkout.fullName' | juliTranslate }} <span class="ub-form-label__required">*</span>
             </label>
             <input id="addr-fullName" formControlName="fullName" type="text" class="ub-input"
+              autocomplete="name"
               [class.ub-input--error]="form.get('fullName')?.invalid && form.get('fullName')?.touched">
+          </div>
+        </div>
+
+        <!-- CEP primeiro: dispara ViaCEP que pré-preenche logradouro/bairro/cidade/UF -->
+        <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-postalCode">
+              {{ 'checkout.postalCode' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-postalCode" formControlName="postalCode" type="text" class="ub-input"
+              placeholder="00000-000"
+              autocomplete="postal-code"
+              inputmode="numeric"
+              maxlength="9"
+              (blur)="onCepBlur()"
+              [class.ub-input--error]="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
+            <small *ngIf="cepLookupPending" class="ub-form-hint">{{ 'addresses.lookingUpCep' | juliTranslate }}</small>
+            <small *ngIf="cepLookupFailed" class="ub-form-hint ub-form-hint--warn">{{ 'addresses.cepNotFound' | juliTranslate }}</small>
           </div>
           <div class="ub-form-group">
             <label class="ub-form-label" for="addr-phone">{{ 'checkout.phone' | juliTranslate }}</label>
-            <input id="addr-phone" formControlName="phone" type="tel" class="ub-input">
+            <input id="addr-phone" formControlName="phone" type="tel" class="ub-input"
+              autocomplete="tel" placeholder="(11) 99999-0000">
+          </div>
+        </div>
+
+        <!-- Endereço -->
+        <div class="ub-form-row">
+          <div class="ub-form-group" style="flex: 3">
+            <label class="ub-form-label" for="addr-line1">
+              {{ 'addresses.street' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-line1" formControlName="line1" type="text" class="ub-input"
+              autocomplete="address-line1"
+              [class.ub-input--error]="form.get('line1')?.invalid && form.get('line1')?.touched">
+          </div>
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-number">
+              {{ 'addresses.number' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-number" formControlName="number" type="text" class="ub-input"
+              autocomplete="off" inputmode="numeric"
+              [class.ub-input--error]="form.get('number')?.invalid && form.get('number')?.touched">
+          </div>
+        </div>
+        <div class="ub-form-row">
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-complement">{{ 'addresses.complement' | juliTranslate }}</label>
+            <input id="addr-complement" formControlName="complement" type="text" class="ub-input"
+              autocomplete="address-line2"
+              [placeholder]="'addresses.complementPlaceholder' | juliTranslate">
+          </div>
+          <div class="ub-form-group">
+            <label class="ub-form-label" for="addr-neighborhood">
+              {{ 'addresses.neighborhood' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            </label>
+            <input id="addr-neighborhood" formControlName="neighborhood" type="text" class="ub-input"
+              autocomplete="address-level3"
+              [class.ub-input--error]="form.get('neighborhood')?.invalid && form.get('neighborhood')?.touched">
           </div>
         </div>
         <div class="ub-form-group ub-form-group--full">
-          <label class="ub-form-label" for="addr-line1">
-            {{ 'checkout.addressLine1' | juliTranslate }} <span class="ub-form-label__required">*</span>
-          </label>
-          <input id="addr-line1" formControlName="line1" type="text" class="ub-input"
-            [class.ub-input--error]="form.get('line1')?.invalid && form.get('line1')?.touched">
-        </div>
-        <div class="ub-form-group ub-form-group--full">
-          <label class="ub-form-label" for="addr-line2">{{ 'checkout.addressLine2' | juliTranslate }}</label>
-          <input id="addr-line2" formControlName="line2" type="text" class="ub-input">
+          <label class="ub-form-label" for="addr-reference">{{ 'addresses.referencePoint' | juliTranslate }}</label>
+          <input id="addr-reference" formControlName="referencePoint" type="text" class="ub-input"
+            [placeholder]="'addresses.referencePointPlaceholder' | juliTranslate">
         </div>
         <div class="ub-form-row">
           <div class="ub-form-group">
@@ -81,26 +140,39 @@
               {{ 'checkout.city' | juliTranslate }} <span class="ub-form-label__required">*</span>
             </label>
             <input id="addr-city" formControlName="city" type="text" class="ub-input"
+              autocomplete="address-level2"
               [class.ub-input--error]="form.get('city')?.invalid && form.get('city')?.touched">
           </div>
           <div class="ub-form-group">
-            <label class="ub-form-label" for="addr-region">{{ 'checkout.region' | juliTranslate }}</label>
-            <input id="addr-region" formControlName="region" type="text" class="ub-input">
-          </div>
-        </div>
-        <div class="ub-form-row">
-          <div class="ub-form-group">
-            <label class="ub-form-label" for="addr-postalCode">
-              {{ 'checkout.postalCode' | juliTranslate }} <span class="ub-form-label__required">*</span>
+            <label class="ub-form-label" for="addr-region">
+              {{ 'addresses.uf' | juliTranslate }} <span class="ub-form-label__required">*</span>
             </label>
-            <input id="addr-postalCode" formControlName="postalCode" type="text" class="ub-input"
-              [class.ub-input--error]="form.get('postalCode')?.invalid && form.get('postalCode')?.touched">
-          </div>
-          <div class="ub-form-group">
-            <label class="ub-form-label" for="addr-countryIso">{{ 'checkout.country' | juliTranslate }}</label>
-            <input id="addr-countryIso" formControlName="countryIso" type="text" class="ub-input">
+            <input id="addr-region" formControlName="region" type="text" class="ub-input"
+              autocomplete="address-level1" maxlength="2"
+              [class.ub-input--error]="form.get('region')?.invalid && form.get('region')?.touched">
           </div>
         </div>
+
+        <!-- Destinatário (NF-e) -->
+        <details class="ub-form-details">
+          <summary class="ub-form-details__summary">{{ 'addresses.recipientFiscal' | juliTranslate }}</summary>
+          <div class="ub-form-row">
+            <div class="ub-form-group">
+              <label class="ub-form-label" for="addr-recipient-cpf">CPF/CNPJ</label>
+              <input id="addr-recipient-cpf" formControlName="recipientCpfCnpj" type="text"
+                class="ub-input" autocomplete="off"
+                [placeholder]="'addresses.recipientCpfPlaceholder' | juliTranslate">
+            </div>
+            <div class="ub-form-group">
+              <label class="ub-form-label" for="addr-recipient-email">{{ 'addresses.recipientEmail' | juliTranslate }}</label>
+              <input id="addr-recipient-email" formControlName="recipientEmail" type="email"
+                class="ub-input" autocomplete="email">
+            </div>
+          </div>
+        </details>
+
+        <input formControlName="countryIso" type="hidden" value="BR">
+
         <div class="form-actions">
           <button type="button" class="btn-secondary" (click)="cancelAdd()" [disabled]="saving">
             {{ 'addresses.cancel' | juliTranslate }}

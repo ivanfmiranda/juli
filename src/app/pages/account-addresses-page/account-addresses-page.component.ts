@@ -9,6 +9,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { UntypedFormBuilder, Validators } from '@angular/forms';
 import { ProfileAddressService } from '../../core/commerce/services/profile-address.service';
+import { CepLookupService } from '../../core/commerce/services/cep-lookup.service';
 import { JuliSavedAddress } from '../../core/commerce/models/ubris-commerce.models';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
 
@@ -27,24 +28,64 @@ export class AccountAddressesPageComponent implements OnInit {
   errorMessage?: string;
   showAddForm = false;
 
+  cepLookupPending = false;
+  cepLookupFailed = false;
+
   readonly form = this.fb.group({
+    label: [''],
     fullName: ['', Validators.required],
-    line1: ['', Validators.required],
-    line2: [''],
-    city: ['', Validators.required],
-    region: [''],
     postalCode: ['', Validators.required],
+    line1: ['', Validators.required],
+    number: ['', Validators.required],
+    complement: [''],
+    neighborhood: ['', Validators.required],
+    referencePoint: [''],
+    city: ['', Validators.required],
+    region: ['', Validators.required],
     countryIso: ['BR', Validators.required],
     phone: [''],
+    recipientCpfCnpj: [''],
+    recipientEmail: [''],
     notes: ['']
   });
 
   constructor(
     private readonly fb: UntypedFormBuilder,
     private readonly profileAddressService: ProfileAddressService,
+    private readonly cepLookup: CepLookupService,
     private readonly cdr: ChangeDetectorRef,
     readonly i18n: JuliI18nService
   ) {}
+
+  /**
+   * Disparado pelo (blur) do input postalCode. Auto-completa logradouro,
+   * bairro, cidade e UF via ViaCEP. Mantém campos editáveis caso o
+   * usuário precise corrigir (CEP único de cidade pequena, condomínio
+   * que ainda não está catalogado, etc.).
+   */
+  onCepBlur(): void {
+    const raw = (this.form.value.postalCode ?? '') as string;
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    this.cepLookupPending = true;
+    this.cepLookupFailed = false;
+    this.cdr.markForCheck();
+    this.cepLookup.lookup(digits).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(info => {
+      this.cepLookupPending = false;
+      if (!info) {
+        this.cepLookupFailed = true;
+      } else {
+        this.form.patchValue({
+          line1: info.street || this.form.value.line1,
+          neighborhood: info.neighborhood || this.form.value.neighborhood,
+          city: info.city || this.form.value.city,
+          region: info.state || this.form.value.region,
+          countryIso: 'BR'
+        }, { emitEvent: false });
+      }
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnInit(): void {
     this.loadAddresses();
@@ -90,11 +131,18 @@ export class AccountAddressesPageComponent implements OnInit {
     this.errorMessage = undefined;
     const v = this.form.value;
     this.profileAddressService.addAddress({
+      label: v.label || undefined,
       fullName: v.fullName,
       line1: v.line1,
-      line2: v.line2 || undefined,
+      line2: undefined,
+      number: v.number,
+      complement: v.complement || undefined,
+      neighborhood: v.neighborhood,
+      referencePoint: v.referencePoint || undefined,
+      recipientCpfCnpj: v.recipientCpfCnpj || undefined,
+      recipientEmail: v.recipientEmail || undefined,
       city: v.city,
-      region: v.region || undefined,
+      region: v.region,
       postalCode: v.postalCode,
       countryIso: v.countryIso || 'BR',
       phone: v.phone || undefined,

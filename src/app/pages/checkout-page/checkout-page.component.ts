@@ -19,6 +19,7 @@ import type { Stripe, StripeCardElement, StripeElements } from '@stripe/stripe-j
 import { AuthService } from '../../core/auth/auth.service';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
 import { ProfileAddressService } from '../../core/commerce/services/profile-address.service';
+import { CepLookupService } from '../../core/commerce/services/cep-lookup.service';
 import { JuliSavedAddress } from '../../core/commerce/models/ubris-commerce.models';
 // SoftLoginPromptComponent intentionally not imported here — guest
 // checkout removed the modal trigger from this page. The component
@@ -115,6 +116,13 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
   selectedProfileAddressId?: string;
   useNewAddress = false;
   addressesLoading = false;
+  /** "Salvar este endereço pra próximas compras" — default ON. Aplica
+   *  só quando logado e usando endereço novo. Best-effort: falha não
+   *  bloqueia o checkout. */
+  saveAddressToProfile = true;
+  /** Estado do lookup ViaCEP (UX feedback no campo CEP). */
+  cepLookupPending = false;
+  cepLookupFailed = false;
 
   // UI State
   currentStepId = 'address';
@@ -144,6 +152,7 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     private readonly cartFacade: JuliCartFacade,
     private readonly checkoutFacade: JuliCheckoutFacade,
     private readonly profileAddressService: ProfileAddressService,
+    private readonly cepLookup: CepLookupService,
     private readonly router: Router,
     private readonly cdr: ChangeDetectorRef,
     private readonly i18n: JuliI18nService,
@@ -213,6 +222,66 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
     }
     this.pendingStripeMount = false;
     void this.mountStripeCardElement();
+  }
+
+  /**
+   * Salva o address recém-digitado no profile do customer logado.
+   * Pré-condições: autenticado, useNewAddress=true (digitou novo),
+   * saveAddressToProfile=true (checkbox marcada), e não está usando
+   * endereço da unit B2B (esse já tem fonte canônica fora do profile).
+   * Falha silencia — o checkout principal não regride.
+   */
+  private persistNewAddressToProfileIfNeeded(): void {
+    const session = this.authService.currentSession;
+    if (!session || !this.useNewAddress || !this.saveAddressToProfile) return;
+    if (this.usingUnitAddress) return;
+    const v = this.form.value;
+    this.profileAddressService.addAddress({
+      fullName: v.fullName || '',
+      line1: v.line1 || '',
+      line2: v.line2 || undefined,
+      number: v.number || undefined,
+      complement: v.complement || undefined,
+      neighborhood: v.neighborhood || undefined,
+      referencePoint: v.referencePoint || undefined,
+      recipientCpfCnpj: v.recipientCpfCnpj || undefined,
+      recipientEmail: v.recipientEmail || undefined,
+      city: v.city || '',
+      region: v.region || undefined,
+      postalCode: v.postalCode || '',
+      countryIso: v.countryIso || 'BR',
+      phone: v.phone || undefined,
+      notes: v.notes || undefined,
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => { /* server dedupes — silencioso é o caminho feliz */ },
+      error: () => { /* não bloqueia checkout; usuário pode salvar
+                        manualmente em /account/addresses */ }
+    });
+  }
+
+  /** ViaCEP lookup on the postalCode field's blur — preenche street,
+   *  neighborhood, city e UF. Falha (CEP inexistente / offline) NÃO
+   *  bloqueia o checkout — apenas mostra hint pro usuário digitar. */
+  onCepBlur(): void {
+    const raw = (this.form.value.postalCode ?? '') as string;
+    const digits = raw.replace(/\D/g, '');
+    if (digits.length !== 8) return;
+    this.cepLookupPending = true;
+    this.cepLookupFailed = false;
+    this.cdr.markForCheck();
+    this.cepLookup.lookup(digits).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(info => {
+      this.cepLookupPending = false;
+      if (!info) {
+        this.cepLookupFailed = true;
+      } else {
+        this.form.patchValue({
+          line1: info.street || this.form.value.line1,
+          city: info.city || this.form.value.city,
+          region: info.state || this.form.value.region,
+        }, { emitEvent: false });
+      }
+      this.cdr.markForCheck();
+    });
   }
 
   saveAddressAndLoadDelivery(): void {
@@ -292,6 +361,12 @@ export class CheckoutPageComponent implements OnDestroy, AfterViewChecked {
         this.loadCheckoutOptions(savedAddress.checkoutId);
         this.currentStepId = 'delivery';
         this.updateSteps();
+        // Persistir no profile do customer logado quando ele digita
+        // endereço novo (useNewAddress=true) e o checkbox está marcado.
+        // Best-effort: o checkout já avançou pra delivery; falha aqui
+        // não bloqueia a compra. Server-side faz dedupe por
+        // (zip+number+complement), então clicar duas vezes é seguro.
+        this.persistNewAddressToProfileIfNeeded();
         this.cdr.markForCheck();
       },
       error: error => {
