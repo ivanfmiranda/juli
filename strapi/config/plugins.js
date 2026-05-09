@@ -5,6 +5,13 @@ module.exports = ({ env }) => ({
     enabled: true,
     resolve: './src/plugins/ubris-page-builder',
   },
+  'ubris-sso': {
+    // Plugin always loads; the OAuth flow itself only activates when
+    // UBRIS_SSO_ENABLED=true so dev setups without the auth server
+    // running keep the standard Strapi login path as fallback.
+    enabled: true,
+    resolve: './src/plugins/ubris-sso',
+  },
   email: {
     config: {
       provider: 'nodemailer',

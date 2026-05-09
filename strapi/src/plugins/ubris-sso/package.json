@@ -1,0 +1,12 @@
+{
+  "name": "ubris-sso",
+  "version": "1.0.0",
+  "description": "Single sign-on into Strapi admin via the Ubris tenant-identity OAuth2 server.",
+  "strapi": {
+    "name": "ubris-sso",
+    "displayName": "Ubris SSO",
+    "description": "Delegate Strapi admin login to the Ubris OAuth2 authorization server.",
+    "kind": "plugin"
+  },
+  "main": "./strapi-server.js"
+}
