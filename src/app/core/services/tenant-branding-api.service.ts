@@ -54,6 +54,18 @@ export interface SocialLink {
   url: string;
 }
 
+/**
+ * Public OAuth client identifiers per provider. These go into the JS
+ * bundle/runtime (Google Identity Services / Apple Sign-In require the
+ * client_id in clear text), so they're considered branding-level config
+ * — NOT credentials. Per-tenant via Strapi keeps each store's Google/Apple
+ * project independent without rebuilding juli.
+ */
+export interface OauthProvidersConfig {
+  google?: { clientId: string };
+  apple?: { clientId: string; redirectUri?: string };
+}
+
 export interface TenantBrandingConfig {
   tenantKey: string;
   brandName: string;
@@ -70,6 +82,7 @@ export interface TenantBrandingConfig {
   address: AddressInfo;
   paymentMethods: PaymentMethod[];
   socialLinks: SocialLink[];
+  oauthProviders?: OauthProvidersConfig;
 }
 
 const DEFAULT_BRANDING: TenantBrandingConfig = {
@@ -202,6 +215,9 @@ export class TenantBrandingApiService {
             address: attrs.address || {},
             paymentMethods: Array.isArray(attrs.paymentMethods) ? attrs.paymentMethods : DEFAULT_BRANDING.paymentMethods,
             socialLinks: Array.isArray(attrs.socialLinks) ? attrs.socialLinks : DEFAULT_BRANDING.socialLinks,
+            oauthProviders: attrs.oauthProviders && typeof attrs.oauthProviders === 'object'
+              ? attrs.oauthProviders
+              : undefined,
           } as TenantBrandingConfig;
         }),
         catchError(() => of(DEFAULT_BRANDING)),

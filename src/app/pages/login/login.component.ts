@@ -9,7 +9,6 @@ import { AuthService, AuthSession, isMfaPending } from '../../core/auth/auth.ser
 import { JuliCartFacade } from '../../core/commerce';
 import { TenantBrandingApiService } from '../../core/services/tenant-branding-api.service';
 import { JuliI18nService } from '../../core/i18n/i18n.service';
-import { environment } from '../../../environments/environment';
 
 declare const google: any;
 
@@ -17,7 +16,8 @@ declare const google: any;
  * Three sequential states the page may be in:
  *
  *  - PASSWORD: traditional username + password form (also where the
- *    Google button lives if {@code googleClientId} is configured).
+ *    Google button lives when the tenant has a Google clientId
+ *    configured in {@code TenantBrandingConfig.oauthProviders.google}).
  *  - MFA: backend returned a {@code roles=[MFA_PENDING]} session; we
  *    render a 6-digit input and call {@code /mfa/verify}.
  *  - PROMOTING: cart promotion is running between successful auth and
@@ -47,7 +47,10 @@ export class LoginComponent implements OnInit, AfterViewInit {
   errorMessage?: string;
   warningMessage?: string;
 
-  readonly googleEnabled = !!environment.googleClientId;
+  /** Google clientId resolved from the tenant branding (Strapi). Empty
+   *  when the tenant has no Google project configured — button stays hidden. */
+  googleClientId = '';
+  get googleEnabled(): boolean { return !!this.googleClientId; }
 
   @ViewChild('googleButton') googleButton?: ElementRef<HTMLDivElement>;
 
@@ -72,6 +75,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
     const config = this.brandingApi.snapshot;
     this.brandName = config.brandName;
     this.titleService.setTitle(`Login — ${config.brandName}`);
+    this.googleClientId = config.oauthProviders?.google?.clientId ?? '';
     this.cdr.markForCheck();
   }
 
@@ -204,7 +208,7 @@ export class LoginComponent implements OnInit, AfterViewInit {
   private initGoogleButton(): void {
     if (typeof google === 'undefined' || !this.googleButton) return;
     google.accounts.id.initialize({
-      client_id: environment.googleClientId,
+      client_id: this.googleClientId,
       callback: (resp: { credential?: string }) => {
         if (!resp?.credential) return;
         this.zone.run(() => this.onGoogleCredential(resp.credential!));
