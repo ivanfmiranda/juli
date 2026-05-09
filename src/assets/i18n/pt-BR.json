@@ -11,7 +11,18 @@
     "cartPromotionWarning": "Login concluído, mas não foi possível recuperar o carrinho anterior.",
     "usernameRequired": "Usuário é obrigatório",
     "passwordRequired": "Senha é obrigatória",
-    "forgotLink": "Esqueci minha senha"
+    "forgotLink": "Esqueci minha senha",
+    "orContinueWith": "ou continue com",
+    "googleSignInFailed": "Não foi possível entrar com o Google. Tente novamente.",
+    "mfaTitle": "Verificação em duas etapas",
+    "mfaInstructions": "Digite o código de 6 dígitos do seu app autenticador, ou um código de recuperação.",
+    "mfaCode": "Código",
+    "mfaCodeRequired": "Código é obrigatório",
+    "verifyMfa": "Verificar",
+    "verifying": "Verificando...",
+    "invalidMfaCode": "Código inválido. Verifique o relógio do seu dispositivo e tente novamente.",
+    "cancel": "Cancelar",
+    "finishingSignIn": "Finalizando login..."
   },
   "auth": {
     "forgotPassword": {

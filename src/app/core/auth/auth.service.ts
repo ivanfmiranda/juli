@@ -31,6 +31,24 @@ type LoginEnvelope = {
   message?: string | null;
 };
 
+export interface TotpSetupPayload {
+  factorId: string;
+  secret: string;
+  otpAuthUri: string;
+  recoveryCodes: string[];
+}
+
+/** Backend BFF wraps responses in {success, data} for some endpoints; unwrap when present. */
+function unwrap<T>(r: any): T {
+  if (r && typeof r === 'object' && 'data' in r) return r.data as T;
+  return r as T;
+}
+
+/** A session token in the MFA-pending state — short TTL, no roles, only good for /mfa/verify. */
+export function isMfaPending(session: AuthSession | null | undefined): boolean {
+  return !!session && Array.isArray(session.roles) && session.roles.includes('MFA_PENDING');
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -117,6 +135,82 @@ export class AuthService {
       newPassword,
       tenantId: this.tenantHost.currentTenantId()
     });
+  }
+
+  /**
+   * Sign in via a Google ID token obtained from Google Identity Services.
+   * Backend may respond with a session JWT OR a {@code roles=[MFA_PENDING]}
+   * envelope when the user has MFA enabled — caller is responsible for
+   * inspecting the result and stitching in the second factor flow.
+   */
+  loginWithGoogle(idToken: string): Observable<AuthSession> {
+    return this.http.post<LoginEnvelope>(`${environment.ubrisApiBaseUrl}/api/bff/auth/social/google`, {
+      idToken,
+      tenantId: this.tenantHost.currentTenantId()
+    }).pipe(
+      map(response => {
+        if (!response?.data?.accessToken) {
+          throw new Error(response?.message || 'Google sign-in failed');
+        }
+        return response.data;
+      }),
+      tap(session => {
+        // MFA-pending tokens have roles=[MFA_PENDING] and short TTL —
+        // we do NOT call persistSession here; the caller must finish
+        // the second factor and then call setSession on the upgraded JWT.
+        if (!isMfaPending(session)) {
+          this.persistSession(session);
+        }
+      })
+    );
+  }
+
+  /**
+   * Trade an mfa-pending token + 6-digit code for a full session JWT.
+   * The pending token from {@link login} or {@link loginWithGoogle}
+   * is forwarded as the bearer.
+   */
+  verifyMfa(pendingToken: string, code: string): Observable<AuthSession> {
+    return this.http.post<LoginEnvelope>(
+      `${environment.ubrisApiBaseUrl}/api/bff/auth/mfa/verify`,
+      { code },
+      { headers: { Authorization: `Bearer ${pendingToken}` } }
+    ).pipe(
+      map(response => {
+        if (!response?.data?.accessToken) {
+          throw new Error(response?.message || 'MFA verification failed');
+        }
+        return response.data;
+      }),
+      tap(session => this.persistSession(session))
+    );
+  }
+
+  // ─── MFA management (used by /account/security) ──────────────────────
+
+  /** Begin TOTP enrollment — returns secret + otpauth URI + recovery codes (1×). */
+  startTotpSetup(): Observable<TotpSetupPayload> {
+    return this.http.post<{ data: TotpSetupPayload } | TotpSetupPayload>(
+      `${environment.ubrisApiBaseUrl}/api/bff/mfa/totp/setup`,
+      {}
+    ).pipe(map(r => unwrap<TotpSetupPayload>(r)));
+  }
+
+  activateTotp(code: number): Observable<void> {
+    return this.http.post<void>(
+      `${environment.ubrisApiBaseUrl}/api/bff/mfa/totp/activate`,
+      { code }
+    );
+  }
+
+  disableTotp(): Observable<void> {
+    return this.http.delete<void>(`${environment.ubrisApiBaseUrl}/api/bff/mfa/totp`);
+  }
+
+  totpStatus(): Observable<{ required: boolean }> {
+    return this.http.get<{ data: { required: boolean } } | { required: boolean }>(
+      `${environment.ubrisApiBaseUrl}/api/bff/mfa/totp/status`
+    ).pipe(map(r => unwrap<{ required: boolean }>(r)));
   }
 
   logout(): void {

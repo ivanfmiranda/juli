@@ -12,7 +12,10 @@ export const environment = {
   supportedLocales: [
     { code: 'pt-BR', language: 'pt', label: 'Português (Brasil)', currency: 'BRL' },
     { code: 'en-US', language: 'en', label: 'English (US)', currency: 'USD' }
-  ]
+  ],
+  // Google Sign-In via Google Identity Services. Empty keeps the button
+  // hidden so dev boots without GIS configuration.
+  googleClientId: ''
 };
 
 /*

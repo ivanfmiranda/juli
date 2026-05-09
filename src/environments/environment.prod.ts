@@ -8,5 +8,6 @@ export const environment = {
   supportedLocales: [
     { code: 'pt-BR', language: 'pt', label: 'Português (Brasil)', currency: 'BRL' },
     { code: 'en-US', language: 'en', label: 'English (US)', currency: 'USD' }
-  ]
+  ],
+  googleClientId: ''
 };

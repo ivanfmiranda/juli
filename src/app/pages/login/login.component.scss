@@ -115,3 +115,55 @@ button[disabled] {
     }
   }
 }
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1rem 0 0.75rem;
+  color: #6b7280;
+  font-size: 0.8125rem;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  span {
+    padding: 0 0.75rem;
+  }
+}
+
+.google-button-host {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.subtle {
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+.link-button {
+  background: none;
+  border: 0;
+  color: var(--color-primary, #2563eb);
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.5rem;
+
+  &:disabled {
+    color: #9ca3af;
+    cursor: not-allowed;
+  }
+}

@@ -3,7 +3,8 @@
     <h1>{{ brandName }}</h1>
     <p>{{ 'login.subtitle' | juliTranslate }}</p>
 
-    <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Phase 1: traditional username + password (also where Google sits). -->
+    <form *ngIf="phase === 'PASSWORD'" [formGroup]="form" (ngSubmit)="submit()">
       <label>
         {{ 'login.username' | juliTranslate }}
         <input type="text" formControlName="username" autocomplete="off">
@@ -30,9 +31,49 @@
       <p class="forgot-link">
         <a routerLink="/recuperar-senha">{{ 'login.forgotLink' | juliTranslate }}</a>
       </p>
+
+      <!-- Google Identity Services button. Hidden when googleClientId
+           is not configured (development boots cleanly without GIS). -->
+      <ng-container *ngIf="googleEnabled">
+        <div class="divider">
+          <span>{{ 'login.orContinueWith' | juliTranslate }}</span>
+        </div>
+        <div #googleButton class="google-button-host"></div>
+      </ng-container>
     </form>
 
-    <p class="register-link">
+    <!-- Phase 2: backend signaled MFA_PENDING after a successful first
+         factor (password OR Google). User pastes the 6-digit TOTP
+         code OR a recovery code. -->
+    <form *ngIf="phase === 'MFA'" [formGroup]="mfaForm" (ngSubmit)="submitMfa()">
+      <h2>{{ 'login.mfaTitle' | juliTranslate }}</h2>
+      <p class="subtle">{{ 'login.mfaInstructions' | juliTranslate }}</p>
+
+      <label>
+        {{ 'login.mfaCode' | juliTranslate }}
+        <input type="text" formControlName="code" inputmode="numeric"
+               autocomplete="one-time-code" maxlength="32" autofocus>
+        <span class="field-error" *ngIf="mfaForm.get('code')?.touched && mfaForm.get('code')?.hasError('required')">
+          {{ 'login.mfaCodeRequired' | juliTranslate }}
+        </span>
+      </label>
+
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+      <button type="submit" [disabled]="submitting">
+        {{ submitting ? ('login.verifying' | juliTranslate) : ('login.verifyMfa' | juliTranslate) }}
+      </button>
+      <button type="button" class="link-button" (click)="cancelMfa()" [disabled]="submitting">
+        {{ 'login.cancel' | juliTranslate }}
+      </button>
+    </form>
+
+    <!-- Phase 3: cart promotion in flight; show spinner-ish hint. -->
+    <p *ngIf="phase === 'PROMOTING'" class="subtle">
+      {{ 'login.finishingSignIn' | juliTranslate }}
+    </p>
+
+    <p class="register-link" *ngIf="phase === 'PASSWORD'">
       {{ 'login.noAccount' | juliTranslate }} <a routerLink="/register">{{ 'login.createAccount' | juliTranslate }}</a>
     </p>
   </div>

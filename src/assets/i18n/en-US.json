@@ -11,7 +11,18 @@
     "cartPromotionWarning": "Login completed, but we could not recover your previous cart.",
     "usernameRequired": "Username is required",
     "passwordRequired": "Password is required",
-    "forgotLink": "Forgot your password?"
+    "forgotLink": "Forgot your password?",
+    "orContinueWith": "or continue with",
+    "googleSignInFailed": "Could not sign in with Google. Try again.",
+    "mfaTitle": "Two-step verification",
+    "mfaInstructions": "Enter the 6-digit code from your authenticator app, or a recovery code.",
+    "mfaCode": "Code",
+    "mfaCodeRequired": "Code is required",
+    "verifyMfa": "Verify",
+    "verifying": "Verifying...",
+    "invalidMfaCode": "Invalid code. Check your device clock and try again.",
+    "cancel": "Cancel",
+    "finishingSignIn": "Finishing sign-in..."
   },
   "auth": {
     "forgotPassword": {
