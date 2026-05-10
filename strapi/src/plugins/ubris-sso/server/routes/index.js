@@ -14,28 +14,18 @@
  * Both routes live in the {@code admin} type so they ride alongside the
  * built-in admin server (same port, no extra security surface).
  */
+// In Strapi v4, plugin admin routes are mounted at {@code /<route-key>/<path>}
+// at the top-level of the HTTP server (not under /admin/<plugin>). Final URLs:
+//   GET /ubris-sso/login
+//   GET /ubris-sso/callback
+//   GET /ubris-sso/config
 module.exports = {
-  admin: {
+  'ubris-sso': {
     type: 'admin',
     routes: [
-      {
-        method: 'GET',
-        path: '/ubris-sso/login',
-        handler: 'controller.start',
-        config: { auth: false, policies: [] },
-      },
-      {
-        method: 'GET',
-        path: '/ubris-sso/callback',
-        handler: 'controller.callback',
-        config: { auth: false, policies: [] },
-      },
-      {
-        method: 'GET',
-        path: '/ubris-sso/config',
-        handler: 'controller.config',
-        config: { auth: false, policies: [] },
-      },
+      { method: 'GET', path: '/login',    handler: 'controller.start',    config: { auth: false, policies: [] } },
+      { method: 'GET', path: '/callback', handler: 'controller.callback', config: { auth: false, policies: [] } },
+      { method: 'GET', path: '/config',   handler: 'controller.config',   config: { auth: false, policies: [] } },
     ],
   },
 };

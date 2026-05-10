@@ -8,7 +8,7 @@ const COOKIE_OPTS = {
   sameSite: 'lax',
   secure: true,
   maxAge: 5 * 60 * 1000,
-  path: '/admin/ubris-sso',
+  path: '/ubris-sso',
 };
 
 module.exports = {
@@ -21,7 +21,7 @@ module.exports = {
     const oauth = strapi.plugin('ubris-sso').service('oauth');
     ctx.body = {
       enabled: oauth.enabled(),
-      loginUrl: '/admin/ubris-sso/login',
+      loginUrl: '/ubris-sso/login',
     };
   },
 

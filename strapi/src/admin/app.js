@@ -98,7 +98,7 @@ export default {
       let ssoConfigPromise = null;
       const fetchSsoConfig = () => {
         if (!ssoConfigPromise) {
-          ssoConfigPromise = fetch('/admin/ubris-sso/config', { credentials: 'include' })
+          ssoConfigPromise = fetch('/ubris-sso/config', { credentials: 'include' })
             .then(r => (r.ok ? r.json() : { enabled: false }))
             .catch(() => ({ enabled: false }));
         }
@@ -135,7 +135,7 @@ export default {
         if (!cfg.enabled) return true; // stop observing — SSO off
         const btn = document.createElement('a');
         btn.className = 'ubris-sso-button';
-        btn.href = cfg.loginUrl || '/admin/ubris-sso/login';
+        btn.href = cfg.loginUrl || '/ubris-sso/login';
         btn.textContent = 'Entrar com Ubris';
         form.appendChild(btn);
         return true;

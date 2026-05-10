@@ -10,6 +10,12 @@ module.exports = ({ env }) => {
     host: env('HOST', '0.0.0.0'),
     port: env.int('PORT', 1337),
     url: env('PUBLIC_URL', ''),
+    // Sit behind nginx → :1337 over plain http; without proxy=true, Koa
+    // sees ctx.secure=false and the SSO plugin's secure cookie throws
+    // "Cannot send secure cookie over unencrypted connection". Enabling
+    // proxy makes ctx.secure honor the X-Forwarded-Proto header that
+    // nginx already sets.
+    proxy: env.bool('STRAPI_TRUST_PROXY', true),
     app: {
       keys,
     },
