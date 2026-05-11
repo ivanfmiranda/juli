@@ -170,7 +170,13 @@ export class LoginComponent implements OnInit, AfterViewInit {
     const promote$ = this.authService.hasAnonymousCart()
       ? this.cartFacade.promoteAnonymousCart().pipe(
           catchError(() => {
-            this.cartFacade.discardAnonymousCart();
+            // Preserve the anonymous cart on failure — discarding it
+            // erases the items the customer added before logging in,
+            // which is exactly what we don't want when promote fails
+            // (downstream pricing 502, network blip, etc.). The cart
+            // page can retry the promote or fall back to anonymous
+            // checkout. We surface a warning so the customer knows the
+            // session-level merge didn't complete.
             this.warningMessage = this.i18n.translate('login.cartPromotionWarning');
             this.cdr.markForCheck();
             return of(null);
